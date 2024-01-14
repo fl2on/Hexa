@@ -12,7 +12,7 @@ Welcome to Hexa, a local storage-based web application! Similar to Pastebin, our
 ## Getting Started
 
 1. Open Hexa in your browser.
-2. Enter or paste your text in the provided text area.
+2. Enter  your text in the parameters text area.
 3. **Query Parameters:**
    - `?text=YOUR_TEXT` to pre-fill the text area with specific content.
      Example: `https://qzxtu.github.io/Hexa/?text=Hello%20World`
