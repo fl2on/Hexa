@@ -20,6 +20,11 @@ Welcome to Hexa, a local storage-based web application! Similar to Pastebin, our
      Example: `https://qzxtu.github.io/Hexa/?title=My%20Hexa%20Session`
 4. Copy to clipboard or clear text as needed.
 5. Enjoy!
+
+## Demo
+
+Check out the [live demo](https://qzxtu.github.io/Hexa/?title=MyJavaScript&text=public%20class%20HelloWorld%20%7B%0A%20%20%20%20public%20static%20void%20main(String%5B%5D%20args)%20%7B%0A%20%20%20%20%20%20%20%20System.out.println(%22Hello,%20World!%22)%3B%0A%20%20%20%20%7D%0A%7D) to see Hexa in action.
+
 ## Technologies Used
 
 - **Tailwind CSS:** [Link to Tailwind CSS](https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css)
