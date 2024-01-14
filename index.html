@@ -1,0 +1,104 @@
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a" type="image/png">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@yourtwitterhandle">
+    <meta name="twitter:title" content="Hexa">
+    <meta name="twitter:description" content="Welcome to our local storage-based web application! Similar to Pastebin, our platform allows you to share and manage text snippets without the need for an intermediate server. Enjoy the convenience of direct, local data management.">
+    <meta name="twitter:image" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
+    <!-- Open Graph -->
+    <meta property="og:title" content="Hexa">
+    <meta name="description" content="<meta name=" description"="">
+       <meta property="og:image" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
+    <meta property="og:url" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Hexa">
+    <!-- Embed Banner -->
+    <meta name="embed-banner:url" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
+    <meta name="embed-banner:width" content="1200">
+    <meta name="embed-banner:height" content="600">
+    <!-- For IE -->
+    <link rel="shortcut icon" href="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a" type="image/x-icon">
+    <title x-text="title">Hexa</title>
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Alpine.js -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer=""></script>
+    <style>
+        /* Custom style for the scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+         #bing-chat-sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 0;
+            height: 100%;
+            overflow: hidden;
+            transition: width 0.5s;
+        }
+        #bing-chat-sidebar.open {
+            width: 300px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center" x-data="{ darkMode: true, title: 'Hexa' }" x-init="title = new URLSearchParams(window.location.search).get('title') || title" :class="{ 'bg-gray-900 text-white': darkMode, 'bg-gray-100 text-gray-900': !darkMode }">
+    <nav class="fixed top-0 left-0 w-full flex justify-between p-6 bg-gray-800 text-white">
+        <div class="flex items-center">
+            <img src="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a" alt="Logo" style="height: 50px; width: 50px; margin-right: 20px;">
+            <a href="#" class="font-bold text-2xl" x-text="title" title="Click here to navigate">Hexa</a>
+            <button onclick="toggleBingChatSidebar()" class="ml-4 px-2 py-1 rounded bg-purple-500 text-white">Toggle Bing Chat</button>
+        </div>
+    </nav>
+    <div class="max-w-md mx-auto p-8 bg-gray-800 rounded-md shadow-md mt-20" :class="{ 'bg-gray-800': darkMode, 'bg-gray-100': !darkMode }">
+        <h1 class="text-4xl font-bold mb-6 text-blue-500" x-text="title">Hexa</h1>
+
+        <div x-data="{ text: '' }" x-init="text = new URLSearchParams(window.location.search).get('text') || localStorage.getItem('text') || ''">
+            <label for="textInput" class="block text-sm font-medium mb-2">Text from URL:</label>
+            <textarea id="textInput" rows="4" class="w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300 ease-in-out dark-scrollbar" x-model="text" @input="localStorage.setItem('text', text)"></textarea>
+            <button onclick="copyToClipboard()" class="mt-4 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-md focus:outline-none transition duration-300 ease-in-out transform hover:scale-105">Copy to Clipboard</button>
+            <button onclick="clearText()" class="mt-4 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-md focus:outline-none transition duration-300 ease-in-out transform hover:scale-105 ml-4">Clear Text</button>
+        </div>
+    </div>
+    <div id="bing-chat-sidebar">
+        <iframe id="underside-iframe-container" name="underside-iframe-container" src="https://copilot.microsoft.com/" frameborder="0" title="Microsoft Copilot" class="w-full h-full"></iframe>
+    </div>
+    <script>
+        function toggleBingChatSidebar() {
+            var sidebar = document.getElementById('bing-chat-sidebar');
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            } else {
+                sidebar.classList.add('open');
+            }
+        }
+
+        function copyToClipboard() {
+            var textArea = document.getElementById('textInput');
+            textArea.select();
+            document.execCommand('copy');
+            alert('Text copied to clipboard.');
+        }
+
+        function clearText() {
+            var textArea = document.getElementById('textInput');
+            textArea.value = '';
+            localStorage.removeItem('text');
+            alert('Text cleared.');
+        }
+    </script>
+</body>
+</html>
