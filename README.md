@@ -12,18 +12,20 @@ Welcome to Hexa, a local storage-based web application! Similar to Pastebin, our
 ## Getting Started
 
 1. Open Hexa in your browser.
-2. Enter your text in the "Parameters" text area.
-3. **Query Parameters:**
+3. Enter your text in the "Parameters" text area.
+4. **Query Parameters:**
    - `?text=YOUR_TEXT` to pre-fill the text area with specific content.
      Example: `https://qzxtu.github.io/Hexa/?text=Hello%20World`
    - `?title=YOUR_TITLE` to set a custom title for your Hexa session.
      Example: `https://qzxtu.github.io/Hexa/?title=My%20Hexa%20Session`
-4. Copy to clipboard or clear text as needed.
-5. Enjoy!
+5. Copy to clipboard or clear text as needed.
+6. Enjoy!
 
 ## Demo
 
 Check out the [live demo](https://qzxtu.github.io/Hexa/?title=MyJavaScript&text=public%20class%20HelloWorld%20%7B%0A%20%20%20%20public%20static%20void%20main(String%5B%5D%20args)%20%7B%0A%20%20%20%20%20%20%20%20System.out.println(%22Hello,%20World!%22)%3B%0A%20%20%20%20%7D%0A%7D) to see Hexa in action.
+
+![image](https://github.com/qzxtu/Hexa/assets/69091361/f6e454e5-32e9-40b0-be92-c19c05dadd1d)
 
 ## Technologies Used
 
