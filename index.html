@@ -10,9 +10,7 @@
     <meta name="twitter:description" content="Welcome to our local storage-based web application! Similar to Pastebin, our platform allows you to share and manage text snippets without the need for an intermediate server. Enjoy the convenience of direct, local data management.">
     <meta name="twitter:image" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
     <!-- Open Graph -->
-    <meta property="og:title" content="Hexa">
-    <meta name="description" content="
-												<meta name=" description"="">
+    <meta property="og:title" content="Hexa">												
     <meta property="og:image" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
     <meta property="og:url" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
     <meta property="og:type" content="website">
@@ -44,6 +42,28 @@
 
       ::-webkit-scrollbar-thumb:hover {
         background: #555;
+      }
+
+      textarea {
+        background-color: rgba(255, 255, 255, 0.1);
+        /* Fondo del área de texto */
+        color: #f7fafc;
+        /* Color del texto dentro del área de texto */
+        padding: 15px;
+        font-family: 'Arial', sans-serif;
+        border: none;
+        resize: none;
+        transition: all 0.2s ease-in-out;
+      }
+
+      /* Para Firefox */
+      textarea {
+        scrollbar-width: none;
+      }
+
+      /* Para Chrome, Safari y Opera */
+      textarea::-webkit-scrollbar {
+        display: none;
       }
 
       #bing-chat-sidebar {
