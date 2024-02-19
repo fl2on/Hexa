@@ -11,7 +11,7 @@
     <meta name="twitter:image" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
     <!-- Open Graph -->
     <meta property="og:title" content="Hexa">
-		<meta property="og:image" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
+    <meta property="og:image" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
     <meta property="og:url" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Hexa">
@@ -27,6 +27,33 @@
     <!-- Alpine.js -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer=""></script>
     <style>
+      body {
+        font-size: 14px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      button {
+        padding: 10px 20px;
+        font-size: 14px;
+      }
+
+      textarea {
+        padding: 10px;
+        font-size: 14px;
+      }
+
+      img {
+        height: 40px;
+        width: 40px;
+      }
+
+      .max-w-md {
+        max-width: 420px;
+      }
+
       /* Custom style for the scrollbar */
       ::-webkit-scrollbar {
         width: 10px;
@@ -77,7 +104,7 @@
       }
 
       #bing-chat-sidebar.open {
-        width: 300px;
+        width: 380px;
       }
 
       .bing-chat-button {
@@ -91,7 +118,7 @@
       }
     </style>
   </head>
-  <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center" x-data="{ darkMode: true, title: 'Hexa' }" x-init="title = new URLSearchParams(window.location.search).get('title') || title" :class="{ 'bg-gray-900 text-white': darkMode, 'bg-gray-100 text-gray-900': !darkMode }">
+  <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center" x-data="{ darkMode: true, title: 'Hexa' }" x-init="title = (new URLSearchParams(window.location.search).get('title') || title).substring(0, 18)" :class="{ 'bg-gray-900 text-white': darkMode, 'bg-gray-100 text-gray-900': !darkMode }">
     <nav class="fixed top-0 left-0 w-full flex justify-between p-6 bg-gray-800 text-white">
       <div class="flex items-center">
         <img src="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a" alt="Logo" style="height: 50px; width: 50px; margin-right: 20px;">
