@@ -10,8 +10,8 @@
     <meta name="twitter:description" content="Welcome to our local storage-based web application! Similar to Pastebin, our platform allows you to share and manage text snippets without the need for an intermediate server. Enjoy the convenience of direct, local data management.">
     <meta name="twitter:image" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
     <!-- Open Graph -->
-    <meta property="og:title" content="Hexa">												
-    <meta property="og:image" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
+    <meta property="og:title" content="Hexa">
+		<meta property="og:image" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
     <meta property="og:url" content="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Hexa">
@@ -79,6 +79,16 @@
       #bing-chat-sidebar.open {
         width: 300px;
       }
+
+      .bing-chat-button {
+        transition: all 0.3s ease;
+        /* Transición */
+      }
+
+      .bing-chat-button:hover {
+        background-color: #9F7AEA;
+        /* Cambia el color del botón al pasar el mouse */
+      }
     </style>
   </head>
   <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center" x-data="{ darkMode: true, title: 'Hexa' }" x-init="title = new URLSearchParams(window.location.search).get('title') || title" :class="{ 'bg-gray-900 text-white': darkMode, 'bg-gray-100 text-gray-900': !darkMode }">
@@ -86,7 +96,7 @@
       <div class="flex items-center">
         <img src="https://cdn.discordapp.com/attachments/689717323543609386/1195879843808677899/u77u7l3.png?ex=65b598e5&amp;is=65a323e5&amp;hm=132efb511a4431b541e8e725495070e29f58343b87a93be8fbe803c8a750680a" alt="Logo" style="height: 50px; width: 50px; margin-right: 20px;">
         <a href="#" class="font-bold text-2xl" x-text="title" title="Click here to navigate">Hexa</a>
-        <button onclick="toggleBingChatSidebar()" class="ml-4 px-2 py-1 rounded bg-purple-500 text-white">Toggle Bing Chat</button>
+        <button onclick="toggleBingChatSidebar()" class="ml-4 px-2 py-1 rounded bg-purple-500 text-white bing-chat-button">Toggle Bing Chat</button>
       </div>
     </nav>
     <div class="max-w-md mx-auto p-8 bg-gray-800 rounded-md shadow-md mt-20" :class="{ 'bg-gray-800': darkMode, 'bg-gray-100': !darkMode }">
