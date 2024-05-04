@@ -1,0 +1,1 @@
+function copyToClipboard(){document.getElementById("textInput").select(),document.execCommand("copy"),alert("Text copied to clipboard.")}function clearText(){document.getElementById("textInput").value="",localStorage.removeItem("text"),alert("Text cleared.")}
