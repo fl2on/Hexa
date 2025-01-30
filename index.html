@@ -1,49 +1,322 @@
-<html lang="en">
-   <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="icon" href="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png" type="image/png">
-      <!-- Twitter Card -->
-      <meta name="twitter:title" content="Hexa">
-      <meta name="twitter:description" content="Welcome to our local storage-based web application! Similar to Pastebin, our platform allows you to share and manage text snippets without the need for an intermediate server. Enjoy the convenience of direct, local data management.">
-      <meta name="twitter:image" content="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png">
-      <!-- Content -->
-      <meta property="og:title" content="Hexa">
-      <meta property="og:image" content="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png">
-      <meta property="og:url" content="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png">
-      <meta property="og:type" content="website">
-      <meta property="og:site_name" content="Hexa">
-      <!-- Embed Banner -->
-      <meta name="embed-banner:url" content="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png">
-      <meta name="embed-banner:width" content="1200">
-      <meta name="embed-banner:height" content="600">
-      <!-- For IE -->
-      <link rel="shortcut icon" href="https://raw.githubusercontent.com/fl2on/main/icon.png" type="image/x-icon">
-      <title x-text="title">Hexa</title>
-      <!-- Tailwind CSS -->
-      <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-      <!-- Alpine.js -->
-      <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer=""></script>
-      <!-- Style -->
-      <link rel="stylesheet" href="css/style.css">
-   </head>
-   <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center" x-data="{ darkMode: true, title: 'Hexa' }" x-init="title = (new URLSearchParams(window.location.search).get('title') || title).substring(0, 18)" :class="{ 'bg-gray-900 text-white': darkMode, 'bg-gray-100 text-gray-900': !darkMode }">
-      <nav class="fixed top-0 left-0 w-full flex justify-between p-6 bg-gray-800 text-white">
-         <div class="flex items-center">
-            <img src="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png" alt="Logo" style="height: 50px; width: 50px; margin-right: 20px;">
-            <a href="#" class="font-bold text-2xl" x-text="title" title="Click here to navigate">Hexa</a>
-         </div>
-      </nav>
-      <div class="max-w-md mx-auto p-8 bg-gray-800 rounded-md shadow-md mt-20" :class="{ 'bg-gray-800': darkMode, 'bg-gray-100': !darkMode }">
-         <h1 class="text-4xl font-bold mb-6 text-blue-500" x-text="title">Hexa</h1>
-         <div x-data="{ text: '' }" x-init="text = new URLSearchParams(window.location.search).get('text') || localStorage.getItem('text') || ''">
-            <label for="textInput" class="block text-sm font-medium mb-2">Text from URL:</label>
-            <textarea id="textInput" rows="4" class="w-full px-3 py-2 bg-gray-700 border rounded-md focus:outline-none focus:ring focus:border-blue-300 transition duration-300 ease-in-out dark-scrollbar" x-model="text" @input="localStorage.setItem('text', text)"></textarea>
-            <button onclick="copyToClipboard()" class="mt-4 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-md focus:outline-none transition duration-300 ease-in-out transform hover:scale-105">Copy to Clipboard</button>
-            <button onclick="clearText()" class="mt-4 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-md focus:outline-none transition duration-300 ease-in-out transform hover:scale-105 ml-4">Clear Text</button>
-         </div>
-      </div>
-      <!-- Scripts -->
-      <script src="js/main.js"></script>  
-   </body>
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png" type="image/png">
+    <title>Hexa</title>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/prism.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/themes/prism-tomorrow.min.css">
+</head>
+<body 
+    x-data="{ 
+        darkMode: localStorage.getItem('darkMode') === 'true' || true,
+        title: 'Hexa',
+        showNotification: false,
+        notificationMessage: '',
+        notificationType: 'success',
+        stats: {
+            chars: 0,
+            words: 0,
+            lines: 0
+        },
+        isOpen: false,
+        shareURL: '',
+        text: localStorage.getItem('text') || '',
+        updateStats() {
+            const text = this.text || '';
+            this.stats.chars = text.length;
+            this.stats.words = text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(word => word.length > 0).length;
+            this.stats.lines = text === '' ? 0 : text.split('\n').length;
+        },
+        clearText() {
+            this.text = '';
+            localStorage.removeItem('text');
+            this.updateStats();
+            this.showNotification('🗑️ Text cleared!', 'success');
+        },
+        async copyToClipboard() {
+            try {
+                await navigator.clipboard.writeText(this.text);
+                this.showNotification('✨ Copied to clipboard!', 'success');
+            } catch (err) {
+                this.showNotification('❌ Failed to copy text', 'error');
+            }
+        },
+        generateShareURL() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('text', this.text);
+            url.searchParams.set('title', this.title);
+            this.shareURL = url.toString();
+            this.isOpen = true;
+        },
+        async copyShareURL() {
+            try {
+                await navigator.clipboard.writeText(this.shareURL);
+                this.showNotification('🔗 Share URL copied!', 'success');
+                setTimeout(() => this.isOpen = false, 1000);
+            } catch (err) {
+                this.showNotification('❌ Failed to copy URL', 'error');
+            }
+        },
+        detectSyntax() {
+            if (!this.text.trim()) {
+                this.showNotification('❌ No text to analyze', 'error');
+                return;
+            }
+            window.detectSyntax(this.text);
+        },
+        handleDrop(event) {
+            const file = event.dataTransfer.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.text = e.target.result;
+                this.updateStats();
+                localStorage.setItem('text', this.text);
+            };
+            reader.readAsText(file);
+        },
+        showNotification(message, type = 'success') {
+            this.notificationMessage = message;
+            this.notificationType = type;
+            this.showNotification = true;
+            setTimeout(() => {
+                this.showNotification = false;
+            }, 3000);
+        },
+        init() {
+            this.$watch('darkMode', value => {
+                localStorage.setItem('darkMode', value);
+                if (value) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+
+            const params = new URLSearchParams(window.location.search);
+            const textParam = params.get('text');
+            const titleParam = params.get('title');
+
+            if (textParam) {
+                this.text = textParam;
+                localStorage.setItem('text', textParam);
+            }
+
+            if (titleParam) {
+                this.title = titleParam.substring(0, 18);
+            }
+
+            this.updateStats();
+        }
+    }" 
+    x-init="init()"
+    class="min-h-screen transition-colors duration-300"
+    :class="darkMode ? 'bg-[#0A0A0A]' : 'bg-gray-50'">
+    
+    <!-- Mouse Glow Effect -->
+    <div id="glow-effect" class="pointer-events-none fixed inset-0 z-30 transition duration-300 lg:block hidden"></div>
+
+    <!-- Notification -->
+    <div id="notification-container" class="fixed top-0 left-0 right-0 z-50 flex justify-center"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full z-50 transition-all duration-300"
+         :class="darkMode ? 'border-b border-white/5 bg-black/50 backdrop-blur-xl' : 'border-b border-black/5 bg-white/50 backdrop-blur-xl'">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-4 group">
+                    <img src="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png" alt="Logo" 
+                         class="h-9 w-9 transition-all duration-500 group-hover:rotate-180">
+                    <span class="text-xl font-semibold relative group">
+                        <span class="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/90"
+                              x-text="title">Hexa</span>
+                        <div class="absolute inset-0 blur-[20px] opacity-50 bg-white/50 group-hover:opacity-75 transition-opacity duration-300"></div>
+                    </span>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
+                        <span x-text="stats.chars">0</span> chars | 
+                        <span x-text="stats.words">0</span> words | 
+                        <span x-text="stats.lines">0</span> lines
+                    </div>
+                    <button @click="darkMode = !darkMode" 
+                            class="relative p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group"
+                            :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'">
+                        <div class="relative z-10">
+                            <svg x-show="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <svg x-show="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        </div>
+                        <div class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100"
+                             :class="darkMode ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 blur' : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 blur'">
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-12 px-4 max-w-3xl mx-auto">
+        <div class="relative w-full rounded-2xl overflow-hidden transition-all duration-300 shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)]"
+             :class="darkMode ? 'bg-white/5 backdrop-blur-xl' : 'bg-white/80 backdrop-blur-xl'">
+            <div class="absolute inset-0 transition-opacity duration-300"
+                 :class="darkMode ? 'bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10' : 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5'">
+            </div>
+            <div class="relative p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button @click="generateShareURL()" 
+                                class="text-xs px-3 py-1 rounded-md transition-all duration-300"
+                                :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                            Share URL
+                        </button>
+                        <button @click="detectSyntax()" 
+                                class="text-xs px-3 py-1 rounded-md transition-all duration-300"
+                                :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                            Detect Syntax
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <div class="line-numbers-container"
+                         :class="darkMode ? 'text-white/30' : 'text-black/30'">
+                        <template x-for="n in (text.split('\n').length || 1)" :key="n">
+                            <div class="text-right pr-2" x-text="n"></div>
+                        </template>
+                    </div>
+                    <textarea 
+                        id="textInput"
+                        x-model="text"
+                        @input="updateStats(); localStorage.setItem('text', text)"
+                        @drop.prevent="handleDrop($event)"
+                        @dragover.prevent
+                        @dragenter.prevent="$event.target.classList.add('ring-2', 'ring-blue-500/50')"
+                        @dragleave.prevent="$event.target.classList.remove('ring-2', 'ring-blue-500/50')"
+                        rows="12"
+                        class="rounded-xl transition-all duration-300 focus:ring-2 focus:outline-none text-sm"
+                        :class="darkMode ? 
+                            'bg-black/50 text-white/90 placeholder-white/20 focus:ring-blue-500/50' : 
+                            'bg-black/5 text-gray-900 placeholder-black/20 focus:ring-blue-600/50'"
+                        placeholder="Type or paste your text here...
+Or drag and drop a file..."></textarea>
+                </div>
+                
+                <div class="flex justify-end mt-4 gap-3">
+                    <button @click="clearText()" 
+                            class="group relative px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105"
+                            :class="darkMode ? 
+                                'bg-red-500/10 text-red-300 hover:bg-red-500/20' : 
+                                'bg-red-500/10 text-red-600 hover:bg-red-500/20'">
+                        <span class="relative z-10">Clear</span>
+                        <div class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-red-500/20 to-orange-500/20 blur"></div>
+                    </button>
+                    <button @click="copyToClipboard()" 
+                            class="group relative px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105"
+                            :class="darkMode ? 
+                                'bg-blue-500/10 text-blue-300 hover:bg-blue-500/20' : 
+                                'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20'">
+                        <span class="relative z-10">Copy to Clipboard</span>
+                        <div class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="fixed bottom-0 left-0 w-full py-4 transition-all duration-300"
+            :class="darkMode ? 'bg-black/50 backdrop-blur-xl border-t border-white/5' : 'bg-white/50 backdrop-blur-xl border-t border-black/5'">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm transition-colors duration-300"
+               :class="darkMode ? 'text-white/50' : 'text-black/50'">
+                © <span id="current-year"></span> fl2on. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Share Modal -->
+    <div x-show="isOpen" 
+         x-cloak
+         class="fixed inset-0 z-50 overflow-y-auto"
+         aria-labelledby="modal-title" 
+         role="dialog" 
+         aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Modal backdrop -->
+            <div x-show="isOpen" 
+                 x-transition:enter="ease-out duration-300" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100" 
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100" 
+                 x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75 backdrop-blur-sm" 
+                 @click="isOpen = false"
+                 aria-hidden="true">
+            </div>
+
+            <!-- Modal panel -->
+            <div x-show="isOpen" 
+                 x-transition:enter="ease-out duration-300" 
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                 class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform rounded-2xl shadow-xl"
+                 :class="darkMode ? 'bg-gray-800/90 backdrop-blur-xl' : 'bg-white/90 backdrop-blur-xl'">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium leading-6" 
+                        :class="darkMode ? 'text-white' : 'text-gray-900'">
+                        Share URL
+                    </h3>
+                    <button @click="isOpen = false" 
+                            class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <span class="sr-only">Close</span>
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <div class="flex rounded-lg shadow-sm">
+                        <input type="text" 
+                               x-model="shareURL" 
+                               class="block w-full min-w-0 flex-1 rounded-l-lg border-0 py-1.5 text-sm ring-1 ring-inset focus:ring-2 focus:ring-inset"
+                               :class="darkMode ? 'bg-gray-700 text-white ring-gray-600 focus:ring-blue-500' : 'bg-white text-gray-900 ring-gray-300 focus:ring-blue-500'"
+                               readonly>
+                        <button @click="copyShareURL()" 
+                                class="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset"
+                                :class="darkMode ? 
+                                    'bg-gray-600 text-white ring-gray-600 hover:bg-gray-500' : 
+                                    'bg-gray-50 text-gray-900 ring-gray-300 hover:bg-gray-100'">
+                            Copy
+                        </button>
+                    </div>
+                    <p class="mt-2 text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
+                        Share this URL to let others see your text and title configuration.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
 </html>
+
