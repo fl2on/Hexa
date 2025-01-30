@@ -18,8 +18,8 @@ Hexa is a local storage-based web application designed to manage and share your 
 
 - **🌙 Dark & Light Themes:** Switch between light and dark themes to suit your environment.
 
-- **🔗 Shareable Links:** Generate shareable links for your text snippets to easily collaborate or share with friends.
-
+- **🔗 Shareable Links:** Generate shareable links for your text snippets to easily collaborate or share with friends. **Note:** The maximum limit for a shareable link is 6179 characters.
+  
 - **🖱️ Drag & Drop File Upload:** Simply drag and drop files into Hexa, and their contents will automatically appear in the text area for easy editing.
 
 ## 🚀 **Getting Started**
