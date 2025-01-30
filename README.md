@@ -7,7 +7,6 @@ Welcome to Hexa, a local storage-based web application! Similar to Pastebin, our
 - **Local Data Management:** Hexa utilizes local storage to store and retrieve text snippets, providing a seamless experience without relying on external servers.
 - **Clipboard Copy:** Easily copy the text to your clipboard with the click of a button for quick sharing.
 - **Clear Text:** Clear your text input when needed with a simple button press.
-- **Copilot Chat Integration:** Access Microsoft Copilot through the Bing Chat sidebar for enhanced collaboration and coding assistance.
 
 ## Getting Started
 
