@@ -12,7 +12,7 @@ Hexa is a local storage-based web application designed to manage and share your 
 
 - **🔄 Clear Text:** Easily clear all the text with just one button click.
 
-- **🔤 Syntax Detection:** Hexa detects the syntax of your code in real-time and applies syntax highlighting for various programming languages.
+- **🔤 Syntax Detection:** Hexa detects the syntax of your code.
 
 - **📝 Real-Time Counters:** Track the number of words, characters, and lines while you type.
 
