@@ -24,7 +24,7 @@ Welcome to Hexa, a local storage-based web application! Similar to Pastebin, our
 
 Check out the [live demo](https://fl2on.github.io/Hexa/?title=MyJavaScript&text=public%20class%20HelloWorld%20%7B%0A%20%20%20%20public%20static%20void%20main(String%5B%5D%20args)%20%7B%0A%20%20%20%20%20%20%20%20System.out.println(%22Hello,%20World!%22)%3B%0A%20%20%20%20%7D%0A%7D) to see Hexa in action.
 
-![image](https://github.com/user-attachments/assets/a1088e50-e48d-4695-928c-142db0fa5efc)
+![image](https://github.com/user-attachments/assets/f84ae1cc-38e9-4207-8ccb-be2032ff95d9)
 
 ## Technologies Used
 
