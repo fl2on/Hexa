@@ -39,7 +39,7 @@ Hexa is a local storage-based web application designed to manage and share your 
 
 Check out the [live demo](https://fl2on.github.io/Hexa/?title=MyJavaScript&text=public%20class%20HelloWorld%20%7B%0A%20%20%20%20public%20static%20void%20main(String%5B%5D%20args)%20%7B%0A%20%20%20%20%20%20%20%20System.out.println(%22Hello,%20World!%22)%3B%0A%20%20%20%20%7D%0A%7D) to see Hexa in action!
 
-![image](https://github.com/user-attachments/assets/f84ae1cc-38e9-4207-8ccb-be2032ff95d9)
+<img width="2560" height="1334" alt="image" src="https://github.com/user-attachments/assets/3f8ffb22-785c-4ba2-8197-ead8b9033b5f" />
 
 
 ## 🧑‍💻 **Technologies Used**
