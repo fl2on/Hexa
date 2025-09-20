@@ -917,7 +917,5 @@ class CodeFeatures {
 
 // Exportar todas las clases para acceso global
 window.CodeGenerator = CodeGenerator;
-window.AIAssistant = AIAssistant;
 window.CodeFeatures = CodeFeatures;
-window.CrazyFeatures = CrazyFeatures;
 window.executePython = executePython;

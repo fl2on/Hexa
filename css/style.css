@@ -240,20 +240,393 @@ body:has([x-data] .bg-black) #glow-effect {
         overflow-x: hidden;
     }
     
-    /* Textarea más amigable al touch */
-    .smart-textarea {
-        font-size: 1rem !important; /* Evitar zoom en iOS */
-        line-height: 1.4 !important;
+    /* Contenedor principal optimizado para móviles */
+    main {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+        padding-top: 4rem !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
     
-    /* Números de línea más pequeños en móviles */
+    /* Contenedor del editor con diseño móvil */
+    .relative.w-full {
+        margin: 0 !important;
+        width: 100% !important;
+        border-radius: 1rem !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* Padding interno cómodo para móviles */
+    .relative.p-3 {
+        padding: 1rem !important;
+    }
+    
+    /* Textarea diseñado para móviles */
+    .smart-textarea {
+        font-size: 1rem !important; /* 16px para evitar zoom en iOS */
+        line-height: 1.5 !important;
+        min-height: 60vh !important;
+        border-radius: 0.75rem !important;
+        border: none !important;
+        resize: none !important;
+    }
+    
+    /* Números de línea elegantes */
     .line-numbers-container {
-        width: 2rem !important;
+        width: 2.5rem !important;
         font-size: 0.75rem !important;
+        padding-right: 0.5rem !important;
+        padding-top: 1rem !important;
+        opacity: 0.6 !important;
     }
     
     .smart-textarea {
-        padding-left: 2.5rem !important;
+        padding-left: 3rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    /* Botones del header con separación elegante */
+    nav .flex.items-center.space-x-1 {
+        gap: 0.75rem !important;
+    }
+    
+    nav button {
+        min-width: 44px !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 0.75rem !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    nav button:active {
+        transform: scale(0.95) !important;
+    }
+    
+    /* Botones de control elegantes para móviles */
+    .flex.justify-between button {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.875rem !important;
+        min-height: 44px !important;
+        border-radius: 0.75rem !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .flex.justify-between button:active {
+        transform: scale(0.95) !important;
+    }
+    
+    /* Márgenes cómodos */
+    .mb-6 {
+        margin-bottom: 1.5rem !important;
+    }
+    
+    .mt-4 {
+        margin-top: 1rem !important;
+    }
+    
+    .mb-3 {
+        margin-bottom: 1rem !important;
+    }
+        
+    /* Paneles como bottom sheets en móviles */
+    .fixed.top-0.right-0.h-full.w-full {
+        top: auto !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100vw !important;
+        height: 85vh !important;
+        border-radius: 1.5rem 1.5rem 0 0 !important;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2) !important;
+        backdrop-filter: blur(20px) !important;
+        animation: slideUp 0.3s ease-out !important;
+    }
+    
+    /* Header de paneles móviles */
+    .fixed .flex.items-center.justify-between {
+        padding: 1.5rem 1.5rem 1rem 1.5rem !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        margin-bottom: 0 !important;
+    }
+    
+    /* Indicador visual de panel móvil */
+    .fixed .flex.items-center.justify-between::before {
+        content: '' !important;
+        position: absolute !important;
+        top: 0.75rem !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 2rem !important;
+        height: 0.25rem !important;
+        background: rgba(255, 255, 255, 0.3) !important;
+        border-radius: 0.125rem !important;
+    }
+    
+    /* Contenido de paneles móviles */
+    .fixed .p-6 {
+        padding: 0 1.5rem 1.5rem 1.5rem !important;
+        height: calc(85vh - 5rem) !important;
+        overflow-y: auto !important;
+    }
+    
+    /* Botones en paneles móviles */
+    .fixed button {
+        min-height: 48px !important;
+        padding: 0.75rem 1rem !important;
+        font-size: 0.875rem !important;
+        border-radius: 0.75rem !important;
+        font-weight: 500 !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .fixed button:active {
+        transform: scale(0.98) !important;
+    }
+    
+    /* Grids optimizados para móviles */
+    .fixed .grid-cols-2 {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    .fixed .grid-cols-3 {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    .fixed .grid-cols-1 {
+        gap: 0.75rem !important;
+    }
+    
+    /* Headers de paneles móviles */
+    .fixed h3 {
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+    }
+    
+    .fixed h4 {
+        font-size: 1rem !important;
+        font-weight: 500 !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    /* Secciones con espaciado elegante */
+    .fixed .mb-6 {
+        margin-bottom: 1.5rem !important;
+        padding-bottom: 1rem !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    .fixed .mb-6:last-child {
+        border-bottom: none !important;
+        padding-bottom: 0 !important;
+    }
+    
+    /* Botón de cierre más grande */
+    .fixed button[class*="p-2"] {
+        min-width: 44px !important;
+        min-height: 44px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Ocultar TODA la sección de botones de utilidades en móviles */
+    nav > div > div > div.flex.items-center.space-x-1 {
+        display: none !important;
+    }
+    
+    /* Ocultar notificaciones en móviles */
+    #notification-container {
+        display: none !important;
+    }
+    
+    /* Ocultar botón Analyze en móviles */
+    button:has-text("Analyze") {
+        display: none !important;
+    }
+    
+    /* Selector más específico para el botón Analyze */
+    .flex.space-x-1 button:nth-child(2) {
+        display: none !important;
+    }
+        
+    /* Contenedor principal del modal */
+    .fixed.inset-0.z-50.overflow-y-auto {
+        align-items: flex-end !important;
+    }
+    
+    /* Contenedor flex del modal */
+    .fixed.inset-0.z-50 .flex.items-end.justify-center {
+        align-items: flex-end !important;
+        padding: 0 !important;
+    }
+    
+    /* Modal como bottom sheet en móviles */
+    .fixed.inset-0.z-50 .inline-block.w-full.max-w-md {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        width: 100vw !important;
+        max-width: none !important;
+        margin: 0 !important;
+        border-radius: 1.5rem 1.5rem 0 0 !important;
+        padding: 1.5rem !important;
+        box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3) !important;
+        transform: translateY(0) !important;
+    }
+    
+    /* Remover transiciones que interfieren */
+    .fixed.inset-0.z-50 .inline-block.w-full.max-w-md[x-transition] {
+        animation: slideUpMobile 0.3s ease-out !important;
+    }
+    
+    /* Header del modal móvil con indicador visual */
+    .fixed.inset-0.z-50 .flex.items-center.justify-between {
+        position: relative !important;
+        padding-top: 1rem !important;
+    }
+    
+    .fixed.inset-0.z-50 .flex.items-center.justify-between::before {
+        content: '' !important;
+        position: absolute !important;
+        top: -0.75rem !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 2.5rem !important;
+        height: 0.25rem !important;
+        background: rgba(255, 255, 255, 0.4) !important;
+        border-radius: 0.125rem !important;
+    }
+    
+    /* Input y botón más grandes para touch */
+    .fixed.inset-0.z-50 .flex.rounded-lg input {
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        border-radius: 0.75rem 0 0 0.75rem !important;
+        min-height: 48px !important;
+    }
+    
+    .fixed.inset-0.z-50 .flex.rounded-lg button {
+        padding: 1rem 1.25rem !important;
+        font-size: 0.875rem !important;
+        border-radius: 0 0.75rem 0.75rem 0 !important;
+        min-height: 48px !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Texto descriptivo más legible */
+    .fixed.inset-0.z-50 p.mt-3 {
+        font-size: 0.875rem !important;
+        line-height: 1.5 !important;
+        margin-top: 1.5rem !important;
+    }
+    
+    /* Título más grande */
+    .fixed.inset-0.z-50 h3 {
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Botón close más grande */
+    .fixed.inset-0.z-50 .flex.items-center.justify-between button {
+        width: 44px !important;
+        height: 44px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    
+    /* Botón Close inferior */
+    .fixed.inset-0.z-50 .mt-4.flex.justify-end button {
+        width: 100% !important;
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+        border-radius: 0.75rem !important;
+        min-height: 48px !important;
+        margin-top: 2rem !important;
+    }
+    
+    /* Header más alto para móviles */
+    nav div.h-12 {
+        height: 4rem !important; /* 64px en lugar de 48px */
+    }
+    
+    /* Anular las clases responsive del header */
+    nav .h-12.sm\\:h-14.md\\:h-16 {
+        height: 4rem !important;
+    }
+    
+    /* Logo y título más grandes en móviles con más espacio */
+    nav img {
+        height: 2.5rem !important; /* 40px en lugar de 32px */
+        width: 2.5rem !important;
+    }
+    
+    nav .text-lg {
+        font-size: 1.5rem !important; /* 24px */
+        line-height: 2rem !important;
+    }
+}
+
+/* Animación para paneles móviles */
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Animación específica para modal móvil */
+@keyframes slideUpMobile {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Ocultar TODOS los botones de utilidades en tablets también */
+@media (max-width: 1023px) {
+    /* Ocultar toda la sección de botones de utilidades */
+    nav > div > div > div.flex.items-center.space-x-1 {
+        display: none !important;
+    }
+    
+    /* Ocultar notificaciones en tablets también */
+    #notification-container {
+        display: none !important;
+    }
+    
+    /* Ocultar botón Analyze en tablets */
+    .flex.space-x-1 button:nth-child(2) {
+        display: none !important;
+    }
+    
+    /* Header más alto para tablets también */
+    nav div.h-12,
+    nav .h-12.sm\\:h-14.md\\:h-16 {
+        height: 3.5rem !important; /* 56px para tablets */
     }
 }
 
