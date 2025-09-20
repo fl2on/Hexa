@@ -1,162 +1,173 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png" type="image/png">
     <title>Hexa</title>
+
+    <!-- Prevent light theme flicker -->
+    <script>
+        (function () {
+            const darkMode = localStorage.getItem('darkMode') !== 'false';
+            if (darkMode) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/prism.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/themes/prism-tomorrow.min.css">
+    <script src="js/advanced-features.js"></script>
 </head>
-<body 
-    x-data="{ 
-        darkMode: localStorage.getItem('darkMode') === 'true' || true,
-        title: 'Hexa',
-        showNotification: false,
-        notificationMessage: '',
-        notificationType: 'success',
-        stats: {
-            chars: 0,
-            words: 0,
-            lines: 0
-        },
-        isOpen: false,
-        shareURL: '',
-        text: localStorage.getItem('text') || '',
-        updateStats() {
-            const text = this.text || '';
-            this.stats.chars = text.length;
-            this.stats.words = text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(word => word.length > 0).length;
-            this.stats.lines = text === '' ? 0 : text.split('\n').length;
-        },
-        clearText() {
-            this.text = '';
-            localStorage.removeItem('text');
-            this.updateStats();
-            this.showNotification('🗑️ Text cleared!', 'success');
-        },
-        async copyToClipboard() {
-            try {
-                await navigator.clipboard.writeText(this.text);
-                this.showNotification('✨ Copied to clipboard!', 'success');
-            } catch (err) {
-                this.showNotification('❌ Failed to copy text', 'error');
-            }
-        },
-        generateShareURL() {
-            const url = new URL(window.location.href);
-            url.searchParams.set('text', this.text);
-            url.searchParams.set('title', this.title);
-            this.shareURL = url.toString();
-            this.isOpen = true;
-        },
-        async copyShareURL() {
-            try {
-                await navigator.clipboard.writeText(this.shareURL);
-                this.showNotification('🔗 Share URL copied!', 'success');
-                setTimeout(() => this.isOpen = false, 1000);
-            } catch (err) {
-                this.showNotification('❌ Failed to copy URL', 'error');
-            }
-        },
-        detectSyntax() {
-            if (!this.text.trim()) {
-                this.showNotification('❌ No text to analyze', 'error');
-                return;
-            }
-            window.detectSyntax(this.text);
-        },
-        handleDrop(event) {
-            const file = event.dataTransfer.files[0];
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.text = e.target.result;
-                this.updateStats();
-                localStorage.setItem('text', this.text);
-            };
-            reader.readAsText(file);
-        },
-        showNotification(message, type = 'success') {
-            this.notificationMessage = message;
-            this.notificationType = type;
-            this.showNotification = true;
-            setTimeout(() => {
-                this.showNotification = false;
-            }, 3000);
-        },
-        init() {
-            this.$watch('darkMode', value => {
-                localStorage.setItem('darkMode', value);
-                if (value) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
-            });
 
-            const params = new URLSearchParams(window.location.search);
-            const textParam = params.get('text');
-            const titleParam = params.get('title');
+<body x-data="hexaApp()" x-init="init()" class="min-h-screen transition-colors duration-300"
+    :class="[
+        darkMode ? 'bg-[#0A0A0A]' : 'bg-gray-50',
+        focusMode ? 'focus-mode-active' : ''
+    ]">
 
-            if (textParam) {
-                this.text = textParam;
-                localStorage.setItem('text', textParam);
-            }
+    <!-- Efecto de brillo del mouse tipo linterna -->
+    <div id="glow-effect" class="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300 lg:block hidden"
+         :style="{ opacity: darkMode ? '1' : '0.8' }"></div>
 
-            if (titleParam) {
-                this.title = titleParam.substring(0, 18);
-            }
+    <div id="notification-container"
+        class="fixed bottom-4 right-4 z-[9999] flex flex-col items-end pointer-events-none space-y-3 max-w-sm"></div>
 
-            this.updateStats();
-        }
-    }" 
-    x-init="init()"
-    class="min-h-screen transition-colors duration-300"
-    :class="darkMode ? 'bg-[#0A0A0A]' : 'bg-gray-50'">
-    
-    <!-- Mouse Glow Effect -->
-    <div id="glow-effect" class="pointer-events-none fixed inset-0 z-30 transition duration-300 lg:block hidden"></div>
+    <!-- Focus mode exit button -->
+    <div x-show="focusMode" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100"
+        class="fixed top-2 right-2 sm:top-4 sm:right-4 z-50">
+        <button @click="toggleFocusMode()"
+            class="focus-exit-btn w-10 h-10 sm:w-12 sm:h-12 text-lg sm:text-xl"
+            title="Exit Focus Mode (Escape)">
+            ✕
+        </button>
+    </div>
 
-    <!-- Notification -->
-    <div id="notification-container" class="fixed top-0 left-0 right-0 z-50 flex justify-center"></div>
-
-    <!-- Navigation -->
-    <nav class="fixed top-0 left-0 w-full z-50 transition-all duration-300"
-         :class="darkMode ? 'border-b border-white/5 bg-black/50 backdrop-blur-xl' : 'border-b border-black/5 bg-white/50 backdrop-blur-xl'">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-4 group">
-                    <img src="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png" alt="Logo" 
-                         class="h-9 w-9 transition-all duration-500 group-hover:rotate-180">
-                    <span class="text-xl font-semibold relative group">
-                        <span class="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/90"
-                              x-text="title">Hexa</span>
-                        <div class="absolute inset-0 blur-[20px] opacity-50 bg-white/50 group-hover:opacity-75 transition-opacity duration-300"></div>
+    <!-- Navegación -->
+    <nav class="fixed top-0 left-0 w-full z-50 transition-all duration-300" :class="[
+             darkMode ? 'border-b border-white/5 bg-black/50 backdrop-blur-xl' : 'border-b border-black/5 bg-white/50 backdrop-blur-xl',
+             focusMode ? 'opacity-0 pointer-events-none' : 'opacity-100'
+         ]">
+        <div class="max-w-7xl mx-auto px-2 sm:px-4">
+            <div class="flex items-center justify-between h-14 sm:h-16">
+                <div class="flex items-center space-x-2 sm:space-x-4 group">
+                    <img src="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png" alt="Logo"
+                        class="h-8 w-8 sm:h-9 sm:w-9 transition-all duration-500 group-hover:rotate-180">
+                    <span class="text-lg sm:text-xl font-semibold relative group">
+                        <span
+                            class="relative z-10 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/90"
+                            x-text="title">Hexa</span>
+                        <div
+                            class="absolute inset-0 blur-[20px] opacity-50 bg-white/50 group-hover:opacity-75 transition-opacity duration-300">
+                        </div>
                     </span>
                 </div>
-                
-                <div class="flex items-center space-x-4">
-                    <div class="text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
-                        <span x-text="stats.chars">0</span> chars | 
-                        <span x-text="stats.words">0</span> words | 
-                        <span x-text="stats.lines">0</span> lines
+
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <div class="text-xs sm:text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
+                        <span class="hidden sm:inline"><span x-text="stats.chars">0</span> chars | </span>
+                        <span x-text="stats.words">0</span> words<span class="hidden sm:inline"> |
+                        <span x-text="stats.lines">0</span> lines</span>
+                        <span x-show="stats.readingTime > 0" class="hidden md:inline"> | <span x-text="stats.readingTime"></span>min read</span>
+                        <span x-show="writingTime > 0" class="hidden lg:inline"> | ⏱️ <span x-text="formatWritingTime()"></span></span>
                     </div>
-                    <button @click="darkMode = !darkMode" 
-                            class="relative p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group"
-                            :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'">
+
+                    <button @click="toggleFocusMode()"
+                        class="relative p-2 sm:p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group"
+                        :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
+                        title="Focus Mode (Alt+Enter)">
                         <div class="relative z-10">
-                            <svg x-show="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="focusMode ? 'text-green-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
-                            <svg x-show="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </div>
+                    </button>
+
+                    <button @click="togglePanel('search')"
+                        class="relative p-2 sm:p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group"
+                        :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
+                        title="Find and Replace">
+                        <div class="relative z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="searchOpen ? 'text-blue-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </button>
+
+                    <button @click="togglePanel('format')"
+                        class="relative p-2 sm:p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group"
+                        :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
+                        title="Text Tools (Ctrl+T)">
+                        <div class="relative z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="formatOpen ? 'text-purple-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                            </svg>
+                        </div>
+                    </button>
+
+                    <button @click="togglePanel('utils')"
+                        class="relative p-2 sm:p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group"
+                        :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
+                        title="Utilities (Discord, Hash)">
+                        <div class="relative z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="utilsOpen ? 'text-indigo-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                        </div>
+                    </button>
+
+                    <button @click="togglePanel('dev')"
+                        class="relative p-2 sm:p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group"
+                        :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
+                        title="Developer Tools">
+                        <div class="relative z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="devToolsOpen ? 'text-green-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                            </svg>
+                        </div>
+                    </button>
+
+                    <button @click="darkMode = !darkMode"
+                        class="relative p-2 sm:p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group"
+                        :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'">
+                        <div class="relative z-10">
+                            <svg x-show="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 text-yellow-300"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <svg x-show="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 text-blue-600"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                             </svg>
                         </div>
                         <div class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100"
-                             :class="darkMode ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 blur' : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 blur'">
+                            :class="darkMode ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 blur' : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 blur'">
                         </div>
                     </button>
                 </div>
@@ -164,12 +175,19 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
-    <main class="pt-24 pb-12 px-4 max-w-3xl mx-auto">
-        <div class="relative w-full rounded-2xl overflow-hidden transition-all duration-300 shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)]"
-             :class="darkMode ? 'bg-white/5 backdrop-blur-xl' : 'bg-white/80 backdrop-blur-xl'">
+    <!-- Contenido principal -->
+    <main class="transition-all duration-500" :class="[
+              focusMode ? 'pt-16 pb-16 px-4 sm:px-8 md:px-16 max-w-5xl mx-auto min-h-screen flex items-center' : 'pt-24 pb-12 px-4 max-w-3xl mx-auto',
+              (devToolsOpen || formatOpen || utilsOpen) && !focusMode ? 'lg:mr-96' : ''
+          ]">
+        <div class="relative w-full rounded-2xl overflow-hidden transition-all duration-500" :class="[
+                 focusMode ? 
+                     'shadow-[0_0_100px_-12px_rgba(59,130,246,0.4)] transform scale-105' : 
+                     'shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)]',
+                 darkMode ? 'bg-white/5 backdrop-blur-xl' : 'bg-white/80 backdrop-blur-xl'
+             ]">
             <div class="absolute inset-0 transition-opacity duration-300"
-                 :class="darkMode ? 'bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10' : 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5'">
+                :class="darkMode ? 'bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10' : 'bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5'">
             </div>
             <div class="relative p-6">
                 <div class="flex items-center justify-between mb-6">
@@ -179,144 +197,713 @@
                         <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
                     </div>
                     <div class="flex space-x-2">
-                        <button @click="generateShareURL()" 
-                                class="text-xs px-3 py-1 rounded-md transition-all duration-300"
-                                :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                        <button @click="generateShareURL()"
+                            class="text-xs px-3 py-1 rounded-md transition-all duration-300"
+                            :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
                             Share URL
                         </button>
-                        <button @click="detectSyntax()" 
-                                class="text-xs px-3 py-1 rounded-md transition-all duration-300"
-                                :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
-                            Detect Syntax
+                        <button @click="getTextAnalysis()"
+                            class="text-xs px-3 py-1 rounded-md transition-all duration-300"
+                            :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                            Analyze
                         </button>
+                        <div class="relative" x-data="{ exportOpen: false }">
+                            <button @click="exportOpen = !exportOpen"
+                                class="text-xs px-3 py-1 rounded-md transition-all duration-300 flex items-center gap-1"
+                                :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                                Export
+                                <svg class="w-3 h-3 transition-transform duration-200"
+                                    :class="exportOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="exportOpen" x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95" @click.away="exportOpen = false"
+                                class="absolute right-0 top-full mt-2 w-40 rounded-lg shadow-xl border z-50"
+                                :class="darkMode ? 'bg-gray-800/95 backdrop-blur-xl border-white/10' : 'bg-white/95 backdrop-blur-xl border-black/10'">
+                                <div class="py-1">
+                                    <button @click="exportText('txt'); exportOpen = false"
+                                        class="flex items-center w-full text-left px-3 py-2 text-xs transition-colors duration-200"
+                                        :class="darkMode ? 'hover:bg-white/10 text-white/80' : 'hover:bg-black/10 text-black/80'">
+                                        <span class="w-8">📄</span> Text (.txt)
+                                    </button>
+                                    <button @click="exportText('md'); exportOpen = false"
+                                        class="flex items-center w-full text-left px-3 py-2 text-xs transition-colors duration-200"
+                                        :class="darkMode ? 'hover:bg-white/10 text-white/80' : 'hover:bg-black/10 text-black/80'">
+                                        <span class="w-8">📝</span> Markdown (.md)
+                                    </button>
+                                    <button @click="exportText('html'); exportOpen = false"
+                                        class="flex items-center w-full text-left px-3 py-2 text-xs transition-colors duration-200"
+                                        :class="darkMode ? 'hover:bg-white/10 text-white/80' : 'hover:bg-black/10 text-black/80'">
+                                        <span class="w-8">🌐</span> HTML (.html)
+                                    </button>
+                                    <hr :class="darkMode ? 'border-white/10' : 'border-black/10'" class="my-1">
+                                    <button @click="exportText('json'); exportOpen = false"
+                                        class="flex items-center w-full text-left px-3 py-2 text-xs transition-colors duration-200"
+                                        :class="darkMode ? 'hover:bg-white/10 text-white/80' : 'hover:bg-black/10 text-black/80'">
+                                        <span class="w-8">📊</span> JSON (.json)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
+
                 <div class="relative">
-                    <div class="line-numbers-container"
-                         :class="darkMode ? 'text-white/30' : 'text-black/30'">
-                        <template x-for="n in (text.split('\n').length || 1)" :key="n">
+                    <div class="line-numbers-container" :class="darkMode ? 'text-white/30' : 'text-black/30'">
+                        <template x-for="n in (text.split('\\n').length || 1)" :key="n">
                             <div class="text-right pr-2" x-text="n"></div>
                         </template>
                     </div>
-                    <textarea 
-                        id="textInput"
-                        x-model="text"
-                        @input="updateStats(); localStorage.setItem('text', text)"
-                        @drop.prevent="handleDrop($event)"
-                        @dragover.prevent
+                    <textarea id="textInput" x-model="text"
+                        @input="updateStats(); localStorage.setItem('text', text); saveToHistory(); startWritingTimer()"
+                        @focus="startWritingTimer()" @blur="stopWritingTimer()" @keydown="handleKeyDown($event)"
+                        @drop.prevent="handleDrop($event)" @dragover.prevent
                         @dragenter.prevent="$event.target.classList.add('ring-2', 'ring-blue-500/50')"
                         @dragleave.prevent="$event.target.classList.remove('ring-2', 'ring-blue-500/50')"
-                        rows="12"
-                        class="rounded-xl transition-all duration-300 focus:ring-2 focus:outline-none text-sm"
-                        :class="darkMode ? 
-                            'bg-black/50 text-white/90 placeholder-white/20 focus:ring-blue-500/50' : 
-                            'bg-black/5 text-gray-900 placeholder-black/20 focus:ring-blue-600/50'"
-                        placeholder="Type or paste your text here...
-Or drag and drop a file..."></textarea>
+                        :rows="focusMode ? '20' : '12'"
+                        class="rounded-xl transition-all duration-500 focus:ring-2 focus:outline-none smart-textarea"
+                        :class="[
+                            darkMode ? 
+                                'bg-black/50 text-white/90 placeholder-white/20 focus:ring-blue-500/50' : 
+                                'bg-black/5 text-gray-900 placeholder-black/20 focus:ring-blue-600/50',
+                            focusMode ? 
+                                'text-xl leading-loose font-light tracking-wide' : 
+                                'text-sm'
+                        ]" :placeholder="focusMode ? 'Focus mode - Write without distractions...' : 'Type or paste your text here...'"
+                        :style="focusMode ? 'min-height: 60vh;' : ''"></textarea>
                 </div>
-                
-                <div class="flex justify-end mt-4 gap-3">
-                    <button @click="clearText()" 
+
+                <div class="flex justify-between mt-4 gap-3">
+                    <div class="flex gap-2">
+                        <button @click="undo()" :disabled="historyIndex <= 0"
+                            class="group relative px-3 py-2 rounded-lg font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            :class="darkMode ? 
+                                    'bg-gray-500/10 text-gray-300 hover:bg-gray-500/20' : 
+                                    'bg-gray-500/10 text-gray-600 hover:bg-gray-500/20'" title="Undo (Ctrl+Z)">
+                            <span class="relative z-10">↶</span>
+                        </button>
+                        <button @click="redo()" :disabled="historyIndex >= history.length - 1"
+                            class="group relative px-3 py-2 rounded-lg font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                            :class="darkMode ? 
+                                    'bg-gray-500/10 text-gray-300 hover:bg-gray-500/20' : 
+                                    'bg-gray-500/10 text-gray-600 hover:bg-gray-500/20'" title="Redo (Ctrl+Shift+Z)">
+                            <span class="relative z-10">↷</span>
+                        </button>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button @click="clearText()"
                             class="group relative px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105"
                             :class="darkMode ? 
-                                'bg-red-500/10 text-red-300 hover:bg-red-500/20' : 
-                                'bg-red-500/10 text-red-600 hover:bg-red-500/20'">
-                        <span class="relative z-10">Clear</span>
-                        <div class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-red-500/20 to-orange-500/20 blur"></div>
-                    </button>
-                    <button @click="copyToClipboard()" 
+                                    'bg-red-500/10 text-red-300 hover:bg-red-500/20' : 
+                                    'bg-red-500/10 text-red-600 hover:bg-red-500/20'">
+                            <span class="relative z-10">Clear</span>
+                            <div
+                                class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-red-500/20 to-orange-500/20 blur">
+                            </div>
+                        </button>
+                        <button @click="copyToClipboard()"
                             class="group relative px-5 py-2.5 rounded-lg font-medium transition-all duration-300 hover:scale-105"
                             :class="darkMode ? 
-                                'bg-blue-500/10 text-blue-300 hover:bg-blue-500/20' : 
-                                'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20'">
-                        <span class="relative z-10">Copy to Clipboard</span>
-                        <div class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur"></div>
-                    </button>
+                                    'bg-blue-500/10 text-blue-300 hover:bg-blue-500/20' : 
+                                    'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20'">
+                            <span class="relative z-10">Copy To Clipboard</span>
+                            <div
+                                class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur">
+                            </div>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="fixed bottom-0 left-0 w-full py-4 transition-all duration-300"
-            :class="darkMode ? 'bg-black/50 backdrop-blur-xl border-t border-white/5' : 'bg-white/50 backdrop-blur-xl border-t border-black/5'">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p class="text-sm transition-colors duration-300"
-               :class="darkMode ? 'text-white/50' : 'text-black/50'">
-                © <span id="current-year"></span> fl2on. All rights reserved.
-            </p>
-        </div>
-    </footer>
-
-    <!-- Share Modal -->
-    <div x-show="isOpen" 
-         x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto"
-         aria-labelledby="modal-title" 
-         role="dialog" 
-         aria-modal="true">
-        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <!-- Modal backdrop -->
-            <div x-show="isOpen" 
-                 x-transition:enter="ease-out duration-300" 
-                 x-transition:enter-start="opacity-0" 
-                 x-transition:enter-end="opacity-100" 
-                 x-transition:leave="ease-in duration-200"
-                 x-transition:leave-start="opacity-100" 
-                 x-transition:leave-end="opacity-0"
-                 class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75 backdrop-blur-sm" 
-                 @click="isOpen = false"
-                 aria-hidden="true">
-            </div>
-
-            <!-- Modal panel -->
-            <div x-show="isOpen" 
-                 x-transition:enter="ease-out duration-300" 
-                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
-                 x-transition:leave="ease-in duration-200"
-                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
-                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                 class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform rounded-2xl shadow-xl"
-                 :class="darkMode ? 'bg-gray-800/90 backdrop-blur-xl' : 'bg-white/90 backdrop-blur-xl'">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-medium leading-6" 
-                        :class="darkMode ? 'text-white' : 'text-gray-900'">
-                        Share URL
-                    </h3>
-                    <button @click="isOpen = false" 
-                            class="text-gray-400 hover:text-gray-500 focus:outline-none">
-                        <span class="sr-only">Close</span>
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+    <!-- Search panel -->
+    <div x-show="searchOpen" x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-1 translate-y-0"
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-1 translate-y-0"
+        x-transition:leave-end="opacity-0 -translate-y-2" class="fixed top-16 left-0 right-0 z-40 p-4">
+        <div class="max-w-3xl mx-auto">
+            <div class="rounded-lg p-4 shadow-lg backdrop-blur-xl"
+                :class="darkMode ? 'bg-black/80 border border-white/10' : 'bg-white/80 border border-black/10'">
+                <div class="flex gap-3 mb-3">
+                    <input type="text" x-model="searchTerm" placeholder="Search..."
+                        class="flex-1 px-3 py-2 rounded-lg text-sm border-0 focus:ring-2 focus:outline-none"
+                        :class="darkMode ? 'bg-white/10 text-white placeholder-white/50 focus:ring-blue-500/50' : 'bg-black/10 text-gray-900 placeholder-black/50 focus:ring-blue-600/50'">
+                    <input type="text" x-model="replaceTerm" placeholder="Replace with..."
+                        class="flex-1 px-3 py-2 rounded-lg text-sm border-0 focus:ring-2 focus:outline-none"
+                        :class="darkMode ? 'bg-white/10 text-white placeholder-white/50 focus:ring-blue-500/50' : 'bg-black/10 text-gray-900 placeholder-black/50 focus:ring-blue-600/50'">
+                    <button @click="searchAndReplace()"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                        :class="darkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-500/20 text-blue-600 hover:bg-blue-500/30'">
+                        Replace
                     </button>
                 </div>
-                <div class="mt-4">
-                    <div class="flex rounded-lg shadow-sm">
-                        <input type="text" 
-                               x-model="shareURL" 
-                               class="block w-full min-w-0 flex-1 rounded-l-lg border-0 py-1.5 text-sm ring-1 ring-inset focus:ring-2 focus:ring-inset"
-                               :class="darkMode ? 'bg-gray-700 text-white ring-gray-600 focus:ring-blue-500' : 'bg-white text-gray-900 ring-gray-300 focus:ring-blue-500'"
-                               readonly>
-                        <button @click="copyShareURL()" 
-                                class="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset"
-                                :class="darkMode ? 
-                                    'bg-gray-600 text-white ring-gray-600 hover:bg-gray-500' : 
-                                    'bg-gray-50 text-gray-900 ring-gray-300 hover:bg-gray-100'">
-                            Copy
-                        </button>
-                    </div>
-                    <p class="mt-2 text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
-                        Share this URL to let others see your text and title configuration.
-                    </p>
+                <div class="text-xs" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
+                    Press Escape to close • Ctrl+F to toggle
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Text Tools Panel -->
+    <div x-show="formatOpen" x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 translate-x-full" x-transition:enter-end="opacity-1 translate-x-0"
+        x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-1 translate-x-0"
+        x-transition:leave-end="opacity-0 translate-x-full"
+        class="fixed top-0 right-0 h-full w-full lg:w-80 z-50 p-4 overflow-y-auto"
+        :class="darkMode ? 'bg-black/90 backdrop-blur-xl border-l border-white/10' : 'bg-white/90 backdrop-blur-xl border-l border-black/10'">
+
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold" :class="darkMode ? 'text-white' : 'text-gray-900'">
+                Text Tools
+            </h3>
+            <button @click="formatOpen = false" class="p-2 rounded-lg transition-all duration-300"
+                :class="darkMode ? 'hover:bg-white/10 text-white/70' : 'hover:bg-black/10 text-black/70'">
+                ✕
+            </button>
+        </div>
+
+        <!-- Text Analysis -->
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                📊 Analysis
+            </h4>
+            <div class="space-y-2 text-xs" :class="darkMode ? 'text-white/60' : 'text-gray-600'">
+                <div>📖 Reading: <span x-text="stats.readingTime"></span> min</div>
+                <div>📝 Sentences: <span x-text="stats.sentences || 0"></span></div>
+                <div>📄 Paragraphs: <span x-text="stats.paragraphs || 0"></span></div>
+                <div>📏 Avg Words/Sentence: <span x-text="stats.avgWordsPerSentence || 0"></span></div>
+                <div>🔤 Avg Chars/Word: <span x-text="stats.avgCharsPerWord || 0"></span></div>
+                <div>🎯 Readability: <span x-text="stats.readabilityScore || 0"></span>/100</div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                🔤 Case Format
+            </h4>
+            <div class="grid grid-cols-2 gap-2">
+                <button @click="formatText('uppercase')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    UPPER
+                </button>
+                <button @click="formatText('lowercase')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    lower
+                </button>
+                <button @click="formatText('titlecase')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    Title Case
+                </button>
+                <button @click="formatText('sentencecase')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    Sentence case
+                </button>
+                <button @click="formatText('camelcase')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    camelCase
+                </button>
+                <button @click="formatText('snakecase')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    snake_case
+                </button>
+                <button @click="formatText('kebabcase')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    kebab-case
+                </button>
+                <button @click="formatText('reverse')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    esreveR
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                🧹 Clean Text
+            </h4>
+            <div class="grid grid-cols-1 gap-2">
+                <button @click="formatText('removeextraspaces')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    Remove Extra Spaces
+                </button>
+                <button @click="formatText('removenewlines')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    Remove Newlines
+                </button>
+                <button @click="formatText('removeduplicates')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    Remove Duplicates
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                📋 Line Operations
+            </h4>
+            <div class="grid grid-cols-2 gap-2">
+                <button @click="formatText('addnumbers')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    Add Numbers
+                </button>
+                <button @click="formatText('removenumbers')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    Remove Numbers
+                </button>
+                <button @click="formatText('sortlines')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    Sort Lines
+                </button>
+                <button @click="formatText('shufflelines')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    Shuffle Lines
+                </button>
+                <button @click="formatText('duplicatelines')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300 col-span-2"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    Duplicate Lines
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                🔍 Extract Data
+            </h4>
+            <div class="grid grid-cols-1 gap-2">
+                <button @click="formatText('extractemails')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    📧 Extract Emails
+                </button>
+                <button @click="formatText('extracturls')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    🔗 Extract URLs
+                </button>
+                <button @click="formatText('wordcount')"
+                    class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
+                    📊 Word Frequency
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div x-show="utilsOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-x-full"
+         x-transition:enter-end="opacity-1 translate-x-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-1 translate-x-0"
+         x-transition:leave-end="opacity-0 translate-x-full"
+         class="fixed top-0 right-0 h-full w-full lg:w-80 z-50 p-4 overflow-y-auto"
+         :class="darkMode ? 'bg-black/90 backdrop-blur-xl border-l border-white/10' : 'bg-white/90 backdrop-blur-xl border-l border-black/10'">
+        
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold flex items-center gap-2" :class="darkMode ? 'text-white' : 'text-gray-900'">
+                🛠️ Utilities
+            </h3>
+            <button @click="utilsOpen = false" 
+                    class="p-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'hover:bg-white/10 text-white/70' : 'hover:bg-black/10 text-black/70'">
+                ✕
+            </button>
+        </div>
+
+        <!-- Discord Tools -->
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                💬 Discord Formatting
+            </h4>
+            <div class="grid grid-cols-2 gap-2">
+                <button @click="processUtils('discord', 'bold')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600'">
+                    **Bold**
+                </button>
+                <button @click="processUtils('discord', 'italic')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600'">
+                    *Italic*
+                </button>
+                <button @click="processUtils('discord', 'underline')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600'">
+                    __Under__
+                </button>
+                <button @click="processUtils('discord', 'strikethrough')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600'">
+                    ~~Strike~~
+                </button>
+                <button @click="processUtils('discord', 'code')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600'">
+                    `Code`
+                </button>
+                <button @click="processUtils('discord', 'spoiler')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600'">
+                    ||Spoiler||
+                </button>
+            </div>
+            <div class="grid grid-cols-1 gap-2 mt-2">
+                <button @click="processUtils('discord', 'codeblock')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600'">
+                    ```Code Block```
+                </button>
+                <button @click="processUtils('discord', 'embed')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600'">
+                    📋 Embed JSON
+                </button>
+            </div>
+        </div>
+
+        <!-- Hash & Encoding -->
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                🔐 Hash & Encoding
+            </h4>
+            <div class="grid grid-cols-2 gap-2">
+                <button @click="processUtils('hash', 'md5')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
+                    MD5
+                </button>
+                <button @click="processUtils('hash', 'sha256')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
+                    SHA256
+                </button>
+                <button @click="processUtils('hash', 'base64encode')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
+                    B64 Encode
+                </button>
+                <button @click="processUtils('hash', 'base64decode')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
+                    B64 Decode
+                </button>
+                <button @click="processUtils('hash', 'urlencode')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
+                    URL Encode
+                </button>
+                <button @click="processUtils('hash', 'urldecode')" 
+                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
+                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
+                    URL Decode
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Developer Panel -->
+    <div x-show="devToolsOpen" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-x-full" x-transition:enter-end="opacity-1 translate-x-0"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-1 translate-x-0"
+        x-transition:leave-end="opacity-0 translate-x-full" class="fixed top-0 right-0 h-full w-full lg:w-96 z-50 overflow-y-auto"
+        :class="darkMode ? 'bg-black/95 backdrop-blur-xl border-l border-white/10' : 'bg-white/95 backdrop-blur-xl border-l border-black/10'">
+
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold flex items-center gap-2"
+                    :class="darkMode ? 'text-white' : 'text-gray-900'">
+                    <span class="text-2xl">🛠️</span> Dev Tools
+                </h3>
+                <button @click="devToolsOpen = false" class="p-2 rounded-lg transition-all duration-300"
+                    :class="darkMode ? 'hover:bg-white/10 text-white/70' : 'hover:bg-black/10 text-black/70'">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Python Executor -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
+                    :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🐍</span> Python Executor
+                </h4>
+                <button @click="executePython()" :disabled="!text.trim() || pythonExecuting"
+                    class="w-full px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    :class="darkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'">
+                    <span x-text="pythonExecuting ? 'Executing...' : 'Run Python'"></span>
+                </button>
+                <div x-show="pythonOutput" class="mt-3 p-3 rounded-lg text-xs font-mono whitespace-pre-wrap"
+                    :class="darkMode ? 'bg-black/50 text-green-300' : 'bg-gray-100 text-green-700'"
+                    x-text="pythonOutput"></div>
+            </div>
+
+            <!-- Generador de Codigos -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
+                    :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>⚡</span> Code Generators
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="generateCode('uuid')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-500/20 text-blue-600 hover:bg-blue-500/30'">
+                        UUID
+                    </button>
+                    <button @click="generateCode('password')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-500/20 text-red-600 hover:bg-red-500/30'">
+                        Password
+                    </button>
+                    <button @click="generateCode('lorem')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30' : 'bg-purple-500/20 text-purple-600 hover:bg-purple-500/30'">
+                        Lorem Ipsum
+                    </button>
+                    <button @click="generateCode('json')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'">
+                        Sample JSON
+                    </button>
+                    <button @click="generateCode('html')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' : 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'">
+                        📄 HTML
+                    </button>
+                    <button @click="generateCode('css')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30' : 'bg-pink-500/20 text-pink-600 hover:bg-pink-500/30'">
+                        🎨 CSS
+                    </button>
+                    <button @click="generateCode('javascript')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30'">
+                        ⚡ JavaScript
+                    </button>
+                    <button @click="generateCode('python')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30'">
+                        🐍 Python
+                    </button>
+                    <button @click="generateCode('sql')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30'">
+                        🗃️ SQL
+                    </button>
+                    <button @click="generateCode('mockdata')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30' : 'bg-teal-500/20 text-teal-600 hover:bg-teal-500/30'">
+                        📊 Mock Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Minify de Codigo -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
+                    :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🗜️</span> Code Minifier
+                </h4>
+                <div class="grid grid-cols-3 gap-2">
+                    <button @click="minifyCode('js')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30'">
+                        JS Minify
+                    </button>
+                    <button @click="minifyCode('css')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-500/20 text-blue-600 hover:bg-blue-500/30'">
+                        CSS Minify
+                    </button>
+                    <button @click="minifyCode('html')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' : 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'">
+                        HTML Minify
+                    </button>
+                    <button @click="beautifyCode()" class="px-3 py-2 rounded-lg text-xs transition-all duration-300 col-span-3"
+                        :class="darkMode ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30' : 'bg-purple-500/20 text-purple-600 hover:bg-purple-500/30'">
+                        ✨ Beautify Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Smart Features -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
+                    :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🔧</span> Code Features
+                </h4>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <button @click="codeFeature('validateCode')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30'">
+                        ✅ Validate Code
+                    </button>
+                    <button @click="codeFeature('analyzeSentiment')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30' : 'bg-pink-500/20 text-pink-600 hover:bg-pink-500/30'">
+                        😊 Sentiment
+                    </button>
+                    <button @click="codeFeature('generateSnippet')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' : 'bg-cyan-500/20 text-cyan-600 hover:bg-cyan-500/30'">
+                        📝 Snippet
+                    </button>
+                    <button @click="codeFeature('explainCode')"
+                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500/20 text-amber-600 hover:bg-amber-500/30'">
+                        💡 Explain
+                    </button>
+                </div>
+            </div>
+
+            <!-- Compression Analysis -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
+                    :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>📊</span> Compression Analysis
+                </h4>
+                <div class="grid grid-cols-1 gap-2">
+                    <button @click="analyzeCompression()" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-500/20 text-blue-600 hover:bg-blue-500/30'">
+                        📈 Analyze Text Compression
+                    </button>
+                    <button @click="getShareLinkStats()" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'">
+                        🔗 Share Link Statistics
+                    </button>
+                </div>
+                <div class="text-xs mt-2 p-2 rounded-lg" :class="darkMode ? 'bg-white/5 text-white/60' : 'bg-black/5 text-gray-600'">
+                    💡 See how much your text can be compressed for sharing
+                </div>
+            </div>
+
+            <!-- Ofuscador de Lua -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
+                    :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🌙</span> Lua Processing
+                </h4>
+                <div class="grid grid-cols-1 gap-2">
+                    <button @click="processLua('obfuscate')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-500/20 text-red-600 hover:bg-red-500/30'">
+                        🔒 Obfuscate Lua Code
+                    </button>
+                    <button @click="processLua('deobfuscate')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'">
+                        🔓 Format Lua Code
+                    </button>
+                </div>
+                <div class="text-xs mt-2 p-2 rounded-lg" :class="darkMode ? 'bg-white/5 text-white/60' : 'bg-black/5 text-gray-600'">
+                    ⚠️ Use responsibly and ethically
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share -->
+    <div x-show="isOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div x-show="isOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                class="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75 backdrop-blur-sm"
+                @click="isOpen = false" aria-hidden="true">
+            </div>
+
+            <div x-show="isOpen" x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform rounded-2xl shadow-xl"
+                :class="darkMode ? 'bg-gray-800/90 backdrop-blur-xl' : 'bg-white/90 backdrop-blur-xl'">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium leading-6 flex items-center gap-2"
+                        :class="darkMode ? 'text-white' : 'text-gray-900'">
+                        🔗 Share URL
+                    </h3>
+                    <button @click="isOpen = false"
+                        class="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors duration-200">
+                        <span class="sr-only">Close</span>
+                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <div class="flex rounded-lg shadow-sm">
+                        <input type="text" x-model="shareURL"
+                            class="block w-full min-w-0 flex-1 rounded-l-lg border-0 py-2 px-3 text-sm ring-1 ring-inset focus:ring-2 focus:ring-inset font-mono"
+                            :class="darkMode ? 'bg-gray-700 text-white ring-gray-600 focus:ring-blue-500' : 'bg-white text-gray-900 ring-gray-300 focus:ring-blue-500'"
+                            readonly>
+                        <button @click="copyShareURL()"
+                            class="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-lg px-4 py-2 text-sm font-semibold ring-1 ring-inset transition-all duration-200"
+                            :class="darkMode ? 
+                                    'bg-gray-600 text-white ring-gray-600 hover:bg-gray-500' : 
+                                    'bg-gray-50 text-gray-900 ring-gray-300 hover:bg-gray-100'">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                    <p class="mt-3 text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
+                        Share this URL to let others see your text and title configuration. The URL contains your
+                        current text content.
+                    </p>
+                    <div class="mt-4 flex justify-end">
+                        <button @click="isOpen = false"
+                            class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+                            :class="darkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="fixed bottom-0 left-0 w-full py-4 transition-all duration-300" :class="[
+                darkMode ? 'bg-black/50 backdrop-blur-xl border-t border-white/5' : 'bg-white/50 backdrop-blur-xl border-t border-black/5',
+                focusMode ? 'opacity-0 pointer-events-none' : 'opacity-100'
+            ]">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm transition-colors duration-300" :class="darkMode ? 'text-white/50' : 'text-black/50'">
+                © <span id="current-year"></span> fl2on. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/advanced-features.js"></script>
+    <script src="js/dev-tools.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/hexa-app.js"></script>
 </body>
 </html>
-

@@ -1,325 +1,353 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+/* ===== TEXTAREA Y NÚMEROS DE LÍNEA ===== */
 
-:root {
-  --glow-blue: 0 0 20px rgba(59, 130, 246, 0.5);
-  --glow-purple: 0 0 20px rgba(147, 51, 234, 0.5);
-}
-
-* {
-  font-family: "Inter", sans-serif;
-}
-
-textarea {
-  font-family: "JetBrains Mono", monospace !important;
-  line-height: 1.5 !important;
-  padding: 1rem !important;
-  padding-left: 3rem !important;
-  tab-size: 4;
-  border: none !important;
-  resize: none;
-  width: 100%;
-  background: transparent;
-}
-
-.dark body {
-  background-image: radial-gradient(circle at center, rgba(59, 130, 246, 0.05) 0%, transparent 70%),
-    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
-  background-size: 100% 100%, 40px 40px;
-  background-position: center, 0 0;
-}
-
-body {
-  background-image: radial-gradient(circle at center, rgba(59, 130, 246, 0.03) 0%, transparent 70%),
-    radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.05) 1px, transparent 0);
-  background-size: 100% 100%, 40px 40px;
-  background-position: center, 0 0;
-}
-
-/* Mouse Glow Effect */
-#glow-effect {
-  background: radial-gradient(
-    600px circle at var(--mouse-x, 0) var(--mouse-y, 0),
-    rgba(59, 130, 246, 0.06),
-    transparent 40%
-  );
-}
-
-/* Animations */
-@keyframes pulse-glow {
-  0%,
-  100% {
-    box-shadow: var(--glow-blue);
-  }
-  50% {
-    box-shadow: var(--glow-purple);
-  }
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-@keyframes rgb-glow {
-  0% {
-    box-shadow: 0 0 50px -12px rgba(59, 130, 246, 0.3);
-  }
-  33% {
-    box-shadow: 0 0 50px -12px rgba(147, 51, 234, 0.3);
-  }
-  66% {
-    box-shadow: 0 0 50px -12px rgba(236, 72, 153, 0.3);
-  }
-  100% {
-    box-shadow: 0 0 50px -12px rgba(59, 130, 246, 0.3);
-  }
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  transition: background 0.3s ease;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  transition: background 0.3s ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-/* Line Numbers Container */
+/* Contenedor de números de línea */
 .line-numbers-container {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3rem;
-  padding: 1rem;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  user-select: none;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Textarea Enhancements */
-textarea {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-textarea:focus {
-  animation: pulse-glow 2s infinite;
-}
-
-/* Drag and Drop Highlight */
-textarea.ring-2 {
-  border-color: rgba(59, 130, 246, 0.5) !important;
-  background-color: rgba(59, 130, 246, 0.1) !important;
-}
-
-/* Button Hover Effects */
-button {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-button:hover {
-  animation: float 2s infinite;
-}
-
-/* Logo Animation */
-.logo-container:hover img {
-  animation: float 2s infinite;
-}
-
-/* Gradient Text Animation */
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.gradient-text {
-  background-size: 200% auto;
-  animation: gradient-shift 3s ease infinite;
-}
-
-.bg-gradient-to-r {
-  background-size: 200% auto;
-  animation: gradient-shift 3s ease infinite;
-}
-
-/* Loading Animation */
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.loading {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.1) 25%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.1) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Focus Ring Animation */
-@keyframes focus-ring-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
-  }
-}
-
-textarea:focus-visible {
-  animation: focus-ring-pulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-.dark main > div {
-  animation: rgb-glow 10s infinite;
-}
-
-/* Drag and Drop Highlight */
-[draggable="true"] {
-  cursor: move;
-}
-
-.drag-over {
-  border-color: rgba(59, 130, 246, 0.5) !important;
-  background-color: rgba(59, 130, 246, 0.1) !important;
-}
-
-/* Modal styles */
-.modal-backdrop {
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-}
-
-.modal-content {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-[x-cloak] {
-  display: none !important;
-}
-
-/* Share URL Input */
-.share-url-input {
-  font-family: "JetBrains Mono", monospace;
-}
-
-/* Modal Animations */
-@keyframes modal-in {
-  0% {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes modal-out {
-  0% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-}
-
-.modal-enter {
-  animation: modal-in 0.2s ease-out;
-}
-
-.modal-leave {
-  animation: modal-out 0.2s ease-in;
-}
-
-#notification-container {
-    position: fixed;
-    top: 0;
+    position: absolute;
     left: 0;
-    right: 0;
-    z-index: 9999; /* Se asegura de que esté por encima de todo */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    pointer-events: none; /* Evita que bloquee clics en otros elementos */
+    top: 0;
+    width: 2.5rem;
+    padding-top: 0.75rem;
+    padding-right: 0.5rem;
+    padding-bottom: 0.75rem;
+    padding-left: 0;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    z-index: 1;
+    pointer-events: none;
 }
 
-.notification {
-    background: rgba(20, 20, 20, 0.95); /* Un fondo oscuro semi-transparente */
-    color: #fff; /* Texto blanco */
-    padding: 15px 25px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-    font-size: 16px;
-    font-weight: 500;
-    max-width: 90%;
-    text-align: center;
-    animation: fadeIn 0.3s ease-out, fadeOut 0.3s ease-in 3s forwards;
-    pointer-events: auto; /* Permite interacción */
+/* Textarea principal */
+.smart-textarea {
+    width: 100% !important;
+    padding-left: 3rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    box-sizing: border-box !important;
+    line-height: 1.5 !important;
+    font-size: 0.875rem !important;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
+/* ===== FOCUS MODE - SOLO LO ESENCIAL ===== */
+
+/* Focus mode: ocultar navegación */
+.focus-mode-active nav {
+    display: none !important;
+}
+
+/* Focus mode: ocultar paneles laterales */
+.focus-mode-active main > div > div:not(.relative) {
+    display: none !important;
+}
+
+/* Focus mode: botón de salida */
+.focus-mode-active .fixed.top-4.right-4 button {
+    background: rgba(0, 0, 0, 0.8) !important;
+    color: white !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 50% !important;
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 1.2rem !important;
+}
+
+/* ===== EFECTO LINTERNA ===== */
+
+/* Efecto de linterna base que sigue el mouse */
+#glow-effect {
+    background: radial-gradient(
+        600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.15) 0%,
+        rgba(255, 255, 255, 0.1) 20%,
+        rgba(255, 255, 255, 0.06) 40%,
+        rgba(255, 255, 255, 0.03) 60%,
+        transparent 80%
+    );
+    mix-blend-mode: overlay;
+    opacity: 0.8;
+}
+
+/* Efecto linterna más intenso cuando darkMode está activo */
+body:has([x-data] [class*="bg-[#0A0A0A]"]) #glow-effect,
+body:has([x-data] .bg-black) #glow-effect {
+    background: radial-gradient(
+        500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.25) 0%,
+        rgba(255, 255, 255, 0.18) 25%,
+        rgba(255, 255, 255, 0.12) 50%,
+        rgba(255, 255, 255, 0.06) 70%,
+        transparent 85%
+    );
+    mix-blend-mode: overlay;
+    opacity: 1;
+}
+
+/* Efecto adicional para el modo focus */
+.focus-mode-active #glow-effect {
+    background: radial-gradient(
+        350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.3) 0%,
+        rgba(255, 255, 255, 0.2) 30%,
+        rgba(255, 255, 255, 0.1) 60%,
+        transparent 80%
+    );
+    mix-blend-mode: overlay;
+}
+
+/* Animación suave para cambios */
+#glow-effect {
+    transition: opacity 0.5s ease-out, background 0.3s ease-out;
+}
+
+/* Efecto más sutil en dispositivos móviles */
+@media (max-width: 1024px) {
+    #glow-effect {
+        display: none !important;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+}
+
+/* ===== RESPONSIVE DESIGN IMPROVEMENTS ===== */
+
+/* Móviles y pantallas pequeñas */
+@media (max-width: 768px) {
+    /* Navegación más compacta */
+    .max-w-7xl.mx-auto.px-4 {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    /* Espaciado de botones de navegación */
+    .flex.items-center.space-x-4 button {
+        padding: 0.5rem !important;
+    }
+    
+    /* Contenido principal responsive */
+    main.transition-all.duration-500 {
+        padding-top: 5rem !important; /* Reducir padding top */
+        padding-bottom: 1rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+        max-width: 100% !important;
+        margin-right: 0 !important; /* Eliminar margen derecho en móviles */
+    }
+    
+    /* Editor más compacto en móviles */
+    .relative.w-full.rounded-2xl {
+        border-radius: 1rem !important;
+        margin: 0 !important;
+    }
+    
+    /* Padding interno del editor */
+    .relative.p-6 {
+        padding: 1rem !important;
+    }
+    
+    /* Botones más grandes para touch */
+    .text-xs.px-3.py-1 {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Footer responsive */
+    footer.fixed.bottom-0 {
+        padding: 0.5rem 0 !important;
+    }
+    
+    /* Focus mode adjustments para móviles */
+    .focus-mode-active main {
+        padding: 1rem !important;
+        max-width: 100% !important;
+    }
+    
+    /* Texto más pequeño en stats para móviles */
+    .text-sm {
+        font-size: 0.75rem !important;
     }
 }
 
-@keyframes fadeOut {
-    to {
-        opacity: 0;
-        transform: translateY(-10px);
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) and (min-width: 769px) {
+    /* Contenido principal en tablets */
+    main.transition-all.duration-500 {
+        padding-top: 6rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        max-width: calc(100% - 2rem) !important;
+    }
+    
+    /* Si hay panel abierto, reducir el margen */
+    main.transition-all.duration-500:has(+ *[class*="mr-96"]) {
+        margin-right: 20rem !important; /* Reducir de 24rem (96) a 20rem */
+    }
+}
+
+/* Paneles laterales responsive */
+@media (max-width: 1024px) {
+    /* En pantallas pequeñas, los paneles ocupan toda la pantalla */
+    .fixed.top-0.right-0.h-full.w-96 {
+        width: 100vw !important;
+        z-index: 9999 !important;
+    }
+    
+    /* Botón de cerrar más visible en móviles */
+    .fixed.top-0.right-0 .p-6 .flex.items-center.justify-between button {
+        padding: 0.75rem !important;
+        font-size: 1.25rem !important;
+    }
+    
+    /* Contenido del panel con scroll mejorado */
+    .fixed.top-0.right-0 .p-6 {
+        padding: 1rem !important;
+        height: 100vh !important;
+        overflow-y: auto !important;
+        padding-top: 2rem !important;
+    }
+}
+
+/* Ultra pequeñas (< 480px) */
+@media (max-width: 479px) {
+    /* Logo y título más compactos */
+    .flex.items-center.space-x-4 > * + * {
+        margin-left: 0.5rem !important;
+    }
+    
+    .text-xl.font-semibold {
+        font-size: 1rem !important;
+    }
+    
+    /* Stats simplificadas */
+    .text-sm {
+        font-size: 0.625rem !important;
+    }
+    
+    /* Editor full width */
+    main {
+        padding-left: 0.25rem !important;
+        padding-right: 0.25rem !important;
+    }
+    
+    /* Panel lateral ajustado */
+    .fixed.top-0.right-0.h-full .p-6 {
+        padding: 0.5rem !important;
+    }
+}
+
+/* ===== USABILIDAD MÓVIL ===== */
+
+/* Scrolling en móviles */
+@media (max-width: 768px) {
+    body {
+        overflow-x: hidden;
+    }
+    
+    /* Textarea más amigable al touch */
+    .smart-textarea {
+        font-size: 1rem !important; /* Evitar zoom en iOS */
+        line-height: 1.4 !important;
+    }
+    
+    /* Números de línea más pequeños en móviles */
+    .line-numbers-container {
+        width: 2rem !important;
+        font-size: 0.75rem !important;
+    }
+    
+    .smart-textarea {
+        padding-left: 2.5rem !important;
+    }
+}
+
+/* ===== MODO LANDSCAPE EN MÓVILES ===== */
+@media (max-width: 768px) and (orientation: landscape) {
+    /* Aprovechar mejor el espacio horizontal */
+    main {
+        padding-top: 4rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    
+    /* Footer más pequeño en landscape */
+    footer {
+        padding: 0.25rem 0 !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Navegación más compacta */
+    nav .h-16 {
+        height: 3rem !important;
+    }
+}
+
+/* ===== MEJORAS DE ACCESIBILIDAD ===== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ===== MEJORAS ADICIONALES PARA TOUCH ===== */
+@media (max-width: 768px) {
+    /* Asegurar que los botones sean fáciles de tocar */
+    button, .btn {
+        min-height: 44px !important;
+        min-width: 44px !important;
+    }
+    
+    /* Textarea más touch-friendly */
+    textarea, .smart-textarea {
+        touch-action: manipulation;
+    }
+    
+    /* Evitar zoom en inputs en iOS */
+    input, textarea, select {
+        font-size: 16px !important;
+    }
+    
+    /* Mejorar el contraste en pantallas pequeñas */
+    .text-gray-400 {
+        color: rgb(156, 163, 175) !important;
+    }
+    
+    .text-gray-600 {
+        color: rgb(75, 85, 99) !important;
+    }
+}
+
+/* ===== GRID RESPONSIVE PARA BOTONES EN PANELES ===== */
+@media (max-width: 768px) {
+    /* Botones en grids más grandes en móviles */
+    .grid-cols-2 {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    .grid-cols-3 {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* Botones más grandes en paneles */
+    .grid button {
+        padding: 0.75rem 1rem !important;
+        font-size: 0.875rem !important;
+        min-height: 48px !important;
+    }
+}
+
+/* ===== PANTALLAS MUY ANCHAS ===== */
+@media (min-width: 1440px) {
+    /* En pantallas grandes, permitir más ancho para el contenido */
+    main {
+        max-width: 80rem !important;
+    }
+    
+    /* Paneles pueden ser un poco más anchos */
+    .w-96 {
+        width: 28rem !important;
+    }
+    
+    .w-80 {
+        width: 24rem !important;
     }
 }
