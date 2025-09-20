@@ -353,6 +353,30 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
+// Set footer year on load
+try {
+  const y = document.getElementById('current-year');
+  if (y) y.textContent = new Date().getFullYear();
+} catch {}
+
+// Keyboard: Ctrl/Cmd+F toggles search panel in-app
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+    e.preventDefault();
+    const root = document.querySelector('[x-data]');
+    if (root && root.__x) {
+      const st = root.__x.$data;
+      st.togglePanel && st.togglePanel('search');
+    }
+  }
+});
+
+// Expose Utils for convenience
+if (window.Utils) {
+  window.debounce = window.Utils.debounce;
+  window.throttle = window.Utils.throttle;
+}
+
 // Exportar funciones globales
 window.showNotification = showNotification;
 window.detectSyntax = detectSyntax;

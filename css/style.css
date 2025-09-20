@@ -30,25 +30,55 @@
 
 /* ===== FOCUS MODE - SOLO LO ESENCIAL ===== */
 
-/* Focus mode: ocultar navegación */
-.focus-mode-active nav {
-    display: none !important;
+/* Base transitions so both enter and exit are smooth */
+nav, footer {
+    transition: opacity 800ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+    will-change: opacity;
 }
 
-/* Focus mode: ocultar paneles laterales */
-.focus-mode-active main > div > div:not(.relative) {
-    display: none !important;
+/* Side panels base transition (dev/utils/format) */
+.fixed.top-0.right-0.h-full {
+    transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1), transform 700ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+    will-change: opacity, transform;
 }
 
-/* Focus mode: botón de salida */
-.focus-mode-active .fixed.top-4.right-4 button {
+/* Focus mode: suavizar ocultación de navegación y paneles */
+.focus-mode-active nav,
+.focus-mode-active footer {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Ocultar paneles laterales suavemente (si están abiertos) */
+.focus-mode-active .fixed.top-0.right-0.h-full {
+    opacity: 0 !important;
+    transform: translateX(24px) !important;
+    pointer-events: none !important;
+    transition: opacity 550ms cubic-bezier(0.22, 1, 0.36, 1), transform 550ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Focus mode: botón de salida (clase .focus-exit-btn en index) */
+.focus-exit-btn {
     background: rgba(0, 0, 0, 0.8) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    border-radius: 50% !important;
-    width: 50px !important;
-    height: 50px !important;
-    font-size: 1.2rem !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 9999px !important; /* total round */
+    box-shadow: 0 8px 30px rgba(0,0,0,0.35) !important;
+    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), background-color 320ms ease, box-shadow 320ms ease !important;
+}
+.focus-exit-btn:hover { transform: scale(1.06) !important; }
+.focus-exit-btn:active { transform: scale(0.96) !important; }
+
+/* Ensure the X is visible white */
+.focus-exit-btn span, .focus-exit-btn svg, .focus-exit-btn {
+    color: #fff !important;
+}
+
+/* Size defaults in focus mode for the exit button */
+.focus-mode-active .focus-exit-btn {
+    width: 48px !important;
+    height: 48px !important;
 }
 
 /* ===== EFECTO LINTERNA ===== */
@@ -345,7 +375,8 @@ body:has([x-data] .bg-black) #glow-effect {
         height: 85vh !important;
         border-radius: 1.5rem 1.5rem 0 0 !important;
         box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2) !important;
-        backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: blur(20px) !important;
         animation: slideUp 0.3s ease-out !important;
     }
     
