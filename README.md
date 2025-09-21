@@ -144,9 +144,8 @@ Check out the [live demo](https://fl2on.github.io/Hexa/?title=MyJavaScript&text=
 
 ### Storage Robustness
 - **TextStore:** Large-text persistence with compression (UTF-16 via LZString) and localStorage→sessionStorage fallback
-- **Quota Handling:** Prevents QuotaExceededError with graceful degradation and one-time notice
-
-### On-Device Learning (No LLMs)
+- 
+### On-Device Learning
 - **TensorFlow.js 4.x:** Learns typing behavior to suggest autosave intervals
 - **Modern Persistence:** Uses official IndexedDB/LocalStorage IO handlers (no deprecated manual artifacts)
 - **Private by Design:** All learning happens locally; no network calls
@@ -164,22 +163,6 @@ Check out the [live demo](https://fl2on.github.io/Hexa/?title=MyJavaScript&text=
 - **TensorFlow.js:** On-device ML for adaptive autosave timing
 
 ## 📍 **Authors**
-## 🔧 Utilities (window.Utils)
-
-Built-in utility module exposed as `window.Utils` provides production-ready helpers:
-
-- `debounce(fn, wait, {leading, trailing})` and `throttle(fn, wait)`
-- `memoize(fn, keyFn)` for caching deterministic function calls
-- `sleep(ms)`, `retry(asyncFn, {retries, delay, factor, onRetry})`, `withTimeout(promise, ms)`
-- `EventBus` for decoupled pub/sub: `const bus = new Utils.EventBus()`
-- `Logger(prefix)` with levels: `debug`, `info`, `warn`, `error`
-- `SafeStorage.local|session.get/set(key, value, ttlMs)` with TTL support
-- DOM helpers: `qs`, `qsa`, `on`, `delegate`
-- Clipboard/Download: `copyText(text)`, `downloadText(filename, text)`
-- Theme: `getTheme()`, `setTheme(bool)`, `toggleTheme()` (also bound to `Alt+D`)
-- Formatters: `formatBytes(n)`, `formatDate(date)`, `formatDuration(ms)`
-- `installGlobalErrorHandler(logger)` to capture errors and show a toast
-
 
 - **fl2on**
   - GitHub: [fl2on](https://github.com/fl2on)
