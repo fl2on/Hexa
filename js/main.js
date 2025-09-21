@@ -1,7 +1,7 @@
 let activeNotifications = new Set();
 
-function showNotification(message, type = "success") {
-  // Prevenir notificaciones duplicadas
+function showNotification(message, type = "success", options = {}) {
+  // Prevent duplicate notifications
   const notificationKey = `${message}-${type}`;
   if (activeNotifications.has(notificationKey)) {
     return;
@@ -19,7 +19,7 @@ function showNotification(message, type = "success") {
 
   const notification = document.createElement("div");
   
-  // Estilos con gradientes
+  // Styles with gradients
   let bgGradient, borderColor, iconBg, textColor;
   let icon = type === "success" ? "✨" : "⚠️";
   
@@ -53,28 +53,30 @@ function showNotification(message, type = "success") {
     <button class="opacity-60 hover:opacity-100 transition-opacity ml-2 text-lg leading-none" onclick="this.parentElement.remove()">×</button>
   `;
   
-  // Estado inicial
+  // Initial state
   notification.style.transform = 'translateX(100%) scale(0.8)';
   notification.style.opacity = '0';
 
-  // Agregar al contenedor
+  // Append to container
   container.appendChild(notification);
   
-  // Animar entrada con efecto rebote
+  // Animate entrance with bounce effect
   requestAnimationFrame(() => {
     notification.style.transform = 'translateX(0) scale(1)';
     notification.style.opacity = '1';
   });
 
-  // Clic para descartar
+  // Click for optional action then dismiss
   notification.addEventListener('click', () => {
+    try { if (typeof options.onClick === 'function') options.onClick(); } catch {}
     dismissNotification(notification, notificationKey);
-  });
+  }, { passive: true });
 
-  // Auto-eliminar después del retraso
+  // Auto-remove after the delay
+  const lifetime = Number.isFinite(options.duration) ? options.duration : 4000;
   setTimeout(() => {
     dismissNotification(notification, notificationKey);
-  }, 4000);
+  }, lifetime);
 }
 
 function dismissNotification(notification, notificationKey) {
@@ -91,88 +93,94 @@ function dismissNotification(notification, notificationKey) {
   }, 300);
 }
 
-// Efecto de linterna que sigue el mouse
-let mouseGlowRAF = null;
-let isMouseMoving = false;
+// Optimized spotlight effect (less jank in Brave/Chromium)
+(() => {
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isBrave = !!(navigator.brave) || /Brave/i.test(navigator.userAgent || '');
+  let glowEl = null;
+  let lastTs = 0;
+  // Limit to ~30fps to reduce paint work on Chromium
+  const fpsInterval = 1000 / 30;
+  let inactivityTimer = null;
 
-function updateGlowEffect(e) {
-  const glowEffect = document.getElementById("glow-effect");
-  if (!glowEffect) return;
-  
-  // Detectar si está en modo oscuro
-  const isDarkMode = document.body.classList.contains('dark') || 
-                     document.querySelector('[x-data]')?.style.getPropertyValue('background').includes('#0A0A0A') ||
-                     document.documentElement.classList.contains('dark');
-  
-  glowEffect.style.setProperty("--mouse-x", `${e.clientX}px`);
-  glowEffect.style.setProperty("--mouse-y", `${e.clientY}px`);
-  
-  // Ajustar intensidad según el modo - ahora con luz blanca
-  if (isDarkMode) {
-    glowEffect.style.background = `radial-gradient(
-      500px circle at ${e.clientX}px ${e.clientY}px,
-      rgba(255, 255, 255, 0.25) 0%,
-      rgba(255, 255, 255, 0.18) 25%,
-      rgba(255, 255, 255, 0.12) 50%,
-      rgba(255, 255, 255, 0.06) 70%,
-      transparent 85%
-    )`;
-    glowEffect.style.mixBlendMode = 'overlay';
-  } else {
-    glowEffect.style.background = `radial-gradient(
-      600px circle at ${e.clientX}px ${e.clientY}px,
-      rgba(255, 255, 255, 0.15) 0%,
-      rgba(255, 255, 255, 0.1) 20%,
-      rgba(255, 255, 255, 0.06) 40%,
-      rgba(255, 255, 255, 0.03) 60%,
-      transparent 80%
-    )`;
-    glowEffect.style.mixBlendMode = 'overlay';
+  function ensureGlowEl() {
+    if (!glowEl) glowEl = document.getElementById('glow-effect');
+    return glowEl;
   }
-  
-  glowEffect.style.opacity = "1";
-}
 
-document.addEventListener("mousemove", (e) => {
-  if (mouseGlowRAF) return;
-  
-  isMouseMoving = true;
-  
-  mouseGlowRAF = requestAnimationFrame(() => {
-    updateGlowEffect(e);
-    mouseGlowRAF = null;
-  });
-  
-  // Limpiar el timeout anterior
-  clearTimeout(window.mouseStopTimeout);
-  
-  // Ocultar el efecto después de inactividad
-  window.mouseStopTimeout = setTimeout(() => {
-    isMouseMoving = false;
-    const glowEffect = document.getElementById("glow-effect");
-    if (glowEffect && !isMouseMoving) {
-      glowEffect.style.opacity = "0.3";
+  function setThemeClass() {
+    const el = ensureGlowEl();
+    if (!el) return;
+    const dark = document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
+    el.classList.toggle('glow--dark', !!dark);
+  }
+
+  function onPointerMove(e) {
+    const el = ensureGlowEl();
+    if (!el) return;
+    const now = performance.now();
+    if (now - lastTs < fpsInterval) return;
+    lastTs = now;
+
+    el.style.setProperty('--mouse-x', e.clientX + 'px');
+    el.style.setProperty('--mouse-y', e.clientY + 'px');
+    el.style.opacity = '1';
+
+    // Reiniciar temporizador de inactividad
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      const el2 = ensureGlowEl();
+      if (el2) el2.style.opacity = '0.3';
+    }, 3000);
+  }
+
+  function onEnter() {
+    const el = ensureGlowEl();
+    if (el) el.style.opacity = '1';
+  }
+
+  function onLeave() {
+    const el = ensureGlowEl();
+    if (el) el.style.opacity = '0';
+  }
+
+  function initGlow() {
+    const el = ensureGlowEl();
+    if (!el) return;
+
+  // Brave-specific tweaks (reduce expensive composition)
+    if (isBrave) {
+      el.style.mixBlendMode = 'normal';
+      el.style.opacity = '0.6';
     }
-  }, 3000);
-});
 
-// Mostrar el efecto cuando el mouse entra en la ventana
-document.addEventListener("mouseenter", () => {
-  const glowEffect = document.getElementById("glow-effect");
-  if (glowEffect) {
-    glowEffect.style.opacity = "1";
+    setThemeClass();
+
+    // Observar cambios de clase para modo oscuro
+    const mo = new MutationObserver(setThemeClass);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+  // Pointer events with passive to avoid blocking main thread
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('mouseenter', onEnter, { passive: true });
+    window.addEventListener('mouseleave', onLeave, { passive: true });
   }
-});
 
-// Ocultar el efecto cuando el mouse sale de la ventana
-document.addEventListener("mouseleave", () => {
-  const glowEffect = document.getElementById("glow-effect");
-  if (glowEffect) {
-    glowEffect.style.opacity = "0";
+  // Disable if user prefers reduced motion
+  if (!prefersReduced) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initGlow, { once: true });
+    } else {
+      initGlow();
+    }
+  } else {
+    const el = ensureGlowEl();
+    if (el) el.style.display = 'none';
   }
-});
+})();
 
-// Detección de sintaxis
+// Syntax detection
 window.detectSyntax = () => {
   const textArea = document.querySelector("textarea");
   if (!textArea || !textArea.value.trim()) {
@@ -230,12 +238,12 @@ window.detectSyntax = () => {
   }
 };
 
-// Arrastrar y soltar archivos
+// Drag & drop files
 document.addEventListener("DOMContentLoaded", () => {
   const textArea = document.querySelector("textarea");
   if (!textArea) return;
 
-  // Controladores de arrastrar y soltar
+  // Drag & drop handlers
   let dragCounter = 0;
   
   textArea.addEventListener("dragenter", (e) => {
@@ -265,13 +273,13 @@ document.addEventListener("DOMContentLoaded", () => {
     textArea.classList.remove("ring-2", "ring-blue-500/50");
 
     if (file) {
-      // Verificar tamaño del archivo (límite 10MB)
+  // Validate file size (10MB limit)
       if (file.size > 10 * 1024 * 1024) {
         showNotification("❌ File too large (max 10MB)", "error");
         return;
       }
 
-      // Verificar tipo de archivo
+  // Validate file type
       const allowedTypes = ['text/plain', 'text/html', 'text/css', 'text/javascript', 'application/json', 'text/markdown'];
       if (!allowedTypes.includes(file.type) && !file.name.match(/\.(txt|html|css|js|json|md|py|sql|xml)$/i)) {
         showNotification("❌ Unsupported file type", "error");
@@ -284,7 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (appElement && appElement.__x) {
           const appData = appElement.__x.$data;
           appData.text = e.target.result;
-          localStorage.setItem("text", appData.text);
+          if (window.TextStore) { window.TextStore.set(appData.text); } else { try { localStorage.setItem("text", appData.text); } catch {} }
           appData.updateStats();
           appData.saveToHistory();
           showNotification(`📄 File "${file.name}" loaded!`, "success");
@@ -303,12 +311,12 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initFeatures() {
-  // Auto-guardado con debouncing
+  // Debounced auto-save
   let autoSaveTimeout;
   function debouncedAutoSave(text) {
     clearTimeout(autoSaveTimeout);
     autoSaveTimeout = setTimeout(() => {
-      localStorage.setItem('text', text);
+  if (window.TextStore) { window.TextStore.set(text); } else { try { localStorage.setItem('text', text); } catch {} }
       localStorage.setItem('lastSave', Date.now());
     }, 2000);
   }
@@ -321,29 +329,16 @@ function initFeatures() {
   }
 
   document.addEventListener('keydown', (e) => {
-    // Prevenir atajos del navegador que puedan interferir
+    // Prevent browser shortcuts that might interfere
     if ((e.ctrlKey || e.metaKey) && ['s', 'f', 'z', 'y'].includes(e.key)) {
       e.preventDefault();
     }
   });
 }
 
-// Utilidades de análisis de texto
-function getReadabilityScore(text) {
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
-  const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
-  
-  if (sentences === 0 || words === 0) return 0;
-  
-  // Use syllable counting from TextAnalyzer
-  const syllables = window.TextAnalyzer ? window.TextAnalyzer.countSyllables(text) : words;
-  
-  // Puntuación de facilidad de lectura Flesch
-  const score = 206.835 - (1.015 * (words / sentences)) - (84.6 * (syllables / words));
-  return Math.max(0, Math.min(100, Math.round(score)));
-}
+// (Removed) Unused readability helper to keep bundle lean
 
-// Inicializar cuando el DOM esté listo
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
   if (!document.getElementById('notification-container')) {
     const container = document.createElement('div');

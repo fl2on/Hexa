@@ -230,5 +230,177 @@
     installGlobalErrorHandler
   };
 
+  // Fancy text helpers
+  const Text = {
+    toBoldUnicode(str) {
+      const offA = 0x1D400 - 0x41; // A
+      const offa = 0x1D41A - 0x61; // a
+      const off0 = 0x1D7CE - 0x30; // 0
+      let out = '';
+      for (const ch of str) {
+        const code = ch.codePointAt(0);
+        if (code >= 0x41 && code <= 0x5A) out += String.fromCodePoint(code + offA);
+        else if (code >= 0x61 && code <= 0x7A) out += String.fromCodePoint(code + offa);
+        else if (code >= 0x30 && code <= 0x39) out += String.fromCodePoint(code + off0);
+        else out += ch;
+      }
+      return out;
+    },
+    toMonospace(str) {
+      const offA = 0x1D670 - 0x41; // A
+      const offa = 0x1D68A - 0x61; // a
+      const off0 = 0x1D7F6 - 0x30; // 0
+      let out = '';
+      for (const ch of str) {
+        const code = ch.codePointAt(0);
+        if (code >= 0x41 && code <= 0x5A) out += String.fromCodePoint(code + offA);
+        else if (code >= 0x61 && code <= 0x7A) out += String.fromCodePoint(code + offa);
+        else if (code >= 0x30 && code <= 0x39) out += String.fromCodePoint(code + off0);
+        else out += ch;
+      }
+      return out;
+    }
+  };
+
+  // Large Text persistence (safe & quota-aware)
+  // Stores under key 'text' using localStorage when possible. If value is large,
+  // compress to UTF-16 and mark with a prefix. Falls back to sessionStorage on quota errors.
+  // Public API: TextStore.get(), TextStore.set(text)
+  const TEXT_KEY = 'text';
+  const PREFIX_C16 = 'hxc:c16:'; // LZString.compressToUTF16 payload
+  const NOTICE_KEY = 'hexa.textstore.notice';
+  function canUseLS() { try { return !!window.localStorage; } catch { return false; } }
+  function canUseSS() { try { return !!window.sessionStorage; } catch { return false; } }
+
+  function decodeMaybeCompressed(val) {
+    if (typeof val !== 'string' || !val) return '';
+    if (val.startsWith(PREFIX_C16)) {
+      try {
+        const payload = val.slice(PREFIX_C16.length);
+        const dec = (window.LZString && window.LZString.decompressFromUTF16)
+          ? window.LZString.decompressFromUTF16(payload)
+          : null;
+        return dec != null ? dec : payload; // fallback to raw payload if lib missing
+      } catch {
+        return '';
+      }
+    }
+    return val;
+  }
+
+  function encodeMaybeCompress(text) {
+    // Heuristic threshold: compress when > 200k chars
+    if (typeof text !== 'string') text = String(text ?? '');
+    if (text.length > 200_000 && window.LZString && window.LZString.compressToUTF16) {
+      try {
+        const c = window.LZString.compressToUTF16(text);
+        return PREFIX_C16 + c;
+      } catch {
+        // fallthrough to raw
+      }
+    }
+    return text;
+  }
+
+  const TextStore = {
+    get() {
+      try {
+        const ls = canUseLS() ? localStorage.getItem(TEXT_KEY) : null;
+        const ss = (!ls && canUseSS()) ? sessionStorage.getItem(TEXT_KEY) : null;
+        return decodeMaybeCompressed(ls ?? ss ?? '');
+      } catch {
+        return '';
+      }
+    },
+    set(text) {
+      const value = encodeMaybeCompress(text || '');
+      let ok = false;
+      // Try localStorage first
+      if (canUseLS()) {
+        try { localStorage.setItem(TEXT_KEY, value); ok = true; } catch {}
+      }
+      // Fallback to sessionStorage
+      if (!ok && canUseSS()) {
+        try { sessionStorage.setItem(TEXT_KEY, value); ok = true; } catch {}
+      }
+      if (!ok) {
+        // Best-effort: show a one-time notice; keep content only in memory
+        try {
+          if (canUseLS() && !localStorage.getItem(NOTICE_KEY)) {
+            localStorage.setItem(NOTICE_KEY, '1');
+            if (window.showNotification) window.showNotification('⚠️ Storage full. Large text will not persist after refresh.', 'warning');
+          }
+        } catch {}
+      }
+      // Expose last saved snapshot for quick equality checks
+      try { window.__hexaLastSavedText = text || ''; } catch {}
+      return ok;
+    }
+  };
+
+  Utils.TextStore = TextStore;
+  window.TextStore = TextStore;
+
+  Utils.Text = Text;
+
+  // Lightweight hash and caching utilities
+  function hashFNV1a(str) {
+    // 32-bit FNV-1a hash for short strings/keys
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+    }
+    return h >>> 0; // unsigned
+  }
+
+  class LRUCache {
+    constructor(limit = 200) {
+      this.limit = Math.max(10, limit);
+      this.map = new Map(); // key -> {value}
+    }
+    get(key) {
+      if (!this.map.has(key)) return undefined;
+      const val = this.map.get(key);
+      // refresh recentness
+      this.map.delete(key);
+      this.map.set(key, val);
+      return val;
+    }
+    set(key, value) {
+      if (this.map.has(key)) this.map.delete(key);
+      this.map.set(key, value);
+      if (this.map.size > this.limit) {
+        const firstKey = this.map.keys().next().value;
+        this.map.delete(firstKey);
+      }
+      return true;
+    }
+    has(key) { return this.map.has(key); }
+    clear() { this.map.clear(); }
+    size() { return this.map.size; }
+  }
+
+  function memoizeByInput(fn, { max = 200, keyFn } = {}) {
+    const cache = new LRUCache(max);
+    return function(...args) {
+      const key = keyFn ? keyFn(...args) : `${args.length}|` + args.map(a => {
+        if (typeof a === 'string') return `s:${a.length}:${a.slice(0,64)}`;
+        if (typeof a === 'number' || typeof a === 'boolean') return String(a);
+        try { return 'j:' + JSON.stringify(a).slice(0,128); } catch { return 'x'; }
+      }).join('|');
+      const hashedKey = hashFNV1a(key).toString(36);
+      const hit = cache.get(hashedKey);
+      if (hit !== undefined) return hit;
+      const val = fn.apply(this, args);
+      cache.set(hashedKey, val);
+      return val;
+    };
+  }
+
+  Utils.hashFNV1a = hashFNV1a;
+  Utils.LRUCache = LRUCache;
+  Utils.memoizeByInput = memoizeByInput;
+
   window.Utils = Utils;
 })();

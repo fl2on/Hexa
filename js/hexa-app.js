@@ -1,8 +1,8 @@
-// Aplicación Hexa - Componente principal de Alpine.js
+// Hexa Application - Main Alpine.js component
 function hexaApp() {
     return {
-        // Variables de estado
-        darkMode: localStorage.getItem('darkMode') !== 'false',
+        // State variables
+    darkMode: (window.Utils && window.Utils.SafeStorage ? window.Utils.SafeStorage.local.get('darkMode', true) !== false : (localStorage.getItem('darkMode') !== 'false')),
         title: 'Hexa',
         showNotification: false,
         notificationMessage: '',
@@ -10,7 +10,6 @@ function hexaApp() {
         stats: {
             chars: 0,
             words: 0,
-            lines: 0,
             readingTime: 0,
             sentences: 0,
             paragraphs: 0,
@@ -20,7 +19,7 @@ function hexaApp() {
         },
         isOpen: false,
         shareURL: '',
-        text: localStorage.getItem('text') || '',
+    text: (window.TextStore ? window.TextStore.get() : (localStorage.getItem('text') || '')),
         history: [],
         historyIndex: -1,
         maxHistory: 50,
@@ -45,8 +44,9 @@ function hexaApp() {
         selectedText: '',
         syntaxHighlight: false,
         currentTheme: 'default',
+    telemetryView: '',
 
-        // Métodos
+    // Methods
         updateStats() {
             const text = this.text || '';
             const chars = text.length;
@@ -56,7 +56,7 @@ function hexaApp() {
             const paragraphs = text === '' ? 0 : text.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
             const readingTime = Math.ceil(words / 200);
             
-            // Métricas
+            // Metrics
             const avgWordsPerSentence = sentences > 0 ? parseFloat((words / sentences).toFixed(1)) : 0;
             const avgCharsPerWord = words > 0 ? parseFloat((chars / words).toFixed(1)) : 0;
             const readabilityScore = this.calculateReadability(text, words, sentences);
@@ -78,7 +78,7 @@ function hexaApp() {
             if (sentences === 0 || words === 0) return 0;
             
             const syllables = this.countSyllables(text);
-            // Puntuación de facilidad de lectura Flesch
+            // Flesch Reading Ease score
             const score = 206.835 - (1.015 * (words / sentences)) - (84.6 * (syllables / words));
             return Math.max(0, Math.min(100, Math.round(score)));
         },
@@ -103,7 +103,7 @@ function hexaApp() {
             
             try {
                 let result = this.text;
-                
+            
                 switch(format) {
                     case 'uppercase':
                         result = this.text.toUpperCase();
@@ -143,9 +143,12 @@ function hexaApp() {
                     case 'removenumbers':
                         result = this.text.replace(/^\d+\.\s*/gm, '');
                         break;
-                    case 'sortlines':
-                        result = this.text.split('\n').sort().join('\n');
+                    case 'sortlines': {
+                        const lines = this.text.split('\n');
+                        const sorted = (window.Algos && Algos.quicksort3) ? Algos.quicksort3(lines) : lines.sort();
+                        result = sorted.join('\n');
                         break;
+                    }
                     case 'shufflelines':
                         const lines = this.text.split('\n');
                         for (let i = lines.length - 1; i > 0; i--) {
@@ -165,13 +168,20 @@ function hexaApp() {
                         const urls = this.text.match(/https?:\/\/[^\s]+/g);
                         result = urls ? urls.join('\n') : 'No URLs found';
                         break;
+                    case 'wordcount': {
+                        const words = this.text.trim().split(/\s+/).filter(Boolean);
+                        const freq = words.reduce((acc,w)=>{ const k=w.toLowerCase(); acc[k]=(acc[k]||0)+1; return acc; },{});
+                        const sorted = Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+                        result = sorted.map(([w,c])=>`${w}: ${c}`).join('\n') || 'No words';
+                        break;
+                    }
                     default:
                         this.showNotification('❌ Unknown format', 'error');
                         return;
                 }
                 
                 this.text = result;
-                localStorage.setItem('text', this.text);
+                if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
                 this.updateStats();
                 this.showNotification(`✨ Text formatted: ${format}`, 'success');
             } catch (error) {
@@ -206,7 +216,7 @@ function hexaApp() {
             const textBefore = this.text.substring(0, cursorPos);
             const textAfter = this.text.substring(cursorPos);
             
-            // Tab para auto-completado
+            // Tab for auto-completion
             if (event.key === 'Tab' && !event.shiftKey) {
                 event.preventDefault();
                 const suggestions = window.CodeFeatures?.getAutocomplete(this.text, cursorPos) || [];
@@ -219,7 +229,7 @@ function hexaApp() {
                         textarea.selectionStart = textarea.selectionEnd = cursorPos + replacement.length;
                     });
                 } else {
-                    // Insertar 2 espacios para indentación
+                    // Insert 2 spaces for indentation
                     this.text = textBefore + '  ' + textAfter;
                     this.$nextTick(() => {
                         textarea.selectionStart = textarea.selectionEnd = cursorPos + 2;
@@ -245,7 +255,7 @@ function hexaApp() {
                 this.historyIndex--;
                 this.text = this.history[this.historyIndex];
                 this.updateStats();
-                localStorage.setItem('text', this.text);
+                if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
                 this.showNotification('↶ Undone', 'success');
             }
         },
@@ -255,7 +265,7 @@ function hexaApp() {
                 this.historyIndex++;
                 this.text = this.history[this.historyIndex];
                 this.updateStats();
-                localStorage.setItem('text', this.text);
+                if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
                 this.showNotification('↷ Redone', 'success');
             }
         },
@@ -264,7 +274,7 @@ function hexaApp() {
             this.focusMode = !this.focusMode;
             
             if (this.focusMode) {
-                // Activar pantalla completa
+                // Enter fullscreen
                 if (document.documentElement.requestFullscreen) {
                     document.documentElement.requestFullscreen();
                 } else if (document.documentElement.webkitRequestFullscreen) {
@@ -273,8 +283,9 @@ function hexaApp() {
                     document.documentElement.msRequestFullscreen();
                 }
                 this.showNotification('🎯 Focus mode ENABLED - Press F11 or Escape to exit', 'success');
+                if (window.UXBrain) { try { window.UXBrain.trackPanel('focus', true); window.UXBrain.tick(this); } catch {} }
             } else {
-                // Salir de pantalla completa
+                // Exit fullscreen
                 if (document.exitFullscreen) {
                     document.exitFullscreen();
                 } else if (document.webkitExitFullscreen) {
@@ -283,6 +294,7 @@ function hexaApp() {
                     document.msExitFullscreen();
                 }
                 this.showNotification('🎯 Focus mode DISABLED', 'success');
+                if (window.UXBrain) { try { window.UXBrain.trackPanel('focus', false); } catch {} }
             }
         },
 
@@ -349,7 +361,7 @@ function hexaApp() {
             if (this.replaceTerm !== '') {
                 this.saveToHistory();
                 this.text = this.text.replace(regex, this.replaceTerm);
-                localStorage.setItem('text', this.text);
+                if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
                 this.updateStats();
                 this.showNotification(`🔄 Replaced ${matches.length} occurrence(s)`, 'success');
             } else {
@@ -390,7 +402,7 @@ function hexaApp() {
             }
         },
 
-        generateShareURL() {
+        generateShareURL(forceBest=false) {
             if (!this.text.trim()) {
                 this.showNotification('❌ No text to share', 'error');
                 return;
@@ -399,39 +411,81 @@ function hexaApp() {
             try {
                 const url = new URL(window.location.href);
                 
-                // Intentar compresión primero para textos más largos
+                // Smart compression with dynamic threshold and real evaluation
                 let textToShare = this.text;
                 let isCompressed = false;
-                
-                // Si el texto es largo, usar compresión
-                if (this.text.length > 1000) {
-                    try {
-                        const compressed = LZString.compressToEncodedURIComponent(this.text);
-                        // Solo usar compresión si realmente reduce el tamaño
-                        if (compressed.length < this.text.length * 0.8) {
-                            textToShare = compressed;
-                            isCompressed = true;
-                            url.searchParams.set('c', '1'); // Flag para indicar que está comprimido
+                let scheme = 'raw';
+                let gain = 0;
+                if (window.SmartCompress) {
+                    const { rawSize, variants, lu } = window.SmartCompress.evaluate(this.text);
+                    const type = window.SmartCompress.detectType(this.text);
+                    const dynThresh = window.SmartCompress.getAdaptiveThreshold(rawSize, type);
+                    let chosen = variants[0];
+                    if (!forceBest) {
+                        // Apply threshold vs LU if available; else vs RAW
+                        if (rawSize < window.SmartCompress.config.minTextLenForCompression || !chosen) {
+                            chosen = null;
+                        } else if (lu && lu.size > 0) {
+                            const gainVsLU = (lu.size - chosen.size) / lu.size;
+                            if (gainVsLU < dynThresh) {
+                                // Fallback to LU compression instead of raw
+                                chosen = lu;
+                            }
+                        } else {
+                            // No LU variant (unlikely) → accept chosen only if clears threshold vs RAW
+                            if (chosen.gain < dynThresh) {
+                                // As last resort, still use chosen if it’s LU-equivalent; else null
+                                // But since no LU, keep chosen to avoid raw
+                            }
                         }
-                    } catch (error) {
-                        console.warn('Compression failed, using original text:', error);
+                    }
+                    if (chosen) {
+                        textToShare = chosen.payload;
+                        isCompressed = true;
+                        scheme = chosen.scheme;
+                        // Prefer reporting gain vs LU when available
+                        if (lu && lu.size > 0) {
+                            gain = (lu.size - chosen.size) / lu.size;
+                            try { window.SmartCompress.recordTelemetry(type, scheme, gain); } catch {}
+                        } else {
+                            gain = chosen.gain;
+                        }
+                        url.searchParams.set('c', '1');
+                        url.searchParams.set('s', scheme);
+                    }
+                } else {
+                    // Fallback to URI-safe LZ
+                    if (this.text.length > 1000) {
+                        try {
+                            const compressed = LZString.compressToEncodedURIComponent(this.text);
+                            if (compressed.length < this.text.length * 0.88) {
+                                textToShare = compressed;
+                                isCompressed = true;
+                                scheme = 'lu';
+                                url.searchParams.set('c', '1');
+                                url.searchParams.set('s', scheme);
+                                gain = 1 - (compressed.length/this.text.length);
+                            }
+                        } catch (error) { console.warn('Compression failed, using original text:', error); }
                     }
                 }
                 
-                // Limpiar parámetros previos
+                // Clear any previous params
                 url.searchParams.delete('text');
                 url.searchParams.delete('t');
                 url.searchParams.delete('c');
+                url.searchParams.delete('s');
                 url.searchParams.delete('title');
                 
-                // Usar parámetro más corto para ahorrar espacio
+                // Use shorter param name to save space
                 url.searchParams.set(isCompressed ? 't' : 'text', textToShare);
                 
                 if (isCompressed) {
                     url.searchParams.set('c', '1');
+                    if (scheme && scheme !== 'raw') url.searchParams.set('s', scheme);
                 }
                 
-                // Solo agregar título si es diferente del default
+                // Only add title if different from default
                 if (this.title && this.title !== 'Hexa') {
                     url.searchParams.set('title', this.title);
                 }
@@ -439,20 +493,23 @@ function hexaApp() {
                 this.shareURL = url.toString();
                 this.isOpen = true;
                 
-                // Mostrar estadísticas de compresión
+                // Show compression statistics
                 if (isCompressed) {
-                    const compressionRatio = ((1 - textToShare.length / this.text.length) * 100).toFixed(1);
+                    const compressionRatio = (gain>0 ? (gain*100).toFixed(1) : ((1 - textToShare.length / this.text.length) * 100).toFixed(1));
                     this.showNotification(`🔗 Share URL generated! (${compressionRatio}% compressed)`, 'success');
                 } else {
                     this.showNotification('🔗 Share URL generated!', 'success');
                 }
-                
-                // Advertir si la URL es muy larga
-                if (this.shareURL.length > 2000) {
-                    setTimeout(() => {
-                        this.showNotification('⚠️ URL is very long - some browsers may have issues', 'warning');
-                    }, 1500);
-                }
+
+                // Gentle one-time notice: very long URLs may not work in some browsers
+                try {
+                    if (!localStorage.getItem('hexa.longUrlNoticeShown')) {
+                        setTimeout(() => {
+                            this.showNotification('ℹ️ Very long URLs may not work in some browsers.', 'info');
+                            try { localStorage.setItem('hexa.longUrlNoticeShown','1'); } catch {}
+                        }, 1200);
+                    }
+                } catch {}
                 
             } catch (error) {
                 console.error('Error generating share URL:', error);
@@ -470,7 +527,7 @@ function hexaApp() {
             }
         },
 
-        // Obtener estadísticas del enlace compartido
+    // Get statistics for the generated share link
         getShareLinkStats() {
             if (!this.shareURL) {
                 this.showNotification('❌ No share link generated yet', 'error');
@@ -498,13 +555,8 @@ function hexaApp() {
                     stats += `Text data: ${textParam.length} chars\n`;
                 }
                 
-                // Advertencias sobre límites de URL
-                if (this.shareURL.length > 2048) {
-                    stats += `⚠️ WARNING: URL exceeds 2048 chars (IE limit)\n`;
-                }
-                if (this.shareURL.length > 8192) {
-                    stats += `🚨 CRITICAL: URL exceeds 8192 chars (server limits)\n`;
-                }
+                // Generic note
+                stats += `ℹ️ Note: Very long URLs may not work in some browsers.\n`;
                 
                 this.showNotification(stats, 'info');
                 
@@ -528,7 +580,7 @@ function hexaApp() {
             reader.onload = (e) => {
                 this.text = e.target.result;
                 this.updateStats();
-                localStorage.setItem('text', this.text);
+                if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
             };
             reader.readAsText(file);
         },
@@ -542,7 +594,26 @@ function hexaApp() {
             }
         },
 
-        // Ejecución de Python
+        showTelemetry() {
+            try {
+                if (!window.SmartCompress) { this.telemetryView = 'SmartCompress not available.'; return; }
+                const raw = localStorage.getItem('SC.telemetry.v1');
+                if (!raw) { this.telemetryView = 'No telemetry yet. Generate a few Share URLs first.'; return; }
+                const st = JSON.parse(raw);
+                const parts = [];
+                for (const [type, rec] of Object.entries(st.data || {})){
+                    const dom = Object.entries(rec.best || {}).sort((a,b)=>b[1]-a[1])[0];
+                    const domStr = dom ? `${dom[0]} (${dom[1]})` : 'n/a';
+                    parts.push(`${type}: total=${rec.total}, dominant=${domStr}, avgGain=${(rec.avgGain*100).toFixed(1)}%`);
+                }
+                this.telemetryView = parts.length ? parts.join('\n') : 'No telemetry data stored yet.';
+            } catch (e) {
+                console.error('Telemetry view failed', e);
+                this.telemetryView = 'Failed to load telemetry.';
+            }
+        },
+
+    // Python execution
         async executePython() {
             if (!this.text.trim()) {
                 this.showNotification('❌ No code to execute', 'error');
@@ -563,7 +634,7 @@ function hexaApp() {
             }
         },
 
-        // Análisis de compresión
+    // Compression analysis
         analyzeCompression() {
             if (!this.text.trim()) {
                 this.showNotification('❌ No text to analyze', 'error');
@@ -572,33 +643,40 @@ function hexaApp() {
             
             try {
                 const originalSize = this.text.length;
-                const compressed = LZString.compressToEncodedURIComponent(this.text);
-                const compressedSize = compressed.length;
-                const ratio = ((1 - compressedSize / originalSize) * 100).toFixed(1);
-                
-                let message = `📊 Compression Analysis:\n`;
-                message += `Original: ${originalSize} chars\n`;
-                message += `Compressed: ${compressedSize} chars\n`;
-                message += `Ratio: ${ratio}% reduction\n`;
-                
-                if (ratio > 30) {
-                    message += `✅ Great compression ratio!`;
-                } else if (ratio > 10) {
-                    message += `👍 Good compression ratio`;
-                } else if (ratio > 0) {
-                    message += `📈 Small compression gain`;
+                if (window.SmartCompress) {
+                    const { rawSize, variants, lu } = window.SmartCompress.evaluate(this.text);
+                    const type = window.SmartCompress.detectType(this.text);
+                    const thr = window.SmartCompress.getAdaptiveThreshold(rawSize, type);
+                    let message = `📊 Smart Compression Analysis:\n`;
+                    message += `Raw: ${rawSize} chars | type: ${type} | adaptive thr: ${(thr*100).toFixed(1)}%\n`;
+                    if (variants.length === 0) {
+                        message += `No compression variant available`;
+                    } else {
+                        for (const v of variants) {
+                            const gainVsLU = (lu && lu.size>0) ? ((lu.size - v.size) / lu.size) : v.gain;
+                            const pct = (gainVsLU*100).toFixed(1);
+                            const meta = v.scheme==='w1' && v.meta ? ` (dict:${v.meta.dictSize}, repl:${v.meta.replaced}${v.meta.suffixDictSize!=null?`, suf:${v.meta.suffixDictSize}, sufRepl:${v.meta.suffixReplaced}`:''})` : '';
+                            message += `- ${v.scheme}: ${v.size} chars (gain vs LU: ${pct}%)${meta}\n`;
+                        }
+                    }
+                    const best = variants[0];
+                    if (best) {
+                        const gainVsLU = (lu && lu.size>0) ? ((lu.size - best.size) / lu.size) : best.gain;
+                        message += `Best: ${best.scheme} → ${best.size} chars (${(gainVsLU*100).toFixed(1)}%)\n`;
+                    }
+                    this.showNotification(message.trim(), 'info');
                 } else {
-                    message += `⚠️ Text doesn't compress well`;
+                    const compressed = LZString.compressToEncodedURIComponent(this.text);
+                    const compressedSize = compressed.length;
+                    const ratio = ((1 - compressedSize / originalSize) * 100).toFixed(1);
+                    let message = `📊 Compression Analysis:\nOriginal: ${originalSize} chars\nCompressed: ${compressedSize} chars\nRatio: ${ratio}% reduction`;
+                    this.showNotification(message, 'info');
                 }
                 
-                this.showNotification(message, 'info');
-                
-                // También loguear en consola para debugging
+                // Also log to console for debugging
                 console.log('Compression Analysis:', {
                     originalSize,
-                    compressedSize,
-                    ratio: ratio + '%',
-                    compressionEffective: ratio > 10
+                    smart: !!window.SmartCompress
                 });
                 
             } catch (error) {
@@ -607,57 +685,55 @@ function hexaApp() {
             }
         },
 
-        // Minificación de código
+        
+
+    // Code minification
         minifyCode(type) {
             if (!this.text.trim()) {
                 this.showNotification('❌ No code to minify', 'error');
                 return;
             }
-            
             this.saveToHistory();
-            
             try {
                 let result = this.text;
-                
-                switch(type) {
+                switch (type) {
                     case 'js':
-                        // Minificación simple de JS
+                        // Simple JS minification
                         result = this.text
-                            .replace(/\/\*[\s\S]*?\*\//g, '') // Eliminar comentarios de bloque
-                            .replace(/\/\/.*$/gm, '') // Eliminar comentarios de línea
-                            .replace(/\s+/g, ' ') // Reemplazar múltiples espacios con uno solo
-                            .replace(/;\s*}/g, '}') // Eliminar punto y coma antes de llave de cierre
-                            .replace(/\s*{\s*/g, '{') // Limpiar llaves
-                            .replace(/\s*;\s*/g, ';') // Limpiar puntos y comas
+                            .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
+                            .replace(/\/\/.*$/gm, '') // Remove line comments
+                            .replace(/\s+/g, ' ') // Collapse multiple spaces
+                            .replace(/;\s*}/g, '}') // Remove semicolon before closing brace
+                            .replace(/\s*{\s*/g, '{') // Trim braces
+                            .replace(/\s*;\s*/g, ';') // Trim semicolons
                             .trim();
                         break;
                     case 'css':
-                        // Minificación simple de CSS
+                        // Simple CSS minification
                         result = this.text
-                            .replace(/\/\*[\s\S]*?\*\//g, '') // Eliminar comentarios
-                            .replace(/\s+/g, ' ') // Reemplazar múltiples espacios
-                            .replace(/;\s*}/g, '}') // Eliminar punto y coma antes de llave de cierre
-                            .replace(/\s*{\s*/g, '{') // Eliminar espacios alrededor de llave de apertura
-                            .replace(/;\s*/g, ';') // Eliminar espacios después de punto y coma
-                            .replace(/:\s*/g, ':') // Eliminar espacios después de dos puntos
+                            .replace(/\/\*[\s\S]*?\*\//g, '') // Remove comments
+                            .replace(/\s+/g, ' ') // Collapse multiple spaces
+                            .replace(/;\s*}/g, '}') // Remove semicolon before closing brace
+                            .replace(/\s*{\s*/g, '{') // Trim around opening brace
+                            .replace(/;\s*/g, ';') // Trim after semicolons
+                            .replace(/:\s*/g, ':') // Trim after colon
                             .trim();
                         break;
                     case 'html':
-                        // Minificación simple de HTML
+                        // Simple HTML minification
                         result = this.text
-                            .replace(/<!--[\s\S]*?-->/g, '') // Eliminar comentarios
-                            .replace(/\s+/g, ' ') // Reemplazar múltiples espacios
-                            .replace(/>\s+</g, '><') // Eliminar espacios entre etiquetas
-                            .replace(/\s+>/g, '>') // Eliminar espacios antes de etiqueta de cierre
+                            .replace(/<!--[\s\S]*?-->/g, '') // Remove comments
+                            .replace(/\s+/g, ' ') // Collapse multiple spaces
+                            .replace(/>\s+</g, '><') // Remove spaces between tags
+                            .replace(/\s+>/g, '>') // Remove spaces before closing tag
                             .trim();
                         break;
                     default:
                         this.showNotification('❌ Unknown minification type', 'error');
                         return;
                 }
-                
                 this.text = result;
-                localStorage.setItem('text', this.text);
+                if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
                 this.updateStats();
                 this.showNotification(`🗜️ ${type.toUpperCase()} minified!`, 'success');
             } catch (error) {
@@ -678,7 +754,7 @@ function hexaApp() {
                 let beautified = '';
                 const text = this.text.trim();
                 
-                // Detectar el tipo de código
+                // Detect code type
                 const codeType = this.detectCodeType(text);
                 
                 switch(codeType) {
@@ -698,51 +774,51 @@ function hexaApp() {
                         beautified = this.beautifyXML(text);
                         break;
                     default:
-                        // Beautificación genérica para otros tipos de código
+                        // Generic beautification for other code types
                         beautified = this.beautifyGeneric(text);
                 }
 
                 this.text = beautified;
-                localStorage.setItem('text', this.text);
+                if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
                 this.updateStats();
                 this.showNotification('✨ Code beautified!', 'success');
             } catch (error) {
-                this.showNotification('❌ Embellecimiento fallido', 'error');
+                this.showNotification('❌ Beautification failed', 'error');
                 console.error('Beautify error:', error);
             }
         },
 
         detectCodeType(text) {
-            // Detectar JSON
+            // Detect JSON
             if ((text.startsWith('{') && text.endsWith('}')) || 
                 (text.startsWith('[') && text.endsWith(']'))) {
                 try {
                     JSON.parse(text);
                     return 'json';
                 } catch (e) {
-                    // No es JSON válido, continuar con otras detecciones
+                    // Not valid JSON; continue with other detections
                 }
             }
             
-            // Detectar HTML
+            // Detect HTML
             if (text.includes('<!DOCTYPE') || text.includes('<html') || 
                 /<\/?[a-z][\s\S]*>/i.test(text)) {
                 return 'html';
             }
             
-            // Detectar XML
+            // Detect XML
             if (text.startsWith('<?xml') || /<\?xml.*\?>/i.test(text)) {
                 return 'xml';
             }
             
-            // Detectar CSS
+            // Detect CSS
             if (text.includes('{') && text.includes('}') && 
                 (text.includes(':') && text.includes(';')) ||
                 /@[a-z-]+/.test(text)) {
                 return 'css';
             }
             
-            // Detectar JavaScript
+            // Detect JavaScript
             if (text.includes('function') || text.includes('=>') || 
                 text.includes('const ') || text.includes('let ') || 
                 text.includes('var ') || text.includes('class ')) {
@@ -766,10 +842,10 @@ function hexaApp() {
             let indentLevel = 0;
             const indent = '    ';
             
-            // Limpiar espacios en blanco
+            // Normalize whitespace
             formatted = formatted.replace(/>\s+</g, '><');
             
-            // Agregar saltos de línea antes de las etiquetas
+            // Add line breaks before tags
             formatted = formatted.replace(/</g, '\n<');
             
             const lines = formatted.split('\n');
@@ -779,14 +855,14 @@ function hexaApp() {
                 line = line.trim();
                 if (!line) return;
                 
-                // Etiquetas de cierre
+                // Closing tags
                 if (line.startsWith('</')) {
                     indentLevel = Math.max(0, indentLevel - 1);
                 }
                 
                 result.push(indent.repeat(indentLevel) + line);
                 
-                // Etiquetas de apertura (no auto-cerradas)
+                // Opening tags (not self-closed)
                 if (line.startsWith('<') && !line.startsWith('</') && 
                     !line.endsWith('/>') && !line.includes('<!')) {
                     indentLevel++;
@@ -799,20 +875,20 @@ function hexaApp() {
         beautifyCSS(text) {
             let formatted = text;
             
-            // Agregar espacios después de dos puntos
+            // Add spaces after colon
             formatted = formatted.replace(/:\s*/g, ': ');
             
-            // Agregar saltos de línea después de punto y coma
+            // Add line breaks after semicolons
             formatted = formatted.replace(/;\s*/g, ';\n    ');
             
-            // Agregar saltos de línea antes y después de llaves
+            // Add line breaks around braces
             formatted = formatted.replace(/\{\s*/g, ' {\n    ');
             formatted = formatted.replace(/\s*\}/g, '\n}');
             
-            // Agregar saltos de línea después de las llaves de cierre
+            // Add line breaks after closing braces
             formatted = formatted.replace(/\}/g, '}\n\n');
             
-            // Limpiar múltiples saltos de línea
+            // Collapse multiple line breaks
             formatted = formatted.replace(/\n{3,}/g, '\n\n');
             
             return formatted.trim();
@@ -823,17 +899,17 @@ function hexaApp() {
             let indentLevel = 0;
             const indent = '    ';
             
-            // Agregar espacios alrededor de operadores
+            // Add spaces around operators
             formatted = formatted.replace(/([=+\-*/<>!&|])\s*/g, ' $1 ');
             formatted = formatted.replace(/\s+([=+\-*/<>!&|])\s+/g, ' $1 ');
             
-            // Agregar espacios después de comas
+            // Add spaces after commas
             formatted = formatted.replace(/,\s*/g, ', ');
             
-            // Agregar saltos de línea después de punto y coma
+            // Add line breaks after semicolons
             formatted = formatted.replace(/;\s*/g, ';\n');
             
-            // Agregar saltos de línea antes y después de llaves
+            // Add line breaks around braces
             formatted = formatted.replace(/\{\s*/g, ' {\n');
             formatted = formatted.replace(/\s*\}/g, '\n}');
             
@@ -844,14 +920,14 @@ function hexaApp() {
                 line = line.trim();
                 if (!line) return;
                 
-                // Disminuir indentación para llaves de cierre
+                // Decrease indent for closing braces
                 if (line.startsWith('}')) {
                     indentLevel = Math.max(0, indentLevel - 1);
                 }
                 
                 result.push(indent.repeat(indentLevel) + line);
                 
-                // Aumentar indentación para llaves de apertura
+                // Increase indent for opening braces
                 if (line.endsWith('{')) {
                     indentLevel++;
                 }
@@ -861,7 +937,7 @@ function hexaApp() {
         },
 
         beautifyXML(text) {
-            return this.beautifyHTML(text); // XML usa la misma lógica que HTML
+            return this.beautifyHTML(text); // XML uses the same logic as HTML
         },
 
         beautifyGeneric(text) {
@@ -877,14 +953,14 @@ function hexaApp() {
                     return;
                 }
 
-                // Disminuir indentación para caracteres de cierre
+                // Decrease indent for closing characters
                 if (/^[}\])]/.test(line)) {
                     indentLevel = Math.max(0, indentLevel - 1);
                 }
 
                 formattedLines.push(indent.repeat(indentLevel) + line);
 
-                // Aumentar indentación para caracteres de apertura
+                // Increase indent for opening characters
                 if (/[{\[(]\s*$/.test(line)) {
                     indentLevel++;
                 }
@@ -893,7 +969,7 @@ function hexaApp() {
             return formattedLines.join('\n');
         },
 
-        // Generadores de código
+    // Code generators
         generateCode(type) {
             this.saveToHistory();
             
@@ -927,9 +1003,6 @@ function hexaApp() {
                     case 'sql':
                         generated = CodeGenerator.generateSQL();
                         break;
-                    case 'mockdata':
-                        generated = JSON.stringify(CrazyFeatures.generateMockData('user'), null, 2);
-                        break;
                     default:
                         this.showNotification('❌ Code type not recognized', 'error');
                         return;
@@ -944,9 +1017,11 @@ function hexaApp() {
             }
         },
 
-        // Funciones de utilidades
+    // Utility functions
         processUtils(type, action) {
-            if (!this.text.trim()) {
+            if (!this.text.trim() 
+                && !['uuid','diff'].includes(type) 
+                && !(type==='social' && ['waLink','discordTimeNow'].includes(action))) {
                 this.showNotification('❌ No text to process', 'error');
                 return;
             }
@@ -956,6 +1031,268 @@ function hexaApp() {
             
             try {
                 switch(type) {
+                    case 'social': {
+                        // Platform-specific helpers
+                        const t = this.text || '';
+                        if (action === 'waLink') {
+                            const phone = (this.searchTerm || '').replace(/\D+/g,'');
+                            const msg = encodeURIComponent(t.trim());
+                            result = phone ? `https://wa.me/${phone}?text=${msg}` : `https://wa.me/?text=${msg}`;
+                            this.showNotification('📲 WhatsApp link generated', 'success');
+                        } else if (action === 'waBold') {
+                            result = `*${t}*`;
+                        } else if (action === 'waItalic') {
+                            result = `_${t}_`;
+                        } else if (action === 'waMono') {
+                            result = '`' + t + '`';
+                        } else if (action === 'xSplit') {
+                            const chunks = [];
+                            const max = 280;
+                            const words = t.split(/\s+/);
+                            let cur = '';
+                            for (const w of words) {
+                                if ((cur + (cur? ' ':'') + w).length > max) { chunks.push(cur); cur = w; } else { cur = cur ? cur + ' ' + w : w; }
+                            }
+                            if (cur) chunks.push(cur);
+                            result = chunks.map((c,i)=>`(${i+1}/${chunks.length}) ${c}`).join('\n\n');
+                        } else if (action === 'tweetLink') {
+                            const msg = encodeURIComponent(t.trim());
+                            if (!msg) { this.showNotification('Write a message to share', 'warning'); return; }
+                            result = `https://twitter.com/intent/tweet?text=${msg}`;
+                            this.showNotification('🐦 Twitter intent link', 'success');
+                        } else if (action === 'tgShare') {
+                            const msg = encodeURIComponent(t.trim());
+                            if (!msg) { this.showNotification('Write a message to share', 'warning'); return; }
+                            result = `https://t.me/share/url?url=&text=${msg}`;
+                            this.showNotification('✈️ Telegram share link', 'success');
+                        } else if (action === 'discordTimeNow') {
+                            const now = Math.floor(Date.now() / 1000);
+                            result = `<t:${now}:F>`;
+                            this.showNotification('🕒 Discord time tag', 'success');
+                        } else if (action === 'slackLinkify') {
+                            // Convert [text](url) markdown to <url|text>
+                            result = t.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<$2|$1>');
+                        } else if (action === 'slackFormat') {
+                            // Basic markdown to Slack: bold/italic/code
+                            result = t.replace(/\*\*(.*?)\*\*/g, '*$1*').replace(/_(.*?)_/g, '_$1_').replace(/`([^`]+)`/g, '```$1```');
+                        } else if (action === 'tgEscape') {
+                            // Escape Telegram MarkdownV2 special chars
+                            result = t.replace(/([_\*\[\]\(\)~`>#+\-=\|{}\.\!])/g, '\\$1');
+                        } else if (action === 'tgCodeBlock') {
+                            result = '```\n' + t + '\n```';
+                        } else if (action === 'redditSpoiler') {
+                            result = '>!' + t + '!<';
+                        } else if (action === 'ytTimestamps') {
+                            // Normalize HH:MM:SS to 0:00 style and align list
+                            const lines = t.split(/\r?\n/).filter(Boolean);
+                            const norm = (s)=>{
+                                const m = s.trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+                                if (!m) return s;
+                                const h = parseInt(m[1],10), mi = parseInt(m[2],10), se = m[3]?parseInt(m[3],10):0;
+                                return (h? h+':':'' ) + String(mi).padStart(h?2:1,'0') + ':' + String(se).padStart(2,'0');
+                            };
+                            result = lines.map(l=>{
+                                const parts = l.split(/\s+-\s+|\s+\|\s+|\s+/);
+                                const ts = norm(parts[0]);
+                                const title = l.slice(l.indexOf(parts[1]||'')>=0? l.indexOf(parts[1]): (ts.length)).trim();
+                                return ts + ' - ' + (title || '');
+                            }).join('\n');
+                        } else {
+                            this.showNotification('❌ Unknown social action', 'error');
+                            return;
+                        }
+                        break;
+                    }
+                    // Track successful utility usage
+                    if (window.AutoOpt) try { window.AutoOpt.trackUsage({ group: type, action }); } catch {}
+
+                    case 'fancy': {
+                        if (action === 'bold') {
+                            result = (window.Utils && window.Utils.Text) ? window.Utils.Text.toBoldUnicode(this.text) : this.text;
+                            this.showNotification('✨ Bold Unicode applied', 'success');
+                        } else if (action === 'mono') {
+                            result = (window.Utils && window.Utils.Text) ? window.Utils.Text.toMonospace(this.text) : this.text;
+                            this.showNotification('✨ Monospace Unicode applied', 'success');
+                        } else {
+                            this.showNotification('❌ Unknown fancy action', 'error');
+                            return;
+                        }
+                        break;
+                    }
+                    case 'regex': {
+                        const pattern = this.searchTerm || '';
+                        if (!pattern) {
+                            this.showNotification('❌ Enter a regex in Find panel', 'error');
+                            return;
+                        }
+                        let flags = 'gmi';
+                        let re;
+                        try {
+                            re = new RegExp(pattern, flags);
+                        } catch (e) {
+                            this.showNotification('❌ Invalid regex: ' + e.message, 'error');
+                            return;
+                        }
+                        if (action === 'test') {
+                            const matched = re.test(this.text);
+                            result = `Regex: /${pattern}/${flags}\nMatched: ${matched}`;
+                            this.showNotification('🧩 Regex tested', 'success');
+                        } else if (action === 'extract') {
+                            const matches = [...this.text.matchAll(re)];
+                            if (matches.length === 0) {
+                                result = 'No matches found';
+                            } else {
+                                result = matches.map((m, i) => `#${i+1}: ${m[0]}${m.length>1 ? '\n' + m.slice(1).map((g,gi)=>`  ($${gi+1}): ${g}`).join('\n') : ''}`).join('\n');
+                            }
+                            this.showNotification('🧩 Groups extracted', 'success');
+                        }
+                        break;
+                    }
+                    case 'convert': {
+                        if (action === 'csvtojson') {
+                            const lines = this.text.split(/\r?\n/).filter(Boolean);
+                            if (lines.length === 0) { result = '[]'; break; }
+                            const headers = lines[0].split(',').map(h=>h.trim());
+                            const rows = lines.slice(1).map(line=>{
+                                const cells = line.split(',');
+                                const obj = {};
+                                headers.forEach((h, idx)=> obj[h] = (cells[idx]||'').trim());
+                                return obj;
+                            });
+                            result = JSON.stringify(rows, null, 2);
+                            this.showNotification('🔁 CSV → JSON', 'success');
+                        } else if (action === 'jsontocsv') {
+                            try {
+                                const arr = JSON.parse(this.text);
+                                if (!Array.isArray(arr) || arr.length === 0) { result = ''; break; }
+                                const headers = Array.from(new Set(arr.flatMap(o => Object.keys(o))));
+                                const csv = [headers.join(',')].concat(
+                                    arr.map(o => headers.map(h => (o[h] ?? '').toString().replace(/"/g, '""')).join(','))
+                                ).join('\n');
+                                result = csv;
+                                this.showNotification('🔁 JSON → CSV', 'success');
+                            } catch (e) {
+                                this.showNotification('❌ Invalid JSON', 'error');
+                                return;
+                            }
+                        }
+                        break;
+                    }
+                    case 'time': {
+                        if (action === 'epoch2date') {
+                            const num = Number(this.text.trim());
+                            const ms = (''+num).length <= 10 ? num*1000 : num;
+                            const d = new Date(ms);
+                            result = isNaN(d.getTime()) ? 'Invalid epoch' : d.toISOString();
+                            this.showNotification('⏱️ Epoch → Date', 'success');
+                        } else if (action === 'date2epoch') {
+                            const d = new Date(this.text.trim());
+                            result = isNaN(d.getTime()) ? 'Invalid date' : Math.floor(d.getTime()/1000).toString();
+                            this.showNotification('⏱️ Date → Epoch', 'success');
+                        }
+                        break;
+                    }
+                    case 'unicode': {
+                        if (action === 'removediacritics') {
+                            // Remove combining marks (universal)
+                            result = this.text.normalize('NFD').replace(/[\u0300-\u036f]+/g, '');
+                            this.showNotification('🌐 Removed diacritics', 'success');
+                        } else if (action === 'normalize') {
+                            result = this.text.normalize('NFKC');
+                            this.showNotification('🌐 Normalized (NFKC)', 'success');
+                        } else if (action === 'slugify') {
+                            result = this.text.normalize('NFD').replace(/\p{Diacritic}+/gu,'')
+                                .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+                            this.showNotification('🌐 Slugified', 'success');
+                        }
+                        break;
+                    }
+                    case 'jwt': {
+                        if (action === 'decode') {
+                            try {
+                                const [h,p,s] = this.text.split('.');
+                                const dec = (v)=> JSON.parse(decodeURIComponent(escape(atob(v.replace(/-/g,'+').replace(/_/g,'/')))));
+                                const out = { header: dec(h), payload: dec(p), signature: s || '' };
+                                result = JSON.stringify(out, null, 2);
+                                this.showNotification('🧾 JWT decoded', 'success');
+                            } catch (e) {
+                                this.showNotification('❌ Invalid JWT', 'error');
+                                return;
+                            }
+                        }
+                        break;
+                    }
+                    case 'url': {
+                        if (!this._memoURL) {
+                            this._memoURL = {
+                                q2j: window.Utils?.memoizeByInput((q) => {
+                                    const params = new URLSearchParams(q);
+                                    const obj = {};
+                                    for (const [k,v] of params.entries()) { if (obj[k]) obj[k] = [].concat(obj[k], v); else obj[k] = v; }
+                                    return obj;
+                                }, { max: 300 }),
+                                j2q: window.Utils?.memoizeByInput((obj) => {
+                                    const params = new URLSearchParams();
+                                    Object.entries(obj).forEach(([k,v]) => { if (Array.isArray(v)) v.forEach(x => params.append(k, x)); else params.set(k, v); });
+                                    return '?' + params.toString();
+                                }, { max: 300 })
+                            };
+                        }
+                        if (action === 'querytojson') {
+                            const q = this.text.trim().replace(/^\?/, '');
+                            const obj = this._memoURL.q2j(q);
+                            result = JSON.stringify(obj, null, 2);
+                            this.showNotification('🔗 Query → JSON', 'success');
+                        } else if (action === 'jsontoquery') {
+                            try {
+                                const obj = JSON.parse(this.text);
+                                result = this._memoURL.j2q(obj);
+                                this.showNotification('🔗 JSON → Query', 'success');
+                            } catch (e) { this.showNotification('❌ Invalid JSON', 'error'); return; }
+                        }
+                        break;
+                    }
+                    case 'diff': {
+                        const prev = this.historyIndex > 0 ? this.history[this.historyIndex - 1] : '';
+                        const a = (prev||'').split('\n');
+                        const b = this.text.split('\n');
+                        function unifiedDiff(a,b){
+                            const out = [];
+                            const max = Math.max(a.length,b.length);
+                            for(let i=0;i<max;i++){
+                                const la=a[i]??'', lb=b[i]??'';
+                                if(la===lb){ out.push(' '+lb); }
+                                else {
+                                    if(la) out.push('-'+la);
+                                    if(lb) out.push('+'+lb);
+                                }
+                            }
+                            return out.join('\n');
+                        }
+                        if (action === 'summary') {
+                            const setA = new Set(a);
+                            const setB = new Set(b);
+                            let added = 0, removed = 0;
+                            for (const line of b) if (!setA.has(line)) added++;
+                            for (const line of a) if (!setB.has(line)) removed++;
+                            result = `Diff summary:\n+ Added: ${added}\n- Removed: ${removed}`;
+                            this.showNotification('🧪 Diff summary created', 'success');
+                        } else if (action === 'insert') {
+                            result = unifiedDiff(a,b);
+                            this.showNotification('🧪 Unified diff inserted', 'success');
+                        }
+                        break;
+                    }
+                    case 'uuid': {
+                        if (action === 'batch') {
+                            const gen = ( ) => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                                const r = Math.random()*16|0, v = c==='x'? r : (r&0x3|0x8); return v.toString(16);
+                            });
+                            result = Array.from({length:10}, gen).join('\n');
+                            this.showNotification('🆔 UUIDs generated', 'success');
+                        }
+                        break;
+                    }
                     case 'discord':
                         switch(action) {
                             case 'bold':
@@ -1069,8 +1406,9 @@ function hexaApp() {
                 }
                 
                 this.text = result;
-                localStorage.setItem('text', this.text);
+                if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
                 this.updateStats();
+                if (window.AutoOpt) { try { window.AutoOpt.trackUsage({ group: type, action }); } catch {} }
             } catch (error) {
                 this.showNotification('❌ Processing failed: ' + error.message, 'error');
                 console.error('Process error:', error);
@@ -1141,7 +1479,7 @@ function hexaApp() {
                 }
                 
                 this.text = result;
-                localStorage.setItem('text', this.text);
+                if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
                 this.updateStats();
             } catch (error) {
                 this.showNotification('❌ Lua processing failed', 'error');
@@ -1161,18 +1499,26 @@ function hexaApp() {
                 case 'format':
                     this.closeOtherPanels('format');
                     this.formatOpen = !this.formatOpen;
+                    if (window.AutoOpt) { try { window.AutoOpt.trackPanel('format', this.formatOpen); } catch {} }
+                    if (window.UXBrain) { try { window.UXBrain.trackPanel('format', this.formatOpen); } catch {} }
                     break;
                 case 'utils':
                     this.closeOtherPanels('utils');
                     this.utilsOpen = !this.utilsOpen;
+                    if (window.AutoOpt) { try { window.AutoOpt.trackPanel('utils', this.utilsOpen); } catch {} }
+                    if (window.UXBrain) { try { window.UXBrain.trackPanel('utils', this.utilsOpen); } catch {} }
                     break;
                 case 'dev':
                     this.closeOtherPanels('dev');
                     this.devToolsOpen = !this.devToolsOpen;
+                    if (window.AutoOpt) { try { window.AutoOpt.trackPanel('dev', this.devToolsOpen); } catch {} }
+                    if (window.UXBrain) { try { window.UXBrain.trackPanel('dev', this.devToolsOpen); } catch {} }
                     break;
                 case 'search':
                     this.closeOtherPanels('search');
                     this.searchOpen = !this.searchOpen;
+                    if (window.AutoOpt) { try { window.AutoOpt.trackPanel('search', this.searchOpen); } catch {} }
+                    if (window.UXBrain) { try { window.UXBrain.trackPanel('search', this.searchOpen); } catch {} }
                     break;
             }
         },
@@ -1191,30 +1537,32 @@ function hexaApp() {
         formatSelectedText(format) {
             const textarea = document.getElementById('textInput');
             if (!textarea) return;
-            
+
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
-            
+
             if (start === end) {
                 this.showNotification('❌ No text selected', 'error');
                 return;
             }
-            
+
             this.saveToHistory();
             const selectedText = this.text.substring(start, end);
-            const formattedText = window.TextFormatter.formatText(selectedText, format);
-            
+            const formattedText = window.TextFormatter && window.TextFormatter.formatText
+                ? window.TextFormatter.formatText(selectedText, format)
+                : selectedText;
+
             this.text = this.text.substring(0, start) + formattedText + this.text.substring(end);
-            localStorage.setItem('text', this.text);
+            if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
             this.updateStats();
-            
+
             // Restore selection
             this.$nextTick(() => {
                 textarea.selectionStart = start;
                 textarea.selectionEnd = start + formattedText.length;
                 textarea.focus();
             });
-            
+
             this.showNotification(`✨ Selected text formatted: ${format}`, 'success');
         },
 
@@ -1223,7 +1571,7 @@ function hexaApp() {
             
             this.updateWritingStats();
             
-            // Listener para detectar salida de pantalla completa
+            // Listener to detect exit from fullscreen
             document.addEventListener('fullscreenchange', () => {
                 if (!document.fullscreenElement && this.focusMode) {
                     this.focusMode = false;
@@ -1239,8 +1587,11 @@ function hexaApp() {
             });
             
             this.autoSaveInterval = setInterval(() => {
-                if (this.text !== localStorage.getItem('text')) {
-                    localStorage.setItem('text', this.text);
+                const last = (typeof window.__hexaLastSavedText === 'string')
+                  ? window.__hexaLastSavedText
+                  : (window.TextStore ? window.TextStore.get() : localStorage.getItem('text'));
+                if (this.text !== last) {
+                    if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
                     this.lastSaveTime = Date.now();
                 }
             }, 30000);
@@ -1263,7 +1614,7 @@ function hexaApp() {
                             break;
                         case 's':
                             e.preventDefault();
-                            localStorage.setItem('text', this.text);
+                            if (window.TextStore) { window.TextStore.set(this.text); } else { try { localStorage.setItem('text', this.text); } catch {} }
                             this.showNotification('💾 Saved!', 'success');
                             break;
                         case 'e':
@@ -1314,35 +1665,43 @@ function hexaApp() {
                 } else {
                     document.documentElement.classList.remove('dark');
                 }
+                if (window.AutoOpt) { try { window.AutoOpt.trackThemeChange(value); } catch {} }
             });
 
             const params = new URLSearchParams(window.location.search);
             const textParam = params.get('text');
-            const compressedParam = params.get('t'); // Parámetro comprimido
+            const compressedParam = params.get('t'); // payload (compressed when c=1)
             const isCompressed = params.get('c') === '1';
+            const schemeParam = params.get('s'); // scheme: lu | lb | w1
             const titleParam = params.get('title');
 
-            // Procesar texto desde URL
+            // Process text from URL
             if (textParam || compressedParam) {
                 let finalText = '';
                 
                 try {
                     if (compressedParam && isCompressed) {
-                        // Descomprimir texto
-                        finalText = LZString.decompressFromEncodedURIComponent(compressedParam);
-                        if (!finalText) {
-                            throw new Error('Decompression failed');
+                        // Decompress text using scheme
+                        if (window.SmartCompress && schemeParam) {
+                            finalText = window.SmartCompress.decompress(schemeParam, compressedParam);
+                        } else {
+                            // Fallback to URI-safe
+                            finalText = LZString.decompressFromEncodedURIComponent(compressedParam);
                         }
-                        console.log('Successfully decompressed text from URL');
+                        if (!finalText) { throw new Error('Decompression failed'); }
                     } else if (textParam) {
-                        // Texto sin comprimir (método tradicional)
+                        // Uncompressed text (traditional)
                         finalText = textParam;
                     } else if (compressedParam) {
-                        // Fallback: intentar descomprimir sin flag
+                        // Fallback: try to decompress without flag
                         try {
-                            finalText = LZString.decompressFromEncodedURIComponent(compressedParam);
+                            if (window.SmartCompress && schemeParam) {
+                                finalText = window.SmartCompress.decompress(schemeParam, compressedParam);
+                            } else {
+                                finalText = LZString.decompressFromEncodedURIComponent(compressedParam);
+                            }
                             if (!finalText) {
-                                finalText = compressedParam; // Usar como texto plano si falla
+                                finalText = compressedParam; // Use as plain text if it fails
                             }
                         } catch (e) {
                             finalText = compressedParam;
@@ -1351,9 +1710,9 @@ function hexaApp() {
                     
                     if (finalText) {
                         this.text = finalText;
-                        localStorage.setItem('text', finalText);
+                        if (window.TextStore) { window.TextStore.set(finalText); } else { try { localStorage.setItem('text', finalText); } catch {} }
                         
-                        // Mostrar notificación de carga exitosa
+                        // Show success notification for URL load
                         setTimeout(() => {
                             if (isCompressed && compressedParam) {
                                 const compressionRatio = ((1 - compressedParam.length / finalText.length) * 100).toFixed(1);
@@ -1366,11 +1725,11 @@ function hexaApp() {
                     
                 } catch (error) {
                     console.error('Error processing text from URL:', error);
-                    // Fallback: intentar usar el parámetro como texto plano
+                    // Fallback: try using the parameter as plain text
                     const fallbackText = compressedParam || textParam;
                     if (fallbackText) {
                         this.text = fallbackText;
-                        localStorage.setItem('text', fallbackText);
+                        if (window.TextStore) { window.TextStore.set(fallbackText); } else { try { localStorage.setItem('text', fallbackText); } catch {} }
                         this.showNotification('📄 Text loaded (compression failed, using fallback)', 'warning');
                     }
                 }
@@ -1385,10 +1744,35 @@ function hexaApp() {
             setTimeout(() => {
                 this.showNotification('🚀 Hexa ready!', 'success');
             }, 500);
+
+            // Apply subtle optimizations shortly after init and periodically
+            setTimeout(() => { if (window.AutoOpt) { try { window.AutoOpt.applyOptimizations(this); } catch {} } }, 1200);
+            setInterval(() => { if (window.AutoOpt) { try { window.AutoOpt.applyOptimizations(this); } catch {} } }, 90000);
+
+            // Kick UXBrain periodic suggestions as well (safe if not present)
+            setInterval(() => { if (window.UXBrain) { try { window.UXBrain.tick(this); } catch {} } }, 60000);
+
+            // Track editor input behavior (debounced)
+            try {
+                const ta = document.getElementById('textInput');
+                if (ta && window.Utils && Utils.debounce) {
+                    const trackInput = Utils.debounce(() => {
+                        if (window.AutoOpt) window.AutoOpt.trackUsage({ group: 'editor', action: 'input' });
+                        try {
+                            // Approximate CPM and idleMs for UXBrain
+                            const minutes = Math.max(1/60, (this.writingTime||1)/60);
+                            const cpm = (this.text||'').length / minutes;
+                            if (window.UXBrain) window.UXBrain.trackTyping(cpm, 0);
+                        } catch {}
+                    }, 1500);
+                    ta.addEventListener('input', trackInput);
+                }
+            } catch {}
         },
 
         codeFeature(action) {
-            if (!this.text.trim()) {
+            const allowWithoutText = new Set(['nowIsoEpoch','uuidBatch','passwords','httpFetchSnippet','axiosSnippet']);
+            if (!allowWithoutText.has(action) && !this.text.trim()) {
                 this.showNotification('❌ Add text to use smart functions', 'warning');
                 return;
             }
@@ -1397,7 +1781,152 @@ function hexaApp() {
             
             try {
                 let result = '';
+                const txt = this.text || '';
+                // Memoized helpers (created once per app instance)
+                if (!this._memo) {
+                    this._memo = {
+                        parseJSON: window.Utils?.memoizeByInput((s) => JSON.parse(s), { max: 200 }),
+                        stringifySorted: window.Utils?.memoizeByInput((o) => JSON.stringify(o, null, 2), { max: 200 }),
+                        hex2rgb: window.Utils?.memoizeByInput((h) => {
+                            let m = h.trim().match(/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+                            if (!m) return null;
+                            let hh = m[1]; if (hh.length === 3) hh = hh.split('').map(c=>c+c).join('');
+                            const r = parseInt(hh.slice(0,2),16), g = parseInt(hh.slice(2,4),16), b = parseInt(hh.slice(4,6),16);
+                            return `rgb(${r}, ${g}, ${b})`;
+                        }, { max: 500 }),
+                        rgb2hex: window.Utils?.memoizeByInput((rgbstr) => {
+                            const m = rgbstr.match(/rgb\s*\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)/i);
+                            if (!m) return null;
+                            const toHex = (n) => Math.max(0, Math.min(255, parseInt(n,10))).toString(16).padStart(2,'0');
+                            return '#' + toHex(m[1]) + toHex(m[2]) + toHex(m[3]);
+                        }, { max: 500 })
+                    };
+                }
                 switch(action) {
+                    // JSON Toolkit
+                    case 'jsonValidate': {
+                        try { JSON.parse(txt); this.showNotification('Valid JSON ✅', 'success'); } catch (e) { this.showNotification('Invalid JSON: ' + e.message, 'error'); }
+                        return;
+                    }
+                    case 'jsonPretty': {
+                        try { const obj = this._memo.parseJSON(txt); result = JSON.stringify(obj, null, 2); } catch (e) { this.showNotification('Invalid JSON: ' + e.message, 'error'); return; }
+                        break;
+                    }
+                    case 'jsonMinify': {
+                        try { const obj = this._memo.parseJSON(txt); result = JSON.stringify(obj); } catch (e) { this.showNotification('Invalid JSON: ' + e.message, 'error'); return; }
+                        break;
+                    }
+                    case 'jsonSortKeys': {
+                        try {
+                            const obj = this._memo.parseJSON(txt);
+                            const sortObj = (o) => Array.isArray(o) ? o.map(sortObj) : (o && typeof o === 'object') ? Object.keys(o).sort().reduce((acc,k)=>{acc[k]=sortObj(o[k]);return acc;}, {}) : o;
+                            result = JSON.stringify(sortObj(obj), null, 2);
+                        } catch (e) { this.showNotification('Invalid JSON: ' + e.message, 'error'); return; }
+                        break;
+                    }
+
+                    // Encoding & Base
+                    case 'textToBinary': {
+                        result = Array.from(txt).map(ch => ch.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+                        break;
+                    }
+                    case 'binaryToText': {
+                        result = txt.trim().split(/\s+/).map(b => String.fromCharCode(parseInt(b, 2))).join('');
+                        break;
+                    }
+                    case 'decToHex': {
+                        result = txt.trim().split(/\s+/).map(n => { const v = Number(n); return Number.isFinite(v) ? '0x' + v.toString(16) : n; }).join(' ');
+                        break;
+                    }
+                    case 'hexToDec': {
+                        result = txt.trim().split(/\s+/).map(n => { const m = n.match(/^0x?[0-9a-fA-F]+$/); return m ? parseInt(n.replace(/^0x/i, ''), 16).toString(10) : n; }).join(' ');
+                        break;
+                    }
+
+                    // Color Tools
+                    case 'hexToRgb': {
+                        const rgb = this._memo.hex2rgb(txt);
+                        if (!rgb) { this.showNotification('Provide HEX like #ff00aa', 'warning'); return; }
+                        result = rgb;
+                        break;
+                    }
+                    case 'rgbToHex': {
+                        const hex = this._memo.rgb2hex(txt);
+                        if (!hex) { this.showNotification('Provide RGB like rgb(255, 0, 170)', 'warning'); return; }
+                        result = hex;
+                        break;
+                    }
+                    case 'palette': {
+                        const src = (this.searchTerm || txt || '').trim();
+                        const m = src.match(/#?[0-9a-fA-F]{6}/);
+                        if (!m) { this.showNotification('Provide a HEX color in the editor or search', 'warning'); return; }
+                        const base = m[0].replace('#','');
+                        const toRgb = (h)=>({ r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16) });
+                        const toHex = ({r,g,b})=> '#' + [r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+                        const {r,g,b} = toRgb(base);
+                        const variants = [ {r:r*0.9,g:g*0.9,b:b*0.9}, {r:r*0.75,g:g*0.75,b:b*0.75}, {r:r*1.1,g:g*1.1,b:b*1.1}, {r:r*1.25,g:g*1.25,b:b*1.25} ].map(toHex);
+                        result = ['#'+base, ...variants].join('\n');
+                        break;
+                    }
+
+                    // Extractors
+                    case 'extractIPs': {
+                        const ips = Array.from(txt.matchAll(/\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b/g)).map(m=>m[0]);
+                        result = ips.join('\n');
+                        break;
+                    }
+                    case 'extractDomains': {
+                        const domains = Array.from(txt.matchAll(/\b([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}\b/gi)).map(m=>m[0].toLowerCase());
+                        result = Array.from(new Set(domains)).join('\n');
+                        break;
+                    }
+                    case 'extractHashtags': {
+                        const tags = Array.from(txt.matchAll(/#(\w+)/g)).map(m=>m[0]);
+                        result = Array.from(new Set(tags)).join(' ');
+                        break;
+                    }
+                    case 'extractMentions': {
+                        const at = Array.from(txt.matchAll(/@(\w+)/g)).map(m=>m[0]);
+                        result = Array.from(new Set(at)).join(' ');
+                        break;
+                    }
+
+                    // URL & Time
+                    case 'parseURL': {
+                        try {
+                            const src = (this.searchTerm || txt).trim();
+                            const u = new URL(src);
+                            const out = { href: u.href, protocol: u.protocol, host: u.host, hostname: u.hostname, port: u.port, pathname: u.pathname, hash: u.hash, query: Object.fromEntries(u.searchParams.entries()) };
+                            result = JSON.stringify(out, null, 2);
+                        } catch (e) { this.showNotification('Invalid URL', 'warning'); return; }
+                        break;
+                    }
+                    case 'nowIsoEpoch': {
+                        const now = new Date();
+                        result = JSON.stringify({ iso: now.toISOString(), epoch: Math.floor(now.getTime()/1000) }, null, 2);
+                        break;
+                    }
+
+                    // Snippets
+                    case 'httpFetchSnippet': {
+                        result = `// fetch example\nfetch('https://api.example.com/data', {\n  method: 'GET',\n  headers: { 'Accept': 'application/json' }\n})\n  .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json(); })\n  .then(console.log)\n  .catch(console.error);`;
+                        break;
+                    }
+                    case 'axiosSnippet': {
+                        result = `// Axios in Node.js\nconst axios = require('axios');\n(async ()=>{\n  try {\n    const { data } = await axios.get('https://api.example.com/data');\n    console.log(data);\n  } catch (err) {\n    console.error(err.message);\n  }\n})();`;
+                        break;
+                    }
+                    case 'uuidBatch': {
+                        const u = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = (Math.random()*16)|0, v = c === 'x' ? r : (r&0x3|0x8); return v.toString(16); });
+                        result = Array.from({length:10}, u).join('\n');
+                        break;
+                    }
+                    case 'passwords': {
+                        const gen = (len=14)=>{ const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*()_+'; return Array.from({length:len},()=>chars[Math.floor(Math.random()*chars.length)]).join(''); };
+                        result = Array.from({length:5},()=>gen(14)).join('\n');
+                        break;
+                    }
+                   
                     case 'validateCode':
                         const language = this.detectLanguage(this.text);
                         const validation = CodeFeatures.validateCode(this.text, language);
@@ -1425,10 +1954,6 @@ function hexaApp() {
                         result = CodeFeatures.generateCodeSnippet('function', lang);
                         break;
                         
-                    case 'explainCode':
-                        result = AIAssistant.explainCode(this.text);
-                        break;
-                        
                     default:
                         this.showNotification('❌ Function not recognized', 'error');
                         return;
@@ -1437,6 +1962,7 @@ function hexaApp() {
                 this.text = result;
                 this.updateStats();
                 this.showNotification(`🧠 ${action} ejecutado exitosamente!`, 'success');
+                if (window.AutoOpt) { try { window.AutoOpt.trackUsage({ group: 'codeFeature', action }); } catch {} }
             } catch (error) {
                 this.showNotification('❌ Error in smart function', 'error');
                 console.error('Feature error:', error);
@@ -1462,6 +1988,7 @@ function hexaApp() {
             } catch {
                 return 'javascript';
             }
-        }
+        },
+
     }
 }

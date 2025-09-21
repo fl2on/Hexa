@@ -10,9 +10,16 @@
     <!-- Prevent light theme flicker -->
     <script>
         (function () {
-            const darkMode = localStorage.getItem('darkMode') !== 'false';
-            if (darkMode) {
-                document.documentElement.classList.add('dark');
+            try {
+                var darkMode = true;
+                if (window.Utils && window.Utils.SafeStorage) {
+                    darkMode = window.Utils.SafeStorage.local.get('darkMode', true) !== false;
+                } else {
+                    darkMode = localStorage.getItem('darkMode') !== 'false';
+                }
+                if (darkMode) document.documentElement.classList.add('dark');
+            } catch {
+                if (localStorage.getItem('darkMode') !== 'false') document.documentElement.classList.add('dark');
             }
         })();
     </script>
@@ -21,9 +28,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <script src="js/smart-compress.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/prism.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/themes/prism-tomorrow.min.css">
     <script src="js/utils.js"></script>
+    <!-- TensorFlow.js for on-device learning -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0/dist/tf.min.js"></script>
+    <script src="js/tf-opt.js"></script>
+    <script src="js/auto-opt.js"></script>
     <script src="js/advanced-features.js"></script>
 </head>
 
@@ -33,7 +45,7 @@
         focusMode ? 'focus-mode-active' : ''
     ]">
 
-    <!-- Efecto de brillo del mouse tipo linterna -->
+    <!-- Mouse glow effect (flashlight-style) -->
     <div id="glow-effect" class="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300 lg:block hidden"
          :style="{ opacity: darkMode ? '1' : '0.8' }"></div>
 
@@ -51,7 +63,7 @@
         </button>
     </div>
 
-    <!-- Navegación -->
+    <!-- Navigation -->
     <nav class="fixed top-0 left-0 w-full z-50 transition-all duration-300" :class="[
              darkMode ? 'border-b border-white/5 bg-black/50 backdrop-blur-xl' : 'border-b border-black/5 bg-white/50 backdrop-blur-xl',
              focusMode ? 'opacity-0 pointer-events-none' : 'opacity-100'
@@ -127,7 +139,7 @@
                     <button @click="togglePanel('utils')"
                         class="relative p-2 sm:p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group flex items-center justify-center"
                         :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
-                        title="Utilities (Discord, Hash)">
+                        title="Utilities (Discord, Social)">
                         <div class="relative z-10 flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
                                 :class="utilsOpen ? 'text-indigo-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
@@ -176,7 +188,7 @@
         </div>
     </nav>
 
-    <!-- Contenido principal -->
+    <!-- Main content -->
     <main class="transition-all duration-500" :class="[
               focusMode ? 'pt-16 pb-16 px-4 sm:px-8 md:px-16 max-w-5xl mx-auto min-h-screen flex items-center' : 'pt-16 md:pt-24 pb-8 md:pb-12 px-2 sm:px-4 max-w-full sm:max-w-3xl mx-auto',
               (devToolsOpen || formatOpen || utilsOpen) && !focusMode ? 'lg:mr-96' : ''
@@ -204,6 +216,7 @@
                             :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
                             Share URL
                         </button>
+                        
                         <button @click="getTextAnalysis()"
                             class="text-xs px-3 py-1 rounded-md transition-all duration-300"
                             :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
@@ -587,42 +600,93 @@
             </div>
         </div>
 
-        <!-- Hash & Encoding -->
+
+        <!-- Fancy Social Text -->
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                🔐 Hash & Encoding
+                &#x2728; Fancy Text
             </h4>
             <div class="grid grid-cols-2 gap-2">
-                <button @click="processUtils('hash', 'md5')" 
-                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
-                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
-                    MD5
-                </button>
-                <button @click="processUtils('hash', 'sha256')" 
-                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
-                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
-                    SHA256
-                </button>
-                <button @click="processUtils('hash', 'base64encode')" 
-                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
-                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
-                    B64 Encode
-                </button>
-                <button @click="processUtils('hash', 'base64decode')" 
-                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
-                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
-                    B64 Decode
-                </button>
-                <button @click="processUtils('hash', 'urlencode')" 
-                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
-                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
-                    URL Encode
-                </button>
-                <button @click="processUtils('hash', 'urldecode')" 
-                        class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
-                        :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">
-                    URL Decode
-                </button>
+                <button @click="processUtils('fancy','bold')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-300' : 'bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-700'">Bold Unicode</button>
+                <button @click="processUtils('fancy','mono')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-300' : 'bg-fuchsia-500/20 hover:bg-fuchsia-500/30 text-fuchsia-700'">Monospace</button>
+            </div>
+        </div>
+
+        <!-- Social Share Links -->
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                &#x1F517; Share Links
+            </h4>
+            <div class="grid grid-cols-2 gap-2">
+                <button @click="processUtils('social','tweetLink')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-300' : 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-700'">Twitter Intent</button>
+                <button @click="processUtils('social','tgShare')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300' : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-700'">Telegram Share</button>
+                <button @click="processUtils('social','discordTimeNow')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300 col-span-2" :class="darkMode ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-700'">Discord Time Tag (now)</button>
+            </div>
+        </div>
+
+        <!-- Social Utilities: WhatsApp -->
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                &#x1F4F2; WhatsApp
+            </h4>
+            <div class="grid grid-cols-2 gap-2">
+                <button @click="processUtils('social','waLink')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-green-500/20 hover:bg-green-500/30 text-green-300' : 'bg-green-500/20 hover:bg-green-500/30 text-green-600'">Generate Chat Link</button>
+                <button @click="processUtils('social','waBold')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-green-500/20 hover:bg-green-500/30 text-green-300' : 'bg-green-500/20 hover:bg-green-500/30 text-green-600'">*Bold*</button>
+                <button @click="processUtils('social','waItalic')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-green-500/20 hover:bg-green-500/30 text-green-300' : 'bg-green-500/20 hover:bg-green-500/30 text-green-600'">_Italic_</button>
+                <button @click="processUtils('social','waMono')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-green-500/20 hover:bg-green-500/30 text-green-300' : 'bg-green-500/20 hover:bg-green-500/30 text-green-600'">`Monospace`</button>
+            </div>
+            <div class="text-xs mt-2" :class="darkMode ? 'text-white/50' : 'text-gray-600'">Uses Search for phone (digits) if provided.</div>
+        </div>
+
+        <!-- Social Utilities: X/Twitter -->
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                &#x1F426; X / Twitter
+            </h4>
+            <div class="grid grid-cols-1 gap-2">
+                <button @click="processUtils('social','xSplit')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-300' : 'bg-sky-500/20 hover:bg-sky-500/30 text-sky-600'">Split to 280 chars (1/N)</button>
+            </div>
+        </div>
+
+        <!-- Social Utilities: Slack -->
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                &#x1F4BC; Slack
+            </h4>
+            <div class="grid grid-cols-2 gap-2">
+                <button @click="processUtils('social','slackLinkify')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-300' : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-600'">[text](url) → <url|text></button>
+                <button @click="processUtils('social','slackFormat')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-300' : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-600'">Markdown → Slack</button>
+            </div>
+        </div>
+
+        <!-- Social Utilities: Telegram -->
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                &#x2708;&#xFE0F; Telegram
+            </h4>
+            <div class="grid grid-cols-2 gap-2">
+                <button @click="processUtils('social','tgEscape')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300' : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-600'">Escape MarkdownV2</button>
+                <button @click="processUtils('social','tgCodeBlock')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300' : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-600'">Wrap Code Block</button>
+            </div>
+        </div>
+
+        <!-- Social Utilities: Reddit -->
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                &#x1F47D; Reddit
+            </h4>
+            <div class="grid grid-cols-1 gap-2">
+                <button @click="processUtils('social','redditSpoiler')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-300' : 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-600'">Wrap as >!spoiler!<</button>
+            </div>
+        </div>
+
+        <!-- Social Utilities: YouTube -->
+        <div class="mb-6">
+            <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                &#x25B6;&#xFE0F; YouTube
+            </h4>
+            <div class="grid grid-cols-1 gap-2">
+                <button @click="processUtils('social','ytTimestamps')" class="text-xs px-3 py-2 rounded-lg transition-all duration-300" :class="darkMode ? 'bg-red-500/20 hover:bg-red-500/30 text-red-300' : 'bg-red-500/20 hover:bg-red-500/30 text-red-600'">Normalize Timestamps</button>
             </div>
         </div>
     </div>
@@ -653,7 +717,7 @@
                     :class="darkMode ? 'text-white/80' : 'text-gray-800'">
                     <span>🐍</span> Python Executor
                 </h4>
-                <button @click="executePython()" :disabled="!text.trim() || pythonExecuting"
+                <button @click="executePython()" :disabled="!text.trim() || pythonExecuting" title="Run Python code"
                     class="w-full px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     :class="darkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'">
                     <span x-text="pythonExecuting ? 'Executing...' : 'Run Python'"></span>
@@ -715,13 +779,10 @@
                         :class="darkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30'">
                         🗃️ SQL
                     </button>
-                    <button @click="generateCode('mockdata')"
-                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
-                        :class="darkMode ? 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30' : 'bg-teal-500/20 text-teal-600 hover:bg-teal-500/30'">
-                        📊 Mock Data
-                    </button>
+                    
                 </div>
             </div>
+
 
             <!-- Minify de Codigo -->
             <div class="mb-6">
@@ -771,11 +832,7 @@
                         :class="darkMode ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' : 'bg-cyan-500/20 text-cyan-600 hover:bg-cyan-500/30'">
                         📝 Snippet
                     </button>
-                    <button @click="codeFeature('explainCode')"
-                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
-                        :class="darkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500/20 text-amber-600 hover:bg-amber-500/30'">
-                        💡 Explain
-                    </button>
+                    
                 </div>
             </div>
 
@@ -800,6 +857,26 @@
                 </div>
             </div>
 
+            <!-- Telemetry (read-only) -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
+                    :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>📈</span> Compression Telemetry
+                </h4>
+                <div class="grid grid-cols-1 gap-2">
+                    <button @click="showTelemetry()" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
+                        :class="darkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-500/20 text-blue-600 hover:bg-blue-500/30'">
+                        📋 View Telemetry Snapshot
+                    </button>
+                </div>
+                <div x-show="telemetryView" class="mt-3 p-3 rounded-lg text-xs font-mono whitespace-pre-wrap"
+                    :class="darkMode ? 'bg-white/5 text-white/70' : 'bg-black/5 text-gray-700'"
+                    x-text="telemetryView"></div>
+                <div class="text-xs mt-2 p-2 rounded-lg" :class="darkMode ? 'bg-white/5 text-white/60' : 'bg-black/5 text-gray-600'">
+                    💡 Local-only stats per content type: total samples, dominant scheme, and average gains.
+                </div>
+            </div>
+
             <!-- Ofuscador de Lua -->
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
@@ -818,6 +895,156 @@
                 </div>
                 <div class="text-xs mt-2 p-2 rounded-lg" :class="darkMode ? 'bg-white/5 text-white/60' : 'bg-black/5 text-gray-600'">
                     ⚠️ Use responsibly and ethically
+                </div>
+            </div>
+
+            <!-- Hash & Encoding (moved from Utilities) -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🔐</span> Hash & Encoding
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="processUtils('hash','md5')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' : 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'">MD5</button>
+                    <button @click="processUtils('hash','sha256')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' : 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'">SHA256</button>
+                    <button @click="processUtils('hash','base64encode')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' : 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'">B64 Encode</button>
+                    <button @click="processUtils('hash','base64decode')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' : 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'">B64 Decode</button>
+                    <button @click="processUtils('hash','urlencode')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' : 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'">URL Encode</button>
+                    <button @click="processUtils('hash','urldecode')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' : 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'">URL Decode</button>
+                </div>
+            </div>
+
+            <!-- Regex Tools (moved) -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🧩</span> Regex Tools
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="processUtils('regex','test')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' : 'bg-cyan-500/20 text-cyan-600 hover:bg-cyan-500/30'">Test Pattern</button>
+                    <button @click="processUtils('regex','extract')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' : 'bg-cyan-500/20 text-cyan-600 hover:bg-cyan-500/30'">Extract Groups</button>
+                </div>
+                <div class="text-xs mt-2" :class="darkMode ? 'text-white/50' : 'text-gray-600'">Uses the Search term as regex (from Find panel)</div>
+            </div>
+
+            <!-- Converters (moved) -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🔁</span> Converters
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="processUtils('convert','csvtojson')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500/20 text-amber-600 hover:bg-amber-500/30'">CSV → JSON</button>
+                    <button @click="processUtils('convert','jsontocsv')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500/20 text-amber-600 hover:bg-amber-500/30'">JSON → CSV</button>
+                    <button @click="processUtils('time','epoch2date')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-lime-500/20 text-lime-300 hover:bg-lime-500/30' : 'bg-lime-500/20 text-lime-600 hover:bg-lime-500/30'">Epoch → Date</button>
+                    <button @click="processUtils('time','date2epoch')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-lime-500/20 text-lime-300 hover:bg-lime-500/30' : 'bg-lime-500/20 text-lime-600 hover:bg-lime-500/30'">Date → Epoch</button>
+                </div>
+            </div>
+
+            <!-- Unicode (moved) -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🌐</span> Unicode
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="processUtils('unicode','removediacritics')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30' : 'bg-purple-500/20 text-purple-600 hover:bg-purple-500/30'">Remove Diacritics</button>
+                    <button @click="processUtils('unicode','normalize')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30' : 'bg-purple-500/20 text-purple-600 hover:bg-purple-500/30'">Normalize NFKC</button>
+                    <button @click="processUtils('unicode','slugify')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300 col-span-2" :class="darkMode ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30' : 'bg-purple-500/20 text-purple-600 hover:bg-purple-500/30'">Slugify</button>
+                </div>
+            </div>
+
+            <!-- JWT & URL (moved) -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🧾</span> JWT & URL
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="processUtils('jwt','decode')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30' : 'bg-rose-500/20 text-rose-600 hover:bg-rose-500/30'">Decode JWT</button>
+                    <button @click="processUtils('url','querytojson')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30'">Query → JSON</button>
+                    <button @click="processUtils('url','jsontoquery')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300 col-span-2" :class="darkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30'">JSON → Query</button>
+                </div>
+            </div>
+
+            <!-- Diff & IDs (moved) -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🧪</span> Diff & IDs
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="processUtils('diff','summary')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30' : 'bg-teal-500/20 text-teal-600 hover:bg-teal-500/30'">Diff with Previous</button>
+                    <button @click="processUtils('diff','insert')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30' : 'bg-teal-500/20 text-teal-600 hover:bg-teal-500/30'">Insert Unified Diff</button>
+                    <button @click="processUtils('uuid','batch')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300 col-span-2" :class="darkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30'">Generate 10 UUIDs</button>
+                </div>
+            </div>
+            <!-- JSON Toolkit -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🧰</span> JSON Toolkit
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="codeFeature('jsonValidate')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30'">Validate JSON</button>
+                    <button @click="codeFeature('jsonPretty')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-500/20 text-blue-600 hover:bg-blue-500/30'">Pretty JSON</button>
+                    <button @click="codeFeature('jsonMinify')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30'">Minify JSON</button>
+                    <button @click="codeFeature('jsonSortKeys')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30' : 'bg-purple-500/20 text-purple-600 hover:bg-purple-500/30'">Sort Keys</button>
+                </div>
+            </div>
+
+            <!-- Encoding & Base Converters -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🔣</span> Encoding & Base
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="codeFeature('textToBinary')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' : 'bg-cyan-500/20 text-cyan-600 hover:bg-cyan-500/30'">Text → Binary</button>
+                    <button @click="codeFeature('binaryToText')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' : 'bg-cyan-500/20 text-cyan-600 hover:bg-cyan-500/30'">Binary → Text</button>
+                    <button @click="codeFeature('decToHex')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500/20 text-amber-600 hover:bg-amber-500/30'">Dec → Hex</button>
+                    <button @click="codeFeature('hexToDec')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500/20 text-amber-600 hover:bg-amber-500/30'">Hex → Dec</button>
+                </div>
+            </div>
+
+            <!-- Color Tools -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🎨</span> Color Tools
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="codeFeature('hexToRgb')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30' : 'bg-pink-500/20 text-pink-600 hover:bg-pink-500/30'">HEX → RGB</button>
+                    <button @click="codeFeature('rgbToHex')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30' : 'bg-pink-500/20 text-pink-600 hover:bg-pink-500/30'">RGB → HEX</button>
+                    <button @click="codeFeature('palette')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300 col-span-2" :class="darkMode ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30' : 'bg-pink-500/20 text-pink-600 hover:bg-pink-500/30'">Generate Palette</button>
+                </div>
+            </div>
+
+            <!-- Extractors -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🧲</span> Extractors
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="codeFeature('extractIPs')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30' : 'bg-teal-500/20 text-teal-600 hover:bg-teal-500/30'">IPs</button>
+                    <button @click="codeFeature('extractDomains')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30' : 'bg-teal-500/20 text-teal-600 hover:bg-teal-500/30'">Domains</button>
+                    <button @click="codeFeature('extractHashtags')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30' : 'bg-teal-500/20 text-teal-600 hover:bg-teal-500/30'"># Hashtags</button>
+                    <button @click="codeFeature('extractMentions')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30' : 'bg-teal-500/20 text-teal-600 hover:bg-teal-500/30'">@ Mentions</button>
+                </div>
+            </div>
+
+            <!-- URL & Time -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>⏱️</span> URL & Time
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="codeFeature('parseURL')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30'">Parse URL</button>
+                    <button @click="codeFeature('nowIsoEpoch')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30'">Now → ISO/Epoch</button>
+                </div>
+            </div>
+
+            <!-- Snippets -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
+                    <span>🧩</span> Snippets
+                </h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="codeFeature('httpFetchSnippet')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500/20 text-amber-600 hover:bg-amber-500/30'">HTTP fetch()</button>
+                    <button @click="codeFeature('axiosSnippet')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500/20 text-amber-600 hover:bg-amber-500/30'">Axios (Node)</button>
+                    <button @click="codeFeature('uuidBatch')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300 col-span-2" :class="darkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30'">Generate 10 UUIDs</button>
+                    <button @click="codeFeature('passwords')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300 col-span-2" :class="darkMode ? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30' : 'bg-rose-500/20 text-rose-600 hover:bg-rose-500/30'">Generate 5 Passwords</button>
                 </div>
             </div>
         </div>
@@ -906,7 +1133,9 @@
     <script src="js/advanced-features.js"></script>
     <script src="js/dev-tools.js"></script>
     <script src="js/main.js"></script>
+        <script src="js/algos.js"></script>
     <script src="js/hexa-app.js"></script>
+    <script src="js/ux-brain.js"></script>
     <script>
         // Initialize utilities: logger, error handler, footer year, and hotkeys
         (function(){

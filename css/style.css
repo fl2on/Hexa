@@ -1,6 +1,6 @@
-/* ===== TEXTAREA Y NÚMEROS DE LÍNEA ===== */
+/* ===== TEXTAREA AND LINE NUMBERS ===== */
 
-/* Contenedor de números de línea */
+/* Line numbers container */
 .line-numbers-container {
     position: absolute;
     left: 0;
@@ -42,7 +42,7 @@ nav, footer {
     will-change: opacity, transform;
 }
 
-/* Focus mode: suavizar ocultación de navegación y paneles */
+/* Focus mode: smooth hiding of navigation and panels */
 .focus-mode-active nav,
 .focus-mode-active footer {
     opacity: 0 !important;
@@ -50,7 +50,7 @@ nav, footer {
     transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
-/* Ocultar paneles laterales suavemente (si están abiertos) */
+/* Smoothly hide side panels (if open) */
 .focus-mode-active .fixed.top-0.right-0.h-full {
     opacity: 0 !important;
     transform: translateX(24px) !important;
@@ -58,12 +58,12 @@ nav, footer {
     transition: opacity 550ms cubic-bezier(0.22, 1, 0.36, 1), transform 550ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
-/* Focus mode: botón de salida (clase .focus-exit-btn en index) */
+/* Focus mode: exit button (class .focus-exit-btn in index) */
 .focus-exit-btn {
     background: rgba(0, 0, 0, 0.8) !important;
     color: #fff !important;
     border: 1px solid rgba(255, 255, 255, 0.25) !important;
-    border-radius: 9999px !important; /* total round */
+    border-radius: 9999px !important; /* fully rounded */
     box-shadow: 0 8px 30px rgba(0,0,0,0.35) !important;
     transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), background-color 320ms ease, box-shadow 320ms ease !important;
 }
@@ -81,9 +81,9 @@ nav, footer {
     height: 48px !important;
 }
 
-/* ===== EFECTO LINTERNA ===== */
+/* ===== FLASHLIGHT EFFECT ===== */
 
-/* Efecto de linterna base que sigue el mouse */
+/* Base flashlight effect that follows the mouse */
 #glow-effect {
     background: radial-gradient(
         600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
@@ -95,11 +95,14 @@ nav, footer {
     );
     mix-blend-mode: overlay;
     opacity: 0.8;
+    pointer-events: none;            /* no interactions */
+    position: fixed;                 /* full-screen layer */
+    inset: 0;                        /* cover the entire window */
+    contain: paint;                  /* limit repaints to this element */
 }
 
-/* Efecto linterna más intenso cuando darkMode está activo */
-body:has([x-data] [class*="bg-[#0A0A0A]"]) #glow-effect,
-body:has([x-data] .bg-black) #glow-effect {
+/* Flashlight effect in dark mode via class (avoid costly :has) */
+#glow-effect.glow--dark {
     background: radial-gradient(
         500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
         rgba(255, 255, 255, 0.25) 0%,
@@ -112,7 +115,7 @@ body:has([x-data] .bg-black) #glow-effect {
     opacity: 1;
 }
 
-/* Efecto adicional para el modo focus */
+/* Additional effect for focus mode */
 .focus-mode-active #glow-effect {
     background: radial-gradient(
         350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
@@ -124,12 +127,12 @@ body:has([x-data] .bg-black) #glow-effect {
     mix-blend-mode: overlay;
 }
 
-/* Animación suave para cambios */
+/* Smooth animation for changes */
 #glow-effect {
-    transition: opacity 0.5s ease-out, background 0.3s ease-out;
+    transition: opacity 0.25s ease-out; /* avoid animating background (expensive) */
 }
 
-/* Efecto más sutil en dispositivos móviles */
+/* More subtle effect on mobile devices */
 @media (max-width: 1024px) {
     #glow-effect {
         display: none !important;
@@ -138,58 +141,58 @@ body:has([x-data] .bg-black) #glow-effect {
 
 /* ===== RESPONSIVE DESIGN IMPROVEMENTS ===== */
 
-/* Móviles y pantallas pequeñas */
+/* Mobile and small screens */
 @media (max-width: 768px) {
-    /* Navegación más compacta */
+    /* More compact navigation */
     .max-w-7xl.mx-auto.px-4 {
         padding-left: 1rem !important;
         padding-right: 1rem !important;
     }
     
-    /* Espaciado de botones de navegación */
+    /* Navigation button spacing */
     .flex.items-center.space-x-4 button {
         padding: 0.5rem !important;
     }
     
-    /* Contenido principal responsive */
+    /* Responsive main content */
     main.transition-all.duration-500 {
-        padding-top: 5rem !important; /* Reducir padding top */
+    padding-top: 5rem !important; /* Reduce top padding */
         padding-bottom: 1rem !important;
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
         max-width: 100% !important;
-        margin-right: 0 !important; /* Eliminar margen derecho en móviles */
+    margin-right: 0 !important; /* Remove right margin on mobile */
     }
     
-    /* Editor más compacto en móviles */
+    /* More compact editor on mobile */
     .relative.w-full.rounded-2xl {
         border-radius: 1rem !important;
         margin: 0 !important;
     }
     
-    /* Padding interno del editor */
+    /* Internal editor padding */
     .relative.p-6 {
         padding: 1rem !important;
     }
     
-    /* Botones más grandes para touch */
+    /* Larger buttons for touch */
     .text-xs.px-3.py-1 {
         padding: 0.5rem 0.75rem !important;
         font-size: 0.75rem !important;
     }
     
-    /* Footer responsive */
+    /* Responsive footer */
     footer.fixed.bottom-0 {
         padding: 0.5rem 0 !important;
     }
     
-    /* Focus mode adjustments para móviles */
+    /* Focus mode adjustments for mobile */
     .focus-mode-active main {
         padding: 1rem !important;
         max-width: 100% !important;
     }
     
-    /* Texto más pequeño en stats para móviles */
+    /* Smaller text in stats for mobile */
     .text-sm {
         font-size: 0.75rem !important;
     }
@@ -213,13 +216,13 @@ body:has([x-data] .bg-black) #glow-effect {
 
 /* Paneles laterales responsive */
 @media (max-width: 1024px) {
-    /* En pantallas pequeñas, los paneles ocupan toda la pantalla */
+    /* On small screens, panels take the full screen */
     .fixed.top-0.right-0.h-full.w-96 {
         width: 100vw !important;
         z-index: 9999 !important;
     }
     
-    /* Botón de cerrar más visible en móviles */
+    /* More visible close button on mobile */
     .fixed.top-0.right-0 .p-6 .flex.items-center.justify-between button {
         padding: 0.75rem !important;
         font-size: 1.25rem !important;
@@ -234,9 +237,9 @@ body:has([x-data] .bg-black) #glow-effect {
     }
 }
 
-/* Ultra pequeñas (< 480px) */
+/* Ultra small (< 480px) */
 @media (max-width: 479px) {
-    /* Logo y título más compactos */
+    /* More compact logo and title */
     .flex.items-center.space-x-4 > * + * {
         margin-left: 0.5rem !important;
     }
@@ -262,15 +265,15 @@ body:has([x-data] .bg-black) #glow-effect {
     }
 }
 
-/* ===== USABILIDAD MÓVIL ===== */
+/* ===== MOBILE USABILITY ===== */
 
-/* Scrolling en móviles */
+/* Scrolling on mobile */
 @media (max-width: 768px) {
     body {
         overflow-x: hidden;
     }
     
-    /* Contenedor principal optimizado para móviles */
+    /* Main container optimized for mobile */
     main {
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
@@ -280,7 +283,7 @@ body:has([x-data] .bg-black) #glow-effect {
         margin-right: 0 !important;
     }
     
-    /* Contenedor del editor con diseño móvil */
+    /* Editor container with mobile layout */
     .relative.w-full {
         margin: 0 !important;
         width: 100% !important;
@@ -288,12 +291,12 @@ body:has([x-data] .bg-black) #glow-effect {
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
     }
     
-    /* Padding interno cómodo para móviles */
+    /* Comfortable internal padding for mobile */
     .relative.p-3 {
         padding: 1rem !important;
     }
     
-    /* Textarea diseñado para móviles */
+    /* Textarea designed for mobile */
     .smart-textarea {
         font-size: 1rem !important; /* 16px para evitar zoom en iOS */
         line-height: 1.5 !important;
@@ -303,7 +306,7 @@ body:has([x-data] .bg-black) #glow-effect {
         resize: none !important;
     }
     
-    /* Números de línea elegantes */
+    /* Stylish line numbers */
     .line-numbers-container {
         width: 2.5rem !important;
         font-size: 0.75rem !important;
@@ -319,7 +322,7 @@ body:has([x-data] .bg-black) #glow-effect {
         padding-right: 1rem !important;
     }
     
-    /* Botones del header con separación elegante */
+    /* Header buttons with elegant spacing */
     nav .flex.items-center.space-x-1 {
         gap: 0.75rem !important;
     }
@@ -338,7 +341,7 @@ body:has([x-data] .bg-black) #glow-effect {
         transform: scale(0.95) !important;
     }
     
-    /* Botones de control elegantes para móviles */
+    /* Elegant control buttons for mobile */
     .flex.justify-between button {
         padding: 0.75rem 1rem !important;
         font-size: 0.875rem !important;
@@ -352,7 +355,7 @@ body:has([x-data] .bg-black) #glow-effect {
         transform: scale(0.95) !important;
     }
     
-    /* Márgenes cómodos */
+    /* Comfortable margins */
     .mb-6 {
         margin-bottom: 1.5rem !important;
     }
@@ -365,7 +368,7 @@ body:has([x-data] .bg-black) #glow-effect {
         margin-bottom: 1rem !important;
     }
         
-    /* Paneles como bottom sheets en móviles */
+    /* Panels as bottom sheets on mobile */
     .fixed.top-0.right-0.h-full.w-full {
         top: auto !important;
         bottom: 0 !important;
@@ -380,14 +383,14 @@ body:has([x-data] .bg-black) #glow-effect {
         animation: slideUp 0.3s ease-out !important;
     }
     
-    /* Header de paneles móviles */
+    /* Mobile panel header */
     .fixed .flex.items-center.justify-between {
         padding: 1.5rem 1.5rem 1rem 1.5rem !important;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
         margin-bottom: 0 !important;
     }
     
-    /* Indicador visual de panel móvil */
+    /* Visual indicator for mobile panel */
     .fixed .flex.items-center.justify-between::before {
         content: '' !important;
         position: absolute !important;
@@ -400,14 +403,14 @@ body:has([x-data] .bg-black) #glow-effect {
         border-radius: 0.125rem !important;
     }
     
-    /* Contenido de paneles móviles */
+    /* Content of mobile panels */
     .fixed .p-6 {
         padding: 0 1.5rem 1.5rem 1.5rem !important;
         height: calc(85vh - 5rem) !important;
         overflow-y: auto !important;
     }
     
-    /* Botones en paneles móviles */
+    /* Buttons in mobile panels */
     .fixed button {
         min-height: 48px !important;
         padding: 0.75rem 1rem !important;
@@ -422,7 +425,7 @@ body:has([x-data] .bg-black) #glow-effect {
         transform: scale(0.98) !important;
     }
     
-    /* Grids optimizados para móviles */
+    /* Grids optimized for mobile */
     .fixed .grid-cols-2 {
         grid-template-columns: 1fr 1fr !important;
         gap: 0.75rem !important;
@@ -437,7 +440,7 @@ body:has([x-data] .bg-black) #glow-effect {
         gap: 0.75rem !important;
     }
     
-    /* Headers de paneles móviles */
+    /* Headers of mobile panels */
     .fixed h3 {
         font-size: 1.25rem !important;
         font-weight: 600 !important;
@@ -461,7 +464,7 @@ body:has([x-data] .bg-black) #glow-effect {
         padding-bottom: 0 !important;
     }
     
-    /* Botón de cierre más grande */
+    /* Larger close button */
     .fixed button[class*="p-2"] {
         min-width: 44px !important;
         min-height: 44px !important;
@@ -471,22 +474,22 @@ body:has([x-data] .bg-black) #glow-effect {
         justify-content: center !important;
     }
     
-    /* Ocultar TODA la sección de botones de utilidades en móviles */
+    /* Hide the entire utilities buttons section on mobile */
     nav > div > div > div.flex.items-center.space-x-1 {
         display: none !important;
     }
     
-    /* Ocultar notificaciones en móviles */
+    /* Hide notifications on mobile */
     #notification-container {
         display: none !important;
     }
     
-    /* Ocultar botón Analyze en móviles */
+    /* Hide Analyze button on mobile */
     button:has-text("Analyze") {
         display: none !important;
     }
     
-    /* Selector más específico para el botón Analyze */
+    /* More specific selector for the Analyze button */
     .flex.space-x-1 button:nth-child(2) {
         display: none !important;
     }
@@ -502,7 +505,7 @@ body:has([x-data] .bg-black) #glow-effect {
         padding: 0 !important;
     }
     
-    /* Modal como bottom sheet en móviles */
+    /* Modal as bottom sheet on mobile */
     .fixed.inset-0.z-50 .inline-block.w-full.max-w-md {
         position: fixed !important;
         bottom: 0 !important;
@@ -523,7 +526,7 @@ body:has([x-data] .bg-black) #glow-effect {
         animation: slideUpMobile 0.3s ease-out !important;
     }
     
-    /* Header del modal móvil con indicador visual */
+    /* Mobile modal header with visual indicator */
     .fixed.inset-0.z-50 .flex.items-center.justify-between {
         position: relative !important;
         padding-top: 1rem !important;
@@ -541,7 +544,7 @@ body:has([x-data] .bg-black) #glow-effect {
         border-radius: 0.125rem !important;
     }
     
-    /* Input y botón más grandes para touch */
+    /* Larger input and button for touch */
     .fixed.inset-0.z-50 .flex.rounded-lg input {
         padding: 1rem !important;
         font-size: 1rem !important;
@@ -557,20 +560,20 @@ body:has([x-data] .bg-black) #glow-effect {
         font-weight: 600 !important;
     }
     
-    /* Texto descriptivo más legible */
+    /* More legible descriptive text */
     .fixed.inset-0.z-50 p.mt-3 {
         font-size: 0.875rem !important;
         line-height: 1.5 !important;
         margin-top: 1.5rem !important;
     }
     
-    /* Título más grande */
+    /* Larger title */
     .fixed.inset-0.z-50 h3 {
         font-size: 1.25rem !important;
         font-weight: 600 !important;
     }
     
-    /* Botón close más grande */
+    /* Larger close button */
     .fixed.inset-0.z-50 .flex.items-center.justify-between button {
         width: 44px !important;
         height: 44px !important;
@@ -580,7 +583,7 @@ body:has([x-data] .bg-black) #glow-effect {
         justify-content: center !important;
     }
     
-    /* Botón Close inferior */
+    /* Bottom Close button */
     .fixed.inset-0.z-50 .mt-4.flex.justify-end button {
         width: 100% !important;
         padding: 1rem !important;
@@ -591,7 +594,7 @@ body:has([x-data] .bg-black) #glow-effect {
         margin-top: 2rem !important;
     }
     
-    /* Header más alto para móviles */
+    /* Taller header for mobile */
     nav div.h-12 {
         height: 4rem !important; /* 64px en lugar de 48px */
     }
@@ -601,7 +604,7 @@ body:has([x-data] .bg-black) #glow-effect {
         height: 4rem !important;
     }
     
-    /* Logo y título más grandes en móviles con más espacio */
+    /* Larger logo and title on mobile with more space */
     nav img {
         height: 2.5rem !important; /* 40px en lugar de 32px */
         width: 2.5rem !important;
@@ -613,7 +616,7 @@ body:has([x-data] .bg-black) #glow-effect {
     }
 }
 
-/* Animación para paneles móviles */
+/* Animation for mobile panels */
 @keyframes slideUp {
     from {
         transform: translateY(100%);
@@ -625,7 +628,7 @@ body:has([x-data] .bg-black) #glow-effect {
     }
 }
 
-/* Animación específica para modal móvil */
+/* Specific animation for mobile modal */
 @keyframes slideUpMobile {
     from {
         transform: translateY(100%);
@@ -637,31 +640,31 @@ body:has([x-data] .bg-black) #glow-effect {
     }
 }
 
-/* Ocultar TODOS los botones de utilidades en tablets también */
+/* Hide ALL utility buttons on tablets as well */
 @media (max-width: 1023px) {
-    /* Ocultar toda la sección de botones de utilidades */
+    /* Hide the entire utilities buttons section */
     nav > div > div > div.flex.items-center.space-x-1 {
         display: none !important;
     }
     
-    /* Ocultar notificaciones en tablets también */
+    /* Hide notifications on tablets as well */
     #notification-container {
         display: none !important;
     }
     
-    /* Ocultar botón Analyze en tablets */
+    /* Hide Analyze button on tablets */
     .flex.space-x-1 button:nth-child(2) {
         display: none !important;
     }
     
-    /* Header más alto para tablets también */
+    /* Taller header for tablets as well */
     nav div.h-12,
     nav .h-12.sm\\:h-14.md\\:h-16 {
         height: 3.5rem !important; /* 56px para tablets */
     }
 }
 
-/* ===== MODO LANDSCAPE EN MÓVILES ===== */
+/* ===== LANDSCAPE MODE ON MOBILE ===== */
 @media (max-width: 768px) and (orientation: landscape) {
     /* Aprovechar mejor el espacio horizontal */
     main {
@@ -669,13 +672,13 @@ body:has([x-data] .bg-black) #glow-effect {
         padding-bottom: 0.5rem !important;
     }
     
-    /* Footer más pequeño en landscape */
+    /* Smaller footer in landscape */
     footer {
         padding: 0.25rem 0 !important;
         font-size: 0.75rem !important;
     }
     
-    /* Navegación más compacta */
+    /* More compact navigation */
     nav .h-16 {
         height: 3rem !important;
     }
@@ -692,13 +695,13 @@ body:has([x-data] .bg-black) #glow-effect {
 
 /* ===== MEJORAS ADICIONALES PARA TOUCH ===== */
 @media (max-width: 768px) {
-    /* Asegurar que los botones sean fáciles de tocar */
+    /* Ensure buttons are easy to tap */
     button, .btn {
         min-height: 44px !important;
         min-width: 44px !important;
     }
     
-    /* Textarea más touch-friendly */
+    /* More touch-friendly textarea */
     textarea, .smart-textarea {
         touch-action: manipulation;
     }
@@ -708,7 +711,7 @@ body:has([x-data] .bg-black) #glow-effect {
         font-size: 16px !important;
     }
     
-    /* Mejorar el contraste en pantallas pequeñas */
+    /* Improve contrast on small screens */
     .text-gray-400 {
         color: rgb(156, 163, 175) !important;
     }
@@ -720,7 +723,7 @@ body:has([x-data] .bg-black) #glow-effect {
 
 /* ===== GRID RESPONSIVE PARA BOTONES EN PANELES ===== */
 @media (max-width: 768px) {
-    /* Botones en grids más grandes en móviles */
+    /* Larger grid buttons on mobile */
     .grid-cols-2 {
         grid-template-columns: 1fr !important;
         gap: 0.75rem !important;
@@ -731,7 +734,7 @@ body:has([x-data] .bg-black) #glow-effect {
         gap: 0.75rem !important;
     }
     
-    /* Botones más grandes en paneles */
+    /* Larger buttons in panels */
     .grid button {
         padding: 0.75rem 1rem !important;
         font-size: 0.875rem !important;
@@ -741,12 +744,12 @@ body:has([x-data] .bg-black) #glow-effect {
 
 /* ===== PANTALLAS MUY ANCHAS ===== */
 @media (min-width: 1440px) {
-    /* En pantallas grandes, permitir más ancho para el contenido */
+    /* On large screens, allow more width for content */
     main {
         max-width: 80rem !important;
     }
     
-    /* Paneles pueden ser un poco más anchos */
+    /* Panels can be a bit wider */
     .w-96 {
         width: 28rem !important;
     }

@@ -1,7 +1,7 @@
-// Herramientas de desarrollador y características para Hexa
-// Este archivo contiene toda la funcionalidad para desarrolladores
+// Developer tools and features for Hexa
+// This file contains all developer-focused functionality
 
-// Ejecución de código Python
+// Execute Python code
 async function executePython(code) {
     try {
         const response = await fetch("https://emkc.org/api/v2/piston/execute", {
@@ -21,7 +21,7 @@ async function executePython(code) {
     }
 }
 
-// Generadores de código
+// Code generators
 class CodeGenerator {
     static generateUUID() {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -52,7 +52,7 @@ class CodeGenerator {
         
         let result = '';
         for (let i = 0; i < paragraphs; i++) {
-            const sentences = Math.floor(Math.random() * 4) + 3; // 3-6 oraciones por párrafo
+            const sentences = Math.floor(Math.random() * 4) + 3; // 3-6 sentences per paragraph
             let paragraph = '';
             for (let j = 0; j < sentences; j++) {
                 paragraph += lorem[Math.floor(Math.random() * lorem.length)] + ' ';
@@ -606,7 +606,7 @@ ORDER BY month DESC;`;
             metrics.averageCharactersPerWord = (metrics.characters / metrics.words).toFixed(2);
         }
 
-        // Cálculo simplificado de legibilidad (similar a Flesch-Kincaid)
+    // Simplified readability calculation (similar to Flesch-Kincaid)
         const avgSentenceLength = metrics.averageWordsPerSentence;
         const avgWordLength = metrics.averageCharactersPerWord;
         
