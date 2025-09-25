@@ -447,6 +447,39 @@ function hexaApp() {
                     event.preventDefault();
                     this.showPerformanceMetrics();
                 }
+                
+                // Focus Mode shortcuts: F11 to toggle, Escape to exit
+                if (event.key === 'F11') {
+                    event.preventDefault();
+                    this.toggleFocusMode();
+                } else if (event.key === 'Escape' && this.focusMode) {
+                    event.preventDefault();
+                    this.focusMode = false;
+                    this.exitFocusMode();
+                }
+            });
+            
+            // Listen for fullscreen changes to sync focus mode state
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement && this.focusMode) {
+                    this.focusMode = false;
+                    this.showNotification('🎯 Focus mode DISABLED', 'success');
+                }
+            });
+            
+            // Support for different browsers
+            document.addEventListener('webkitfullscreenchange', () => {
+                if (!document.webkitFullscreenElement && this.focusMode) {
+                    this.focusMode = false;
+                    this.showNotification('🎯 Focus mode DISABLED', 'success');
+                }
+            });
+            
+            document.addEventListener('msfullscreenchange', () => {
+                if (!document.msFullscreenElement && this.focusMode) {
+                    this.focusMode = false;
+                    this.showNotification('🎯 Focus mode DISABLED', 'success');
+                }
             });
         },
 
@@ -555,27 +588,65 @@ function hexaApp() {
             
             if (this.focusMode) {
                 // Enter fullscreen
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen();
-                } else if (document.documentElement.msRequestFullscreen) {
-                    document.documentElement.msRequestFullscreen();
+                try {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) {
+                        document.documentElement.msRequestFullscreen();
+                    }
+                    this.showNotification('🎯 Focus mode ENABLED - Press F11 or Escape to exit', 'success');
+                } catch (error) {
+                    console.warn('🔍 [Hexa] Fullscreen request failed:', error.message);
+                    this.showNotification('🎯 Focus mode ENABLED (fullscreen unavailable)', 'success');
                 }
-                this.showNotification('🎯 Focus mode ENABLED - Press F11 or Escape to exit', 'success');
                 if (window.UXBrain) { try { window.UXBrain.trackPanel('focus', true); window.UXBrain.tick(this); } catch {} }
             } else {
-                // Exit fullscreen
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
+                // Exit fullscreen - check if document is in fullscreen and active
+                try {
+                    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || 
+                                       document.msFullscreenElement || document.mozFullScreenElement;
+                    
+                    if (isFullscreen && document.hasFocus()) {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen().catch(e => console.warn('🔍 [Hexa] Fullscreen exit promise failed:', e.message));
+                        } else if (document.webkitExitFullscreen) {
+                            document.webkitExitFullscreen();
+                        } else if (document.msExitFullscreen) {
+                            document.msExitFullscreen();
+                        }
+                    }
+                    this.showNotification('🎯 Focus mode DISABLED', 'success');
+                } catch (error) {
+                    console.warn('🔍 [Hexa] Fullscreen exit failed (document not active):', error.message);
+                    this.showNotification('🎯 Focus mode DISABLED', 'success');
                 }
-                this.showNotification('🎯 Focus mode DISABLED', 'success');
                 if (window.UXBrain) { try { window.UXBrain.trackPanel('focus', false); } catch {} }
             }
+        },
+
+        exitFocusMode() {
+            // Exit fullscreen - check if document is in fullscreen and active
+            try {
+                const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || 
+                                   document.msFullscreenElement || document.mozFullScreenElement;
+                
+                if (isFullscreen && document.hasFocus()) {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen().catch(e => console.warn('🔍 [Hexa] Fullscreen exit promise failed:', e.message));
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+                this.showNotification('🎯 Focus mode DISABLED', 'success');
+            } catch (error) {
+                console.warn('🔍 [Hexa] Fullscreen exit failed (document not active):', error.message);
+                this.showNotification('🎯 Focus mode DISABLED', 'success');
+            }
+            if (window.UXBrain) { try { window.UXBrain.trackPanel('focus', false); } catch {} }
         },
 
         startWritingTimer() {
