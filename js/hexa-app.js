@@ -80,6 +80,7 @@ function hexaApp() {
 
         // Puter.js Authentication
         authMenuOpen: false,
+        showBlockerDetails: false,
         puterAuth: {
             isAuthenticated: false,
             userInfo: null,
@@ -88,6 +89,10 @@ function hexaApp() {
             initialized: false,
             fallbackMode: true  // Start in fallback mode until Puter.js is initialized
         },
+        
+        // Notification system improvements
+        lastNotificationTime: {},
+        isBrave: navigator.userAgentData?.brands?.some(brand => brand.brand === 'Brave') || navigator.brave,
 
     // Methods
         updateStats() {
@@ -886,6 +891,23 @@ function hexaApp() {
         },
 
         showNotification(message, type = 'success') {
+            // Anti-spam system for repetitive notifications
+            const now = Date.now();
+            const messageKey = `${message}_${type}`;
+            
+            // In Brave browser, be more aggressive about preventing auth spam
+            if (this.isBrave && message.includes('Authentication cancelled')) {
+                if (this.lastNotificationTime[messageKey] && now - this.lastNotificationTime[messageKey] < 5000) {
+                    console.log('Suppressing repeated auth notification in Brave');
+                    return;
+                }
+            } else if (this.lastNotificationTime[messageKey] && now - this.lastNotificationTime[messageKey] < 1000) {
+                // General anti-spam for all notifications
+                return;
+            }
+            
+            this.lastNotificationTime[messageKey] = now;
+            
             // Usar el sistema de notificaciones personalizado
             if (window.showNotification && typeof window.showNotification === 'function') {
                 window.showNotification(message, type);
@@ -3106,6 +3128,12 @@ function hexaApp() {
         // Simplified sign in following official Puter.js pattern
         async signInToPuter() {
             try {
+                // Check if we're using file:// protocol first
+                if (window.EnvironmentDetector && !window.EnvironmentDetector.shouldMakeAPIRequests()) {
+                    this.showNotification('📄 Sign-in not available when opening file directly', 'info');
+                    return;
+                }
+                
                 this.puterAuth.isLoading = true;
                 this.puterAuth.error = null;
                 
@@ -3141,24 +3169,102 @@ function hexaApp() {
                             this.authMenuOpen = false;
                         }, 1500);
                     } else {
-                        throw new Error('Sign in failed - no user returned');
+                        // Special handling for Brave browser - null user doesn't always mean failure
+                        if (this.isBrave) {
+                            console.log('🟠 Brave browser: No user returned, checking auth state...');
+                            this.showNotification('⏳ Checking authentication status...', 'info');
+                            
+                            // Wait a moment and check if authentication actually succeeded
+                            setTimeout(async () => {
+                                if (window.puterAI) {
+                                    await window.puterAI.refreshAuthState();
+                                    const authStatus = window.puterAI.getAuthStatus();
+                                    
+                                    if (authStatus.isAuthenticated) {
+                                        this.puterAuth.isAuthenticated = true;
+                                        this.puterAuth.userInfo = authStatus.userInfo;
+                                        this.puterAuth.fallbackMode = false;
+                                        this.showNotification('✅ Authentication successful!', 'success');
+                                        this.authMenuOpen = false;
+                                    } else {
+                                        this.showNotification('⚠️ Authentication incomplete. Please try again.', 'warning');
+                                    }
+                                }
+                            }, 2000);
+                            return; // Exit early for Brave
+                        } else {
+                            throw new Error('Sign in failed - no user returned');
+                        }
                     }
                 } catch (error) {
                     // Handle specific error cases
                     const errorMessage = error?.message || error?.toString() || 'Unknown error';
                     const errorObj = error?.error || error;
                     
+                    // Check for blocker-related issues - but ignore in localhost
+                    const isLocalhost = window.EnvironmentDetector && window.EnvironmentDetector.isLocalhost;
+                    const hasBlockers = isLocalhost ? false : window.BlockerDetector?.hasHighImpactBlockers?.();
+                    const blockerInfo = hasBlockers ? window.BlockerDetector?.getDetectedBlockers?.()?.[0] : null;
+                    
+                    // Special handling for Brave browser errors
+                    if (this.isBrave && (errorObj === 'auth_window_closed' || errorMessage.includes('auth_window_closed'))) {
+                        console.log('🟠 Brave authentication window closed - attempting status check...');
+                        
+                        if (hasBlockers && blockerInfo) {
+                            this.showNotification(`⚠️ ${blockerInfo.name} is blocking authentication popups. ${blockerInfo.suggestion}`, 'warning', { duration: 10000 });
+                        } else {
+                            this.showNotification('⏳ Brave detected. Checking authentication...', 'info');
+                        }
+                        
+                        // In Brave, the window closing might still mean success
+                        setTimeout(async () => {
+                            try {
+                                if (window.puterAI) {
+                                    await window.puterAI.refreshAuthState();
+                                    const authStatus = window.puterAI.getAuthStatus();
+                                    
+                                    if (authStatus.isAuthenticated) {
+                                        this.puterAuth.isAuthenticated = true;
+                                        this.puterAuth.userInfo = authStatus.userInfo;
+                                        this.puterAuth.fallbackMode = false;
+                                        this.showNotification('✅ Authentication successful in Brave!', 'success');
+                                        this.authMenuOpen = false;
+                                    } else {
+                                        if (hasBlockers) {
+                                            this.showNotification(`❌ ${blockerInfo.name} prevented authentication. Please check browser settings.`, 'error');
+                                        } else {
+                                            this.showNotification('❌ Authentication failed. Window was closed.', 'error');
+                                        }
+                                    }
+                                }
+                            } catch (checkError) {
+                                console.error('Auth status check failed:', checkError);
+                                this.showNotification('❌ Authentication check failed.', 'error');
+                            }
+                        }, 1500);
+                        return; // Exit early for Brave
+                    }
+                    
+                    // Standard error handling - simple and user-friendly
                     this.puterAuth.error = errorMessage;
                     this.puterAuth.isAuthenticated = false;
                     this.puterAuth.userInfo = null;
                     
+                    // Simple, non-intrusive error messages
                     if (errorMessage.includes('popup') || errorMessage.includes('blocked')) {
-                        this.showNotification('🚫 Popup blocked. Try "Direct Sign In" below.', 'warning');
-                    } else if (errorMessage.includes('cancelled') || errorObj === 'auth_window_closed') {
+                        this.showNotification('🚫 Popup was blocked. Try "Direct Sign In" option.', 'warning');
+                    } else if (errorMessage.includes('cancelled')) {
                         this.showNotification('🔄 Authentication cancelled. Please try again.', 'info');
                     } else {
-                        this.showNotification('❌ Sign in failed: ' + errorMessage, 'error');
+                        // Generic, simple error message - no blocker spam
+                        this.showNotification('❌ Sign in failed. Please try again or use Direct Sign In.', 'error');
+                        
+                        // Only log technical details to console for debugging
+                        if (hasBlockers && blockerInfo) {
+                            console.warn(`🔍 Blocker detected (${blockerInfo.name}) - this might affect sign-in`);
+                        }
                     }
+                    
                     console.error('Sign in failed:', error);
                     // Keep auth menu open on error so user can try again
                 }
@@ -3176,6 +3282,12 @@ function hexaApp() {
 
         async directSignInToPuter() {
             try {
+                // Check if we're using file:// protocol first
+                if (window.EnvironmentDetector && !window.EnvironmentDetector.shouldMakeAPIRequests()) {
+                    this.showNotification('📄 Sign-in not available when opening file directly', 'info');
+                    return;
+                }
+                
                 this.puterAuth.isLoading = true;
                 this.puterAuth.error = null;
                 
@@ -3190,7 +3302,7 @@ function hexaApp() {
                 
             } catch (error) {
                 this.puterAuth.error = error.message;
-                this.showNotification('❌ Direct sign in failed: ' + error.message, 'error');
+                this.showNotification('❌ Direct sign in failed. Please try again.', 'error');
                 console.error('Direct sign in failed:', error);
             } finally {
                 this.puterAuth.isLoading = false;
@@ -3199,6 +3311,12 @@ function hexaApp() {
 
         async quickSignInToPuter() {
             try {
+                // Check if we're in local environment first
+                if (window.EnvironmentDetector && !window.EnvironmentDetector.shouldMakeAPIRequests()) {
+                    this.showNotification('📄 Sign-in not available when opening file directly', 'info');
+                    return;
+                }
+                
                 this.puterAuth.isLoading = true;
                 this.puterAuth.error = null;
                 
@@ -3222,7 +3340,7 @@ function hexaApp() {
                 
             } catch (error) {
                 this.puterAuth.error = error.message;
-                this.showNotification('❌ Quick sign in failed: ' + error.message, 'error');
+                this.showNotification('❌ Quick sign in failed. Please try again.', 'error');
                 console.error('Quick sign in failed:', error);
                 // Keep auth menu open on error so user can try again
             } finally {

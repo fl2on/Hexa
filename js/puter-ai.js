@@ -10,6 +10,13 @@ class PuterAI {
     // Initialize Puter.js AI integration
     async init() {
         try {
+            // Skip Puter.js initialization in file:// protocol
+            if (window.EnvironmentDetector && !window.EnvironmentDetector.shouldMakeAPIRequests()) {
+                console.log('📄 Skipping Puter.js initialization - file:// protocol detected');
+                this.setOfflineMode();
+                return;
+            }
+            
             // Check if Puter.js is loaded
             if (typeof puter === 'undefined') {
                 throw new Error('Puter.js not loaded');
@@ -84,7 +91,7 @@ class PuterAI {
         this.userInfo = null;
         this.fallbackMode = true;
         this.initialized = true;
-        console.log('🔵 Puter.js AI in offline mode');
+        console.log('� Puter.js AI in offline mode (file:// protocol)');
     }
 
     // Auth state management
@@ -100,9 +107,25 @@ class PuterAI {
     async refreshAuthState() {
         try {
             if (typeof puter !== 'undefined' && puter.auth) {
-                const isSignedIn = puter.auth.isSignedIn();
-                if (isSignedIn) {
-                    const userData = await puter.auth.getUser();
+                // First check: isSignedIn()
+                let isSignedIn = puter.auth.isSignedIn();
+                
+                // Second check: try to get user data (more reliable)
+                let userData = null;
+                try {
+                    userData = await puter.auth.getUser();
+                    if (userData) {
+                        isSignedIn = true; // Override if we got valid user data
+                    }
+                } catch (getUserError) {
+                    // If getUser fails, isSignedIn is likely correct
+                    if (getUserError.status !== 401) {
+                        console.warn('getUser check failed:', getUserError);
+                    }
+                }
+                
+                if (isSignedIn && userData) {
+                    console.log('🟢 Puter auth verified - user authenticated');
                     this.handleActiveSession(userData);
                 } else {
                     this.setOfflineMode();
@@ -661,6 +684,11 @@ Keep the analysis clear and actionable.`;
 
     async signIn() {
         try {
+            // Check if we're using file:// protocol first
+            if (window.EnvironmentDetector && !window.EnvironmentDetector.shouldMakeAPIRequests()) {
+                throw new Error('Sign-in not available when opening file directly');
+            }
+            
             if (typeof puter === 'undefined') {
                 throw new Error('Puter.js not loaded');
             }
@@ -669,17 +697,78 @@ Keep the analysis clear and actionable.`;
                 throw new Error('Puter.js authentication not available');
             }
 
-            // Use Puter's official sign in method
-            const user = await puter.auth.signIn();
-            
-            if (user) {
-                this.handleActiveSession(user);
-                return user;
+            // Special handling for Brave browser
+            const isBrave = navigator.userAgentData?.brands?.some(brand => brand.brand === 'Brave') || 
+                           window.navigator.brave;
+
+            if (isBrave) {
+                // For Brave, try with different approach but keep it simple
+                console.log('🟠 Brave browser detected - using enhanced auth flow');
+                
+                try {
+                    // Try standard sign in first
+                    const user = await puter.auth.signIn();
+                    
+                    if (user) {
+                        this.handleActiveSession(user);
+                        return user;
+                    } else {
+                        console.log('🟠 No user returned, checking authentication status...');
+                        // Wait and check authentication status
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        await this.refreshAuthState();
+                        
+                        if (this.isAuthenticated) {
+                            console.log('✅ Authentication successful in Brave!');
+                            return this.userInfo;
+                        } else {
+                            throw new Error('Brave authentication incomplete');
+                        }
+                    }
+                } catch (braveError) {
+                    console.log('🟠 Brave auth failed (possibly AdGuard/popup blocker):', braveError.error);
+                    
+                    // If it's just the popup being closed, don't treat as fatal error
+                    if (braveError.error === 'auth_window_closed') {
+                        console.log('🟠 Popup was closed - this may be due to AdGuard or popup blocker');
+                        // Check if we might have actually authenticated
+                        setTimeout(async () => {
+                            await this.refreshAuthState();
+                            if (this.isAuthenticated) {
+                                console.log('✅ Authentication succeeded despite popup closure');
+                            }
+                        }, 2000);
+                        
+                        // Don't throw error immediately for Brave
+                        return null;
+                    }
+                    
+                    throw braveError;
+                }
             } else {
-                throw new Error('Authentication failed - no user data returned');
+                // Standard sign in for other browsers
+                const user = await puter.auth.signIn();
+                
+                if (user) {
+                    this.handleActiveSession(user);
+                    return user;
+                } else {
+                    throw new Error('Authentication failed - no user data returned');
+                }
             }
         } catch (error) {
             console.error('PuterAI signIn error:', error);
+            
+            // Special handling for auth_window_closed in Brave
+            if (error.error === 'auth_window_closed' && 
+                (navigator.userAgentData?.brands?.some(brand => brand.brand === 'Brave') || 
+                 window.navigator.brave)) {
+                console.log('🟠 Brave authentication window closed - likely due to AdGuard or popup blocker');
+                
+                // Don't set offline mode for Brave popup issues
+                return null;
+            }
+            
             this.setOfflineMode();
             throw error;
         }

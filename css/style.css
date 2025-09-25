@@ -1244,7 +1244,7 @@ body {
     will-change: transform, opacity;
 }
 
-/* Aggressive optimizations when INP is poor */
+/* INP optimized styles - no gradient removal to prevent blue background issues */
 .inp-optimized * {
     /* Force immediate paint operations */
     will-change: auto !important;
@@ -1267,15 +1267,21 @@ body {
     transition-timing-function: linear !important;
 }
 
-.inp-optimized .bg-gradient-to-r,
-.inp-optimized .bg-gradient-to-br {
-    /* Remove expensive gradients but keep subtle background - but NOT for text elements */
+/* DISABLED: Gradient removal causing blue background issues
+.inp-optimized .bg-gradient-to-r:not(.main-gradient),
+.inp-optimized .bg-gradient-to-br:not(.main-gradient) {
     background-image: none !important;
 }
+*/
 
 /* Don't remove gradients from text elements */
 .inp-optimized .bg-clip-text {
     background-image: linear-gradient(to right, white, rgba(255,255,255,0.9)) !important;
+}
+
+/* Force main background gradient to be transparent to prevent blue background issues */
+.main-gradient {
+    background: transparent !important;
 }
 
 /* Monitor INP metrics styling */

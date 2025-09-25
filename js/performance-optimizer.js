@@ -339,7 +339,8 @@
         }
 
         logPerformanceMetrics() {
-            if (this.performanceMetrics.statsCalculations > 0) {
+            if (this.performanceMetrics.statsCalculations > 0 && this.performanceMetrics.statsCalculations % 100 === 0) {
+                // Only log every 100 calculations to reduce console spam
                 console.log('📊 Performance Metrics:', {
                     inputEvents: this.performanceMetrics.inputEvents,
                     statsCalculations: this.performanceMetrics.statsCalculations,

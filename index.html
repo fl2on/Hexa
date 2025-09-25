@@ -48,6 +48,13 @@
                     /Script error/i,
                     /Unhandled error/i,
                     /WebGL.*CONTEXT_LOST_WEBGL/i,
+                    /doubleclick\.net/i,
+                    /google-analytics\.com/i,
+                    /googletagmanager\.com/i,
+                    /ERR_BLOCKED_BY_CLIENT/i,
+                    /Tracking Prevention blocked/i,
+                    /net::ERR_BLOCKED_BY_CLIENT/i,
+                    /favicon\.ico.*Failed to load/i,
                     /context lost/i,
                     /Could not get context for WebGL/i,
                     /Initialization of backend webgl failed/i,
@@ -67,6 +74,13 @@
                     /window\.puterAI\.signIn is not a function/i,
                     /window\.puterAI\.directSignIn is not a function/i,
                     /BASS V.*ERROR From BloggerPemula/i,
+                    // Local environment specific errors
+                    /PuterAI signIn error.*Puter\.js not loaded/i,
+                    /Sign in failed.*Puter\.js not loaded/i,
+                    /Error: Puter\.js not loaded/i,
+                    /Sign-in not available in local environment/i,
+                    /Sign in failed.*AdGuard Home/i,
+                    /AdGuard Home.*detected/i,
                     // Alpine.js specific errors
                     /text\.trim is not a function/i,
                     /text\.split is not a function/i,
@@ -78,8 +92,31 @@
                     /Error.*svg.*attribute viewBox/i,
                     /content\.js.*JSON/i,
                     /_storageChangeDispatcher/i,
-                    /\[object Object\].*is not valid JSON/i
+                    /\[object Object\].*is not valid JSON/i,
+                    // Puter.js popup specific errors
+                    /120v2.*Cannot read properties of null.*reading 'closed'/i,
+                    /163v2.*Cannot read properties of null.*reading 'closed'/i,
+                    /v2\/.*Cannot read properties of null.*reading 'closed'/i,
+                    /Cannot read properties of null.*reading 'closed'.*v2/i,
+                    /puter.*popup.*window.*null/i,
+                    /auth.*popup.*closed.*unexpectedly/i,
+                    // Generic popup errors
+                    /popup.*null.*closed/i,
+                    /window.*reference.*null/i
                 ];
+                
+                // In local environment, suppress more network-related errors
+                if (typeof window !== 'undefined' && window.IS_LOCAL_ENV) {
+                    const localSuppressionPatterns = [
+                        /Failed to load resource/i,
+                        /NetworkError/i,
+                        /TypeError.*fetch/i,
+                        /401/i,
+                        /400/i,
+                        /CORS/i
+                    ];
+                    suppressPatterns.push(...localSuppressionPatterns);
+                }
                 
                 return suppressPatterns.some(pattern => pattern.test(message));
             }
@@ -112,10 +149,21 @@
                 return filterConsoleOutput(originalConsoleWarn, ...args);
             };
             
+            // Enhanced error handling for popup-related errors
+            window.addEventListener('error', function(event) {
+                const message = event.message || event.error?.message || '';
+                if (shouldSuppress(message)) {
+                    event.preventDefault();
+                    console.warn('[Hexa] Suppressed window error:', message.substring(0, 100));
+                    return false;
+                }
+            });
+            
             window.addEventListener('unhandledrejection', function(event) {
                 const message = event.reason?.message || event.reason || '';
                 if (shouldSuppress(message)) {
                     event.preventDefault();
+                    console.warn('[Hexa] Suppressed unhandled rejection:', String(message).substring(0, 100));
                     return;
                 }
             });
@@ -152,19 +200,31 @@
             }
         };
 
-        // Puter.js loader
+        // Puter.js loader with environment detection
         (function() {
-            const script = document.createElement('script');
-            script.src = 'https://js.puter.com/v2/';
-            script.onerror = function() {
-                console.warn('Puter.js failed to load, using offline mode');
-                window.puterLoadFailed = true;
+            // Load environment detector first
+            const envScript = document.createElement('script');
+            envScript.src = 'js/environment-detector.js';
+            envScript.onload = function() {
+                // Only load Puter.js in production environment (including localhost)
+                if (window.EnvironmentDetector && window.EnvironmentDetector.shouldLoadExternalAPIs()) {
+                    const script = document.createElement('script');
+                    script.src = 'https://js.puter.com/v2/';
+                    script.onerror = function() {
+                        console.warn('Puter.js failed to load, using offline mode');
+                        window.puterLoadFailed = true;
+                    };
+                    script.onload = function() {
+                        console.log('Puter.js loaded successfully');
+                        window.puterLoadFailed = false;
+                    };
+                    document.head.appendChild(script);
+                } else {
+                    console.log('📄 Skipping Puter.js load - file:// protocol detected');
+                    window.puterLoadFailed = true; // Force offline mode
+                }
             };
-            script.onload = function() {
-                console.log('Puter.js loaded successfully');
-                window.puterLoadFailed = false;
-            };
-            document.head.appendChild(script);
+            document.head.appendChild(envScript);
         })();
     </script>
     <link rel="stylesheet" href="css/style.css">
@@ -173,6 +233,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/prism.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/themes/prism-tomorrow.min.css">
     <script src="js/utils.js"></script>
+    <script src="js/environment-detector.js"></script>
     <script src="js/performance-optimizer.js"></script>
     <script src="js/inp-optimizer.js"></script>
     <!-- TensorFlow.js for on-device learning -->
@@ -187,6 +248,7 @@
     <script src="js/main.js"></script>
     <script src="js/algos.js"></script>
     <script src="js/ux-brain.js"></script>
+    <script src="js/blocker-detector.js"></script>
 </head>
 
 <body x-data="hexaApp()" x-init="init()" class="min-h-screen transition-colors duration-300"
@@ -421,8 +483,8 @@
                      'shadow-sm sm:shadow-[0_0_50px_-12px_rgba(59,130,246,0.1)]',
                  darkMode ? 'bg-white/5 sm:backdrop-blur-xl' : 'bg-white/90 sm:bg-white/80 sm:backdrop-blur-xl'
              ]">
-            <div class="absolute inset-0 transition-opacity duration-300 hidden sm:block"
-                :class="darkMode ? 'bg-gradient-to-br from-blue-500/3 via-purple-500/3 to-pink-500/3' : 'bg-gradient-to-br from-blue-500/2 via-purple-500/2 to-pink-500/2'">
+            <div class="absolute inset-0 transition-opacity duration-300 hidden sm:block main-gradient"
+                :class="darkMode ? 'bg-gradient-to-br from-blue-500/1 via-purple-500/1 to-pink-500/1' : 'bg-gradient-to-br from-blue-500/1 via-purple-500/1 to-pink-500/1'">
             </div>
             <div class="relative p-3 sm:p-6">
                 <div class="flex items-center justify-between mb-3 sm:mb-6">
@@ -1638,6 +1700,48 @@
                         <span x-show="puterAuth.isLoading">Opening popup...</span>
                     </button>
 
+                    <!-- Brave Browser Help -->
+                    <div x-show="isBrave" class="text-xs p-3 rounded-lg border-2 border-orange-500/20 bg-orange-500/10">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="h-4 w-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="font-medium text-orange-500">Brave Browser Detected</span>
+                        </div>
+                        <p class="text-orange-400 text-xs mb-2">If authentication fails, it might be due to:</p>
+                        <ul class="text-orange-400 text-xs list-disc list-inside space-y-1">
+                            <li>AdGuard Home blocking popups</li>
+                            <li>Brave's built-in popup blocker</li>
+                            <li>Other browser extensions</li>
+                        </ul>
+                        <p class="text-orange-400 text-xs font-medium mt-2">💡 Try temporarily disabling AdGuard or popup blockers.</p>
+                    </div>
+
+                    <!-- Blocker Detection Warning -->
+                    <div x-show="window.BlockerDetector?.hasHighImpactBlockers?.()" 
+                         x-transition 
+                         class="text-xs p-3 rounded-lg border-2 border-red-500/20 bg-red-500/10">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                            </svg>
+                            <span class="font-medium text-red-500">Blocker Detected</span>
+                        </div>
+                        <p class="text-red-400 text-xs mb-2" x-text="window.BlockerDetector?.getDetectedBlockers?.()?.[0]?.name + ' is blocking popups'"></p>
+                        <button @click="showBlockerDetails = !showBlockerDetails" 
+                                class="text-red-400 text-xs underline hover:text-red-300">
+                            Show details & solutions
+                        </button>
+                        <div x-show="showBlockerDetails" x-transition class="mt-2 space-y-1">
+                            <template x-for="blocker in window.BlockerDetector?.getRecommendations?.() || []">
+                                <div class="text-red-400 text-xs">
+                                    <strong x-text="blocker.blocker"></strong>: 
+                                    <span x-text="blocker.suggestion"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
                     <!-- Popup blocked help -->
                     <div x-show="puterAuth.error && puterAuth.error.includes('timeout')" class="text-xs p-3 rounded-lg border-2 border-yellow-500/20 bg-yellow-500/10">
                         <div class="flex items-center gap-2 mb-2">
@@ -2165,6 +2269,43 @@
         window.addEventListener('DOMContentLoaded', function() {
             // Wait for Puter.js to load before initializing
             const initializePuterAI = () => {
+                // Check if we're using file:// protocol first
+                if (window.EnvironmentDetector && !window.EnvironmentDetector.shouldMakeAPIRequests()) {
+                    console.log('📄 PuterAI initialization skipped - file:// protocol detected');
+                    
+                    // Initialize PuterAI in offline mode directly
+                    if (window.puterAI) {
+                        window.puterAI.setOfflineMode();
+                        
+                        // Update Alpine.js state for offline mode
+                        setTimeout(() => {
+                            try {
+                                const appElement = document.querySelector('[x-data]');
+                                if (appElement && appElement._x_dataStack && appElement._x_dataStack[0]) {
+                                    const app = appElement._x_dataStack[0];
+                                    if (app.puterAuth) {
+                                        app.puterAuth.isAuthenticated = false;
+                                        app.puterAuth.initialized = true;
+                                        app.puterAuth.fallbackMode = true;
+                                        app.puterAuth.userInfo = null;
+                                        
+                                        // Trigger Alpine.js reactivity
+                                        if (app.$nextTick) {
+                                            app.$nextTick(() => {
+                                                console.log('📄 File mode initialized for Alpine.js');
+                                            });
+                                        }
+                                    }
+                                }
+                            } catch (error) {
+                                console.warn('⚠️ File mode Alpine.js update failed:', error);
+                            }
+                        }, 100);
+                    }
+                    return; // Exit early, don't continue trying to load Puter.js
+                }
+                
+                // Production environment logic
                 if (window.puterAI && typeof puter !== 'undefined') {
                     window.puterAI.init().then(() => {
                         
@@ -2215,9 +2356,13 @@
                         console.warn('⚠️ PuterAI initialization failed:', error);
                     });
                 } else {
-                    // Retry after a short delay if Puter.js isn't loaded yet
-                    console.log('⏳ Waiting for Puter.js to load...');
-                    setTimeout(initializePuterAI, 1000);
+                    // Only retry in production environment (including localhost)
+                    if (window.EnvironmentDetector && window.EnvironmentDetector.shouldMakeAPIRequests()) {
+                        console.log('⏳ Waiting for Puter.js to load...');
+                        setTimeout(initializePuterAI, 1000);
+                    } else {
+                        console.log('📄 Stopping Puter.js wait - file:// protocol detected');
+                    }
                 }
             };
             
