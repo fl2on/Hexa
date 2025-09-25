@@ -174,6 +174,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/themes/prism-tomorrow.min.css">
     <script src="js/utils.js"></script>
     <script src="js/performance-optimizer.js"></script>
+    <script src="js/inp-optimizer.js"></script>
     <!-- TensorFlow.js for on-device learning -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0/dist/tf.min.js"></script>
     <script src="js/tf-opt.js"></script>
@@ -195,14 +196,14 @@
     ]">
 
     <!-- Global AI Processing Overlay -->
-    <div x-show="aiProcessing" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0" 
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100" 
-         x-transition:leave-end="opacity-0"
-         class="fixed inset-0 z-[9998] pointer-events-none">
+    <template x-if="aiProcessing === true">
+        <div x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0" 
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100" 
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-[9998] pointer-events-none">
         
         <!-- Semi-transparent overlay -->
         <div class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
@@ -227,7 +228,7 @@
                 </button>
             </div>
         </div>
-    </div>
+    </template>
 
     <!-- Mouse glow effect (flashlight-style) -->
     <div id="glow-effect" class="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300 lg:block hidden"
@@ -1650,29 +1651,6 @@
                             <li>Try signing in again</li>
                         </ol>
                     </div>
-                    
-                    <!-- Direct Sign In Button -->
-                    <button @click="directSignInToPuter()" 
-                        :disabled="puterAuth.isLoading"
-                        class="w-full px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 text-white transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                        :class="darkMode ? 'bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500' : 'bg-gradient-to-r from-teal-700 to-cyan-700 hover:from-teal-600 hover:to-cyan-600'">
-                        <svg class="h-4 w-4 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        Direct Sign In (New Tab)
-                    </button>
-                    
-                    <button @click="quickSignInToPuter()" 
-                        :disabled="puterAuth.isLoading"
-                        class="w-full px-4 py-2 rounded-lg text-xs transition-all duration-300 border-2 border-dashed hover:bg-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        :class="darkMode ? 'border-white/20 text-white/70 hover:bg-white/10' : 'border-black/20 text-black/70 hover:bg-black/10'">
-                        <svg class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        Quick Sign In (Temporary User)
-                    </button>
                 </div>
             </template>
 

@@ -1,3 +1,13 @@
+/* ===== ALPINE.JS CLOAK ===== */
+[x-cloak] { 
+    display: none !important; 
+}
+
+/* Prevent AI overlay flash during initialization */
+.ai-overlay-prevent-flash {
+    visibility: hidden;
+}
+
 /* ===== TEXTAREA AND LINE NUMBERS ===== */
 
 @keyframes spin {
@@ -793,6 +803,122 @@ textarea::-webkit-scrollbar-thumb:hover {
     background-color: rgba(0, 0, 0, 0.2);
 }
 
+/* ===== PERFORMANCE OPTIMIZATIONS ===== */
+
+/* Optimize z-index layering and relative positioning to reduce INP delays */
+.relative.z-10 {
+    /* Force GPU acceleration for better compositing */
+    transform: translateZ(0);
+    will-change: transform, opacity;
+    /* Optimize paint operations */
+    contain: layout style paint;
+}
+
+/* Optimize spans with relative z-10 specifically for better text rendering */
+span.relative.z-10 {
+    /* Reduce paint complexity */
+    backface-visibility: hidden;
+    /* Optimize font rendering */
+    text-rendering: optimizeSpeed;
+    /* Force hardware acceleration */
+    transform: translate3d(0, 0, 0);
+    /* Contain layout calculations */
+    contain: layout paint;
+}
+
+/* Performance optimizations for interactive elements */
+button span.relative.z-10,
+.relative.z-10:hover,
+.relative.z-10:focus {
+    /* Prevent unnecessary repaints on interaction */
+    transform: translateZ(0);
+    will-change: auto;
+}
+
+/* Optimize gradient text elements that cause expensive repaints */
+.bg-clip-text.text-transparent {
+    /* Force GPU layer for gradient text */
+    transform: translateZ(0);
+    /* Optimize text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Contain paint operations */
+    contain: layout paint;
+}
+
+/* Optimize flex containers with relative positioning */
+.relative.z-10.flex {
+    /* Optimize flex layout calculations */
+    contain: layout;
+    /* Force compositor layer */
+    transform: translateZ(0);
+}
+
+/* Reduce paint operations for frequently changing elements */
+.transition-all {
+    /* Optimize transitions to use compositor */
+    will-change: transform, opacity, background-color;
+    /* Force hardware acceleration */
+    transform: translateZ(0);
+}
+
+/* Performance hint for animated elements */
+[x-transition] {
+    /* Prepare for animation */
+    will-change: transform, opacity;
+    transform: translateZ(0);
+}
+
+/* Optimize button hover states to reduce INP */
+button:hover .relative.z-10,
+button:focus .relative.z-10 {
+    /* Prevent layout thrashing */
+    transform: translateZ(0);
+    contain: layout paint;
+}
+
+/* Critical rendering path optimization */
+@media (prefers-reduced-motion: no-preference) {
+    /* Only apply expensive effects when motion is preferred */
+    .transition-all.duration-300 {
+        transition-duration: 150ms; /* Reduce transition time for better INP */
+    }
+}
+
+/* Mobile performance optimizations */
+@media (max-width: 768px) {
+    /* Reduce complexity on mobile devices */
+    .relative.z-10 {
+        /* Simplify rendering on mobile */
+        contain: style paint;
+    }
+    
+    /* Disable expensive effects on mobile for better performance */
+    .bg-gradient-to-r,
+    .bg-gradient-to-br {
+        /* Use solid colors on mobile to improve performance */
+        background-image: none;
+        background-color: rgba(59, 130, 246, 0.5);
+    }
+    
+    /* Optimize touch targets */
+    button span.relative.z-10 {
+        /* Improve touch responsiveness */
+        touch-action: manipulation;
+        /* Reduce paint operations */
+        contain: layout paint;
+    }
+}
+
+/* Optimize high-frequency interaction elements */
+.stats-container .relative.z-10,
+.text-tools .relative.z-10 {
+    /* Pre-optimize frequently updated elements */
+    transform: translateZ(0);
+    contain: layout paint;
+    will-change: contents;
+}
+
 .light .overflow-y-auto::-webkit-scrollbar-thumb:hover {
     background-color: rgba(0, 0, 0, 0.3);
 }
@@ -918,6 +1044,248 @@ select:not(.dark select):not([data-theme="dark"] select) {
     outline: none;
     box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.5);
     transform: translateY(-1px);
+}
+
+/* ===== ADDITIONAL PERFORMANCE OPTIMIZATIONS FOR INP ===== */
+
+/* Optimize input and textarea elements to reduce input delay */
+#textInput,
+textarea,
+input[type="text"],
+input[type="search"] {
+    /* Force GPU acceleration for input elements */
+    transform: translateZ(0);
+    /* Optimize text input rendering */
+    will-change: contents;
+    /* Contain layout and paint operations */
+    contain: layout paint;
+    /* Optimize text rendering for better input responsiveness */
+    text-rendering: optimizeSpeed;
+}
+
+/* Optimize button interactions to reduce processing duration */
+button {
+    /* Prepare buttons for interaction */
+    will-change: transform, background-color, box-shadow;
+    /* Force hardware acceleration */
+    transform: translateZ(0);
+    /* Contain expensive operations */
+    contain: layout paint;
+}
+
+button:hover,
+button:focus,
+button:active {
+    /* Optimize hover/focus states */
+    will-change: auto;
+    /* Ensure smooth interactions */
+    transition-timing-function: ease-out;
+}
+
+/* Optimize Alpine.js transitions to reduce presentation delay */
+[x-show],
+[x-transition] {
+    /* Optimize Alpine.js element visibility changes */
+    contain: layout style;
+    transform: translateZ(0);
+}
+
+/* Critical path optimization for main content area */
+.main-content,
+#textInput {
+    /* High-priority rendering optimization */
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 500px;
+}
+
+/* Optimize dropdown and modal interactions */
+.dropdown-menu,
+.modal,
+.panel {
+    /* Prepare for showing/hiding */
+    will-change: transform, opacity;
+    contain: layout paint;
+    /* Use transform instead of position changes */
+    transform: translateZ(0);
+}
+
+/* Reduce paint complexity for status indicators */
+.stats-display,
+.notification,
+.badge {
+    /* Optimize frequently changing elements */
+    contain: layout paint;
+    will-change: contents;
+    transform: translateZ(0);
+}
+
+/* Optimize scroll performance */
+.overflow-y-auto,
+.overflow-x-auto {
+    /* Optimize scrolling performance */
+    contain: layout paint;
+    will-change: scroll-position;
+    /* Use momentum scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Font optimization for better text rendering performance */
+/* Note: This is a general optimization hint, specific @font-face rules should include font-display: swap */
+
+/* Optimize line numbers rendering */
+.line-numbers {
+    /* Optimize line number rendering */
+    contain: layout paint;
+    font-variant-numeric: tabular-nums;
+    text-rendering: optimizeSpeed;
+}
+
+/* Critical rendering optimizations */
+html {
+    /* Enable hardware acceleration globally */
+    transform: translateZ(0);
+}
+
+body {
+    /* Optimize main document flow */
+    contain: layout style;
+    /* Improve font rendering */
+    text-rendering: optimizeSpeed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimize CSS animations to use compositor */
+@keyframes optimized-fade {
+    from {
+        opacity: 0;
+        transform: translateZ(0) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateZ(0) scale(1);
+    }
+}
+
+/* Use optimized animations instead of CSS transitions where possible */
+.fade-in-optimized {
+    animation: optimized-fade 0.15s ease-out forwards;
+    will-change: transform, opacity;
+}
+
+/* Optimize panel switching animations */
+.panel-transition {
+    transform: translateZ(0);
+    contain: layout paint;
+    will-change: transform, opacity;
+}
+
+/* Performance hints for different device capabilities */
+@media (pointer: coarse) {
+    /* Touch device optimizations */
+    button, .interactive {
+        /* Optimize touch interactions */
+        touch-action: manipulation;
+        transform: translateZ(0);
+    }
+}
+
+@media (hover: none) {
+    /* Remove hover effects on touch devices to improve performance */
+    .hover\:scale-105:hover {
+        transform: none;
+    }
+    
+    button:hover {
+        transform: none;
+    }
+}
+
+/* High refresh rate display optimizations */
+@media (prefers-reduced-motion: no-preference) and (min-resolution: 120dpi) {
+    /* Optimize for high refresh rate displays */
+    .transition-all {
+        transition-duration: 100ms; /* Shorter transitions for smooth high-Hz displays */
+    }
+}
+
+/* Memory and performance optimization */
+.hidden {
+    /* Optimize hidden elements */
+    content-visibility: hidden;
+    contain-intrinsic-size: 0 0;
+}
+
+/* Optimize complex selectors to reduce style calculation time */
+.performance-critical * {
+    /* Apply performance hints to critical path elements */
+    contain: layout paint;
+}
+
+/* Improve paint performance for frequently changing content */
+.dynamic-content {
+    contain: layout paint;
+    will-change: contents;
+    transform: translateZ(0);
+}
+
+/* ===== INP OPTIMIZER INTEGRATION ===== */
+
+/* Optimizations for elements marked by INP optimizer */
+.performance-optimized {
+    contain: layout paint;
+    transform: translateZ(0);
+    will-change: transform, opacity;
+}
+
+/* Aggressive optimizations when INP is poor */
+.inp-optimized * {
+    /* Force immediate paint operations */
+    will-change: auto !important;
+}
+
+.inp-optimized .transition-all {
+    /* Minimal transition duration for poor INP */
+    transition-duration: 0.05s !important;
+    transition-timing-function: linear !important;
+}
+
+.inp-optimized .bg-gradient-to-r,
+.inp-optimized .bg-gradient-to-br {
+    /* Remove expensive gradients */
+    background-image: none !important;
+    background-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Monitor INP metrics styling */
+.inp-monitoring {
+    /* Global performance hints */
+    font-display: swap;
+}
+
+/* Optimized button states for better INP */
+.performance-optimized button:hover {
+    transform: translateZ(0) scale(1.02);
+    transition: transform 0.1s ease-out;
+}
+
+.performance-optimized button:active {
+    transform: translateZ(0) scale(0.98);
+    transition: transform 0.05s ease-out;
+}
+
+/* Optimize commonly problematic elements */
+.performance-optimized span.relative.z-10 {
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
+    text-rendering: optimizeSpeed;
+}
+
+/* Critical path CSS for immediate load */
+.critical-perf {
+    contain: layout paint;
+    will-change: auto;
+    transform: translateZ(0);
 }
 
 /* Remove outline on focus for cleaner look */

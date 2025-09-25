@@ -1951,6 +1951,9 @@ function hexaApp() {
         },
 
         init() {
+            // Explicitly set aiProcessing to false during initialization to prevent overlay flash
+            this.aiProcessing = false;
+            
             // Load text from URL parameters first, before other initialization
             this.loadFromURL();
             
