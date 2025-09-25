@@ -1,169 +1,327 @@
+<div align="center">
+
 ![Hexa Logo](https://github.com/qzxtu/Hexa/assets/69091361/3f61e2b4-bd7e-43e3-8a63-1591c300647e)
 
-# Welcome to **Hexa** ✨
+# Hexa ✨
+### *The Ultimate Modern Text Editor*
 
-Hexa is a modern and powerful text editor designed for productivity and a fluid writing experience. Built with cutting-edge web technologies, it offers advanced features while maintaining simplicity and performance. **Fully responsive and optimized for mobile devices.**
+[![GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue?style=for-the-badge&logo=github)](https://fl2on.github.io/Hexa)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://github.com/fl2on/Hexa)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Alpine.js](https://img.shields.io/badge/Alpine.js-8BC34A?style=for-the-badge&logo=alpine.js&logoColor=white)](https://alpinejs.dev/)
 
-## 🎉 **Main Features**
+**A powerful, responsive text editor built with cutting-edge web technologies. Experience seamless writing with advanced features, smart compression, AI integration, and comprehensive developer tools.**
 
-### ✍️ **Advanced Text Editor**
-- **🌙 Smart Dark/Light Mode:** Instant theme switching without loading flicker
-- **🎯 Focus Mode:** Distraction-free writing environment (Alt+Enter)
-- **📏 Line Numbers:** Clear visual reference for your text
-- **🖱️ Enhanced Drag and Drop:** Support for multiple file types up to 10MB
-- **📱 Responsive Design:** Fully optimized for mobile, tablet, and desktop
+---
 
-### 📊 **Intelligent Text Analysis**
-- **📈 Real-time Statistics:** Characters, words, lines, sentences, and paragraphs
-- **⏱️ Reading Time:** Accurate estimation based on 200 WPM
-- **📖 Readability Score:** Flesch Reading Ease analysis for content quality
-- **🔍 Advanced Syntax Detection:** HTML, CSS, JavaScript, Python, SQL, JSON, Markdown, XML
-- **📝 Word Frequency:** Analysis of most common words
-- **😊 Sentiment Analysis:** Detects emotional tone of text
+</div>
 
-### 🛠️ **Powerful Text Tools**
-- **🔤 Text Formatting:** UPPERCASE, lowercase, Title Case, Sentence case
-- **🧹 Text Cleaning:** Remove extra spaces, line breaks, smart formatting
-- **🔍 Search and Replace:** Advanced search and replace with regex support
-- **↶ Undo/Redo System:** Up to 50 states with complete history tracking
-- **🎨 Smart Autocomplete:** Contextual suggestions for code
+## 🎯 Core Features
 
-### ⏰ **Writing Session Tracking**
-- **⏱️ Active Timer:** Tracks your real writing time
-- **📊 Daily Statistics:** Words written and time spent today
-- **📈 Session History:** Long-term productivity tracking
+### ✍️ Advanced Text Editor
+- **🌙 Smart Theme System**: Instant dark/light mode switching with zero flicker
+- **🎯 Focus Mode**: Distraction-free writing environment (`Alt+Enter`)
+- **📏 Enhanced Line Numbers**: Visual reference with syntax highlighting
+- **🖱️ Drag & Drop**: Multi-format file support up to 10MB
+- **📱 Mobile-First Design**: Fully responsive across all devices
+- **⚡ Performance Optimized**: Handles 100k+ characters smoothly
 
-### 💾 **Export and Advanced Sharing**
-- **📤 Multiple Formats:** Export as TXT, MD, HTML or JSON
-- **🔗 Smart Sharing with Compression (SmartCompress):** URLs that support 5-10x more text with adaptive strategy selection
-- **📊 Compression Analysis:** Detailed compression statistics (Dev Tools → Compression Analysis)
-- **🧠 Strategies:** `lu` (LZ URI-safe), `lb` (LZ+base64url), `w1` (word-dictionary + reversible affixes + LZ)
-- **📈 Adaptive Thresholds:** Picks best strategy and falls back to `lu` when gains are marginal; type-aware telemetry guides thresholds over time
-- **  URL-Safe & Backward Compatible:** Legacy links continue to work; decoders maintain compatibility
-- **💾 Auto-Save:** Smart saving every 30 seconds
-- **🔒 Local Storage:** Secure and private data storage
+### 📊 Intelligent Text Analysis
 
-### 🔧 **Advanced Developer Tools**
-- **🐍 Python Executor:** Run Python code directly in the browser
-- **✨ Smart Code Beautifier:** Automatic formatting for multiple languages:
-  - 📄 **HTML:** Correct tag indentation
-  - 🎨 **CSS:** Rule and property formatting
-  - ⚡ **JavaScript:** Function spacing and structure
-  - 🐍 **Python:** Indentation validation
-  - 📋 **JSON:** Formatting with syntax validation
-  - 🔧 **XML:** Hierarchical structure
-- **🗜️ Code Minifier:** Minifies JS, CSS and HTML
-- **✅ Code Validator:** Detects errors and suggests optimizations
-- **🎨 Generators:** UUID, secure passwords, Lorem Ipsum, sample JSON
-- **📝 Template Generators:** HTML, CSS, JavaScript and Python
-- **🌙 Lua Processor:** Lua code obfuscation and formatting (optional tool)
+```mermaid
+flowchart TD
+    A[Text Input] --> B[Analysis Engine]
+    B --> C[Statistics]
+    B --> D[Readability]
+    B --> E[Sentiment]
+    B --> F[Syntax Detection]
+    
+    C --> C1[Characters]
+    C --> C2[Words]
+    C --> C3[Reading Time]
+    
+    D --> D1[Flesch Score]
+    D --> D2[Content Quality]
+    
+    E --> E1[Emotion Tone]
+    E --> E2[AI Analysis]
+    
+    F --> F1[HTML/CSS/JS]
+    F --> F2[Python/JSON]
+    F --> F3[Markdown/XML]
+```
 
-### 🌐 **Complete Web Utilities**
-- **💬 Discord Format:** Convert text to Discord format (bold, italic, code)
-- **🔐 Hash and Encoding:** MD5, SHA-256, Base64, URL encoding/decoding
-- **🔤 Text Analysis:** Advanced metrics and statistics
- - **🧩 Regex Tools:** Test regex and extract groups (uses Find panel pattern)
- - **🔁 Converters:** CSV ↔ JSON, Date ↔ Epoch
- - **🌐 Unicode:** Remove diacritics, Normalize NFKC, Slugify
- - **🧾 JWT & URL:** Decode JWT, Query ↔ JSON
- - **🧪 Diff & IDs:** Diff with previous text, insert unified diff, batch UUIDs
+- **📈 Real-time Statistics**: Characters, words, lines, sentences, paragraphs
+- **⏱️ Reading Time**: Accurate estimation based on 200 WPM
+- **📖 Readability Score**: Flesch Reading Ease analysis
+- **🔍 Syntax Detection**: Support for 8+ programming languages
+- **📝 Word Frequency Analysis**: Most common words extraction
+- **😊 Sentiment Analysis**: Emotional tone detection with AI
 
-### 📱 **Mobile Features**
-- **👆 Touch-Friendly:** Touch-optimized buttons (minimum 44px)
-- **📱 Full-Screen Panels:** Side panels take full screen on mobile
-- **🔤 Scalable Text:** Adaptive font sizes based on device
-- **⚡ Optimized Performance:** Effects disabled on mobile for better performance
-- **🌐 Responsive Navigation:** Adaptive interface for all screen sizes
+### 🛠️ Powerful Text Tools
 
-## 🚀 **Getting Started**
+| Feature | Description | Hotkey |
+|---------|-------------|--------|
+| **🔤 Text Formatting** | UPPERCASE, lowercase, Title Case, Sentence case | - |
+| **🧹 Smart Cleaning** | Remove extra spaces, normalize line breaks | - |
+| **🔍 Find & Replace** | Advanced search with regex support | - |
+| **↶ Undo/Redo** | 50-state history tracking | `Ctrl+Z`/`Ctrl+Y` |
+| **🎨 Autocomplete** | Context-aware code suggestions | - |
+| **📋 Smart Select** | Word/line/paragraph selection | - |
 
-1. Open [Hexa](https://fl2on.github.io/Hexa) in your browser (desktop or mobile).
-2. Start writing in the enhanced text editor with line numbers.
-3. Use **Query Parameters** for advanced configuration:
-   - `?text=YOUR_TEXT` to pre-fill content (without compression)
-   - `?t=COMPRESSED_TEXT&c=1` for compressed content
-   - `?title=YOUR_TITLE` to set custom session title
-   - Example: `https://fl2on.github.io/Hexa/?text=Hello%20World&title=My%20Session`
-4. **Drag and Drop** supported files (TXT, HTML, CSS, JS, JSON, MD, PY, SQL, XML)
-5. Use the **Text Tools** panel for formatting and analysis
-6. **Find and Replace** with advanced pattern matching
-7. **Export** your work in multiple formats
-8. Track your **writing progress** with session statistics
-9. **Share** long texts with automatic compression
+### ⏰ Writing Session Tracking
+- **⏱️ Active Timer**: Tracks real writing time (pauses during inactivity)
+- **📊 Daily Statistics**: Words written and time spent today
+- **📈 Session History**: Long-term productivity tracking with graphs
+- **🎯 Goal Setting**: Customizable daily/weekly writing goals
+- **🏆 Achievement System**: Milestone rewards and progress badges
 
-## 🔗 **Advanced Sharing System**
+---
 
-### **Smart Compression:**
-- **Short texts (<1000 chars):** Traditional method
-- **Long texts (>1000 chars):** Automatic SmartCompress with URL-safe payloads
-- **Compression ratio:** Typically 30-80% reduction depending on content type
-- **Strategies:** Automatically evaluates `lu`, `lb`, and `w1`; chooses the smallest
-- **Telemetry-aware:** Local telemetry improves choices over time; no network calls
-- **Single Share Action:** One “Share URL” button; long-URL notice is gentle and shown once
+## 🚀 Advanced Features
 
-### **Compatibility:**
-- ✅ **Backward Compatible:** Old links continue to work
-- ✅ **Universal:** Works on any device/browser
-- ✅ **No time limits:** Links never expire
-- ✅ **Automatic fallback:** If compression fails, uses original method
+### 💾 Smart Compression System
 
-### **Compression Analysis:**
-- 📊 **Dev Tools → Compression Analysis:** View compression statistics
-- 🔗 **Share Link Statistics:** Analyze generated links
-- 📈 **Typical ratios:** JavaScript 40-60%, JSON 50-80%, Markdown 25-45%
+```mermaid
+flowchart TD
+    A[Text Input] --> B{Size Check}
+    B -->|Small < 1k| C[Traditional URL]
+    B -->|Large > 1k| D[SmartCompress]
+    
+    D --> E[Strategy Test]
+    E --> F[LU: LZ URI-safe]
+    E --> G[LB: LZ + Base64]
+    E --> H[W1: Dictionary + LZ]
+    
+    F --> I[Best Strategy]
+    G --> I
+    H --> I
+    
+    I --> J[Compressed URL]
+    J --> K[Share Link]
+```
 
-## 🎥 **Live Demo**
+**SmartCompress Technology**:
+- **🔗 5-10x Compression**: Revolutionary text compression for URLs
+- **🧠 Adaptive Strategies**: AI-driven strategy selection (lu, lb, w1)
+- **📊 Real-time Analysis**: Compression statistics and performance metrics
+- **🔄 Backward Compatible**: Legacy links continue working
+- **📈 Learning System**: Improves compression over time with telemetry
 
-Check out the [live demo](https://fl2on.github.io/Hexa/?title=MyJavaScript&text=public%20class%20HelloWorld%20%7B%0A%20%20%20%20public%20static%20void%20main(String%5B%5D%20args)%20%7B%0A%20%20%20%20%20%20%20%20System.out.println(%22Hello,%20World!%22)%3B%0A%20%20%20%20%7D%0A%7D) to see Hexa in action!
+### 🔧 Developer Tools
 
-<img width="2560" height="1334" alt="image" src="https://github.com/user-attachments/assets/3f8ffb22-785c-4ba2-8197-ead8b9033b5f" />
+#### 🐍 Python Execution
+Execute Python code directly in your browser:
 
-## 📱 **Responsive Design**
+```python
+# Example: Fibonacci sequence
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
 
-### **Breakpoints:**
-- **📱 Mobile:** ≤768px (touch-optimized interface)
-- **📋 Tablet:** 769px-1024px (hybrid navigation)
-- **🖥️ Desktop:** ≥1025px (full interface)
-- **🖥️ Ultra-wide:** ≥1440px (optimized space usage)
+print([fibonacci(i) for i in range(10)])
+# Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+```
 
-### **Mobile Optimizations:**
-- **👆 Touch Buttons:** Minimum 44px for easy interaction
-- **📱 Full-Screen Panels:** Better space usage on mobile
-- **🔤 Scalable Fonts:** 16px minimum to avoid zoom on iOS
-- **⚡ Performance:** Effects disabled on mobile devices
+#### ✨ Multi-Language Code Beautifier
 
-## 🛠️ **Performance Optimizations**
+| Language | Features |
+|----------|----------|
+| **📄 HTML** | Tag indentation, attribute formatting |
+| **🎨 CSS** | Rule organization, property alignment |
+| **⚡ JavaScript** | Function spacing, bracket alignment |
+| **🐍 Python** | PEP8 compliance, indentation validation |
+| **📋 JSON** | Syntax validation, key sorting |
+| **🔧 XML** | Hierarchical structure, namespace handling |
 
-- **⚡ Hardware Acceleration:** GPU-optimized animations and transitions
-- **🎯 Throttled Events:** Mouse tracking optimized with requestAnimationFrame and FPS capping to reduce jank (esp. Brave)
-- **📦 Lazy Loading:** Advanced features load after initial render
-- **♿ Accessibility:** Respects reduced motion preferences
-- **🔄 Debounced Operations:** Smart auto-save and analysis timing
-- **💾 Memory Management:** Efficient history and session tracking
-- **📱 Mobile Optimization:** Lower battery and resource usage on mobile devices
+#### 🗜️ Code Optimization Suite
+- **Minification**: JS, CSS, HTML compression
+- **Validation**: Syntax checking with suggestions
+- **Template Generation**: Boilerplate code for multiple languages
+- **Lua Processing**: Advanced obfuscation and formatting
 
-### Storage Robustness
-- **TextStore:** Large-text persistence with compression (UTF-16 via LZString) and localStorage→sessionStorage fallback
-- 
-### On-Device Learning
-- **TensorFlow.js 4.x:** Learns typing behavior to suggest autosave intervals
-- **Modern Persistence:** Uses official IndexedDB/LocalStorage IO handlers (no deprecated manual artifacts)
-- **Private by Design:** All learning happens locally; no network calls
+### 🌐 Web Utilities Arsenal
 
-## 🧑‍💻 **Technologies Used**
+```mermaid
+graph LR
+    A[Input Text] --> B[Encryption]
+    A --> C[Formatting]
+    A --> D[Processing]
+    A --> E[Conversion]
+    
+    B --> B1[MD5/SHA-256]
+    B --> B2[Base64 Encode/Decode]
+    B --> B3[URL Encode/Decode]
+    
+    C --> C1[Discord Format]
+    C --> C2[Unicode Normalize]
+    C --> C3[Case Conversion]
+    
+    D --> D1[Regex Testing]
+    D --> D2[Hashtag Extract]
+    D --> D3[Mention Extract]
+    
+    E --> E1[CSV ↔ JSON]
+    E --> E2[Date ↔ Epoch]
+    E --> E3[JWT Decode]
+```
 
-- **Alpine.js 3.x:** Reactive functionality and state management
-- **Tailwind CSS:** Modern utility-first styling framework with responsive system
-- **LZ-String:** Compression library for URL optimization (also used by SmartCompress)
-- **Vanilla JavaScript:** High-performance core features
-- **Web APIs:** Clipboard, File Reader, Performance Observer
-- **Local/Session Storage:** Secure client-side data persistence, with TextStore wrapper
-- **CSS3:** Advanced animations and responsive design
-- **Prism.js:** Syntax highlighting for multiple languages
-- **TensorFlow.js:** On-device ML for adaptive autosave timing
+---
 
-## 📍 **Authors**
+## 🤖 AI Integration
 
-- **fl2on**
-  - GitHub: [fl2on](https://github.com/fl2on)
-  - Twitter: [@nova_qzxtu](https://twitter.com/nova_qzxtu)
+> **Note**: AI features require Puter.js authentication for full functionality
+
+### AI-Powered Features:
+- **🧠 Smart Summarization**: Intelligent content condensation
+- **🔄 Code Conversion**: Transform between programming languages
+- **✨ Text Enhancement**: Grammar, style, and tone improvements
+- **🌐 Translation**: Multi-language support with context awareness
+- **📖 Documentation**: Automatic code documentation generation
+- **💬 Interactive Chat**: AI assistant for writing and coding help
+
+---
+
+## 📱 Mobile Excellence
+
+### Responsive Design
+- **📱 Mobile**: ≤768px (touch-optimized)
+- **📋 Tablet**: 769px-1024px (hybrid interface)
+- **🖥️ Desktop**: ≥1025px (full features)
+- **🖥️ Ultra-wide**: ≥1440px (enhanced layout)
+
+### Mobile Optimizations:
+- **👆 Touch-Friendly**: 44px minimum touch targets
+- **📱 Full-Screen Panels**: Better space usage on mobile
+- **🔤 Scalable Fonts**: 16px minimum to avoid iOS zoom
+- **⚡ Performance**: Effects disabled on mobile devices
+- **🔋 Battery Optimization**: Reduced resource usage
+
+---
+
+## ⚡ Performance & Technology
+
+### Performance Optimizations:
+- **⚡ Hardware Acceleration**: GPU-optimized animations
+- **🎯 Throttled Events**: RequestAnimationFrame with FPS capping
+- **📦 Lazy Loading**: Progressive feature activation
+- **♿ Accessibility**: Respects reduced motion preferences
+- **🔄 Smart Debouncing**: Intelligent update timing
+- **💾 Memory Management**: Efficient history and caching
+
+### Technology Stack:
+
+```mermaid
+graph TB
+    A[Frontend] --> B[Alpine.js 3.x]
+    A --> C[TailwindCSS]
+    A --> D[Vanilla JavaScript]
+    
+    E[Libraries] --> F[LZ-String]
+    E --> G[Prism.js]
+    E --> H[TensorFlow.js]
+    
+    I[Storage] --> J[LocalStorage]
+    I --> K[SessionStorage]
+    I --> L[IndexedDB]
+```
+
+**Core Technologies**:
+- **Alpine.js 3.x**: Reactive functionality and state management
+- **TailwindCSS**: Modern utility-first styling framework
+- **LZ-String**: Compression library for URL optimization
+- **Vanilla JavaScript**: High-performance core features
+- **TensorFlow.js**: On-device ML for adaptive features
+- **Prism.js**: Syntax highlighting for multiple languages
+
+---
+
+## 🚀 Quick Start
+
+### 1. Launch Hexa
+Visit: **[https://fl2on.github.io/Hexa](https://fl2on.github.io/Hexa)**
+
+### 2. URL Parameters
+```url
+# Pre-fill content
+?text=Hello%20World&title=My%20Document
+
+# Load compressed content
+?t=COMPRESSED_TEXT&c=1
+
+# Multiple parameters
+?text=Code%20example&title=JavaScript&theme=dark
+```
+
+### 3. File Support
+**Drag & Drop**: `TXT`, `HTML`, `CSS`, `JS`, `JSON`, `MD`, `PY`, `SQL`, `XML` (up to 10MB)
+
+---
+
+## 🎬 Live Demo
+
+<div align="center">
+
+### [🚀 Try Hexa Now!](https://fl2on.github.io/Hexa/?title=Demo&text=Welcome%20to%20Hexa!%20✨)
+
+![Hexa Screenshot](https://github.com/user-attachments/assets/3f8ffb22-785c-4ba2-8197-ead8b9033b5f)
+
+</div>
+
+---
+
+## 📊 Compression Showcase
+
+| Content Type | Original Size | Compressed | Ratio | Strategy |
+|-------------|---------------|------------|-------|----------|
+| JavaScript | 15.2KB | 8.1KB | 47% | `w1` |
+| JSON Data | 23.7KB | 4.8KB | 80% | `lb` |
+| Markdown | 8.9KB | 6.7KB | 25% | `lu` |
+| HTML | 12.4KB | 7.2KB | 42% | `w1` |
+| Plain Text | 18.3KB | 11.1KB | 39% | `w1` |
+
+---
+
+## 🔒 Privacy & Security
+
+### Security Features:
+- **🔒 Local-first Architecture**: All processing happens in your browser
+- **🚫 Zero Data Collection**: No analytics, tracking, or personal data storage
+- **🔐 Secure AI Integration**: Optional authenticated features with Puter.js
+- **🛡️ Privacy by Design**: GDPR compliant, no cookies required
+
+---
+
+## 🤝 Contributing
+
+### Development Setup:
+```bash
+# Clone the repository
+git clone https://github.com/fl2on/Hexa.git
+cd Hexa
+
+# Start local server
+python -m http.server 3000
+# or
+npx serve .
+
+# Open in browser
+open http://localhost:3000
+```
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👨‍💻 Author
+
+<div align="center">
+
+### Created with ❤️ by **[fl2on](https://github.com/fl2on)**
+
+[![GitHub](https://img.shields.io/badge/GitHub-fl2on-black?style=for-the-badge&logo=github)](https://github.com/fl2on)
+[![Twitter](https://img.shields.io/badge/Twitter-@nova__qzxtu-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/nova_qzxtu)
