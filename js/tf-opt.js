@@ -10,6 +10,26 @@
     return;
   }
 
+  // Initialize TensorFlow with CPU backend as fallback
+  async function initTensorFlow() {
+    try {
+      // Try to set WebGL backend first
+      await tf.setBackend('webgl');
+      await tf.ready();
+    } catch (webglError) {
+      console.warn('[TF-Opt] WebGL backend failed, falling back to CPU:', webglError.message);
+      try {
+        await tf.setBackend('cpu');
+        await tf.ready();
+        console.log('[TF-Opt] Successfully initialized with CPU backend');
+      } catch (cpuError) {
+        console.error('[TF-Opt] Both WebGL and CPU backends failed:', cpuError);
+        return false;
+      }
+    }
+    return true;
+  }
+
   const STORAGE_KEY = 'tfopt_profile_v1';
   const MODEL_KEY = 'tfopt_model_v1'; // legacy (JSON stringified artifacts)
   const MODEL_ID = 'hexa_tfopt_v1';   // new storage id for tf.io handlers
@@ -102,7 +122,24 @@
     }
   }
 
-  let modelPromise = loadModel().then(async (m) => { await trainIfPossible(m); return m; });
+  let modelPromise = null;
+
+  // Initialize TensorFlow and model
+  initTensorFlow().then(async (success) => {
+    if (success) {
+      try {
+        modelPromise = loadModel().then(async (m) => { 
+          await trainIfPossible(m); 
+          return m; 
+        });
+      } catch (error) {
+        console.warn('[TF-Opt] Model initialization failed:', error);
+        modelPromise = null;
+      }
+    }
+  }).catch(error => {
+    console.warn('[TF-Opt] TensorFlow initialization failed:', error);
+  });
 
   // Public API
   window.TFOpt = {
@@ -118,6 +155,11 @@
     // Predict autosave delay in ms from stats (falls back to heuristic)
     async predictAutosaveMs(stats){
       try {
+        if (!modelPromise) {
+          // Fallback to heuristic if model not available
+          return targetAutosaveMs(stats);
+        }
+        
         const m = await modelPromise;
         const x = tf.tensor2d([ featuresFromStats(stats) ]);
         const y = m.predict(x);
@@ -126,6 +168,7 @@
         const ms = Math.max(5000, Math.min(60000, outMin || targetAutosaveMs(stats)));
         return Math.round(ms);
       } catch (e) {
+        console.warn('[TF-Opt] Prediction failed, using heuristic:', e.message);
         return targetAutosaveMs(stats);
       }
     }

@@ -656,6 +656,70 @@ Keep the analysis clear and actionable.`;
             throw new Error(`AI service error: ${error.message}`);
         }
     }
+
+    // ===== AUTHENTICATION FUNCTIONS =====
+
+    async signIn() {
+        try {
+            if (typeof puter === 'undefined') {
+                throw new Error('Puter.js not loaded');
+            }
+
+            if (!puter.auth || !puter.auth.signIn) {
+                throw new Error('Puter.js authentication not available');
+            }
+
+            // Use Puter's official sign in method
+            const user = await puter.auth.signIn();
+            
+            if (user) {
+                this.handleActiveSession(user);
+                return user;
+            } else {
+                throw new Error('Authentication failed - no user data returned');
+            }
+        } catch (error) {
+            console.error('PuterAI signIn error:', error);
+            this.setOfflineMode();
+            throw error;
+        }
+    }
+
+    async directSignIn() {
+        try {
+            if (typeof puter === 'undefined') {
+                throw new Error('Puter.js not loaded');
+            }
+
+            if (!puter.auth) {
+                throw new Error('Puter.js authentication not available');
+            }
+
+            // Check if there's a direct sign in method available
+            if (puter.auth.directSignIn) {
+                await puter.auth.directSignIn();
+            } else {
+                // Fallback to regular sign in
+                return await this.signIn();
+            }
+        } catch (error) {
+            console.error('PuterAI directSignIn error:', error);
+            this.setOfflineMode();
+            throw error;
+        }
+    }
+
+    async signOut() {
+        try {
+            if (typeof puter !== 'undefined' && puter.auth && puter.auth.signOut) {
+                await puter.auth.signOut();
+            }
+        } catch (error) {
+            console.warn('Sign out error:', error);
+        } finally {
+            this.setOfflineMode();
+        }
+    }
 }
 
 // Create global instance
