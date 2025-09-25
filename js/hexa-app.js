@@ -19,7 +19,10 @@ function hexaApp() {
         },
         isOpen: false,
         shareURL: '',
-        text: String(window.TextStore ? window.TextStore.get() : (localStorage.getItem('text') || '')),
+        text: (() => {
+            // Always try to load from storage first (immediate-decompress.js might have set it)
+            return String(window.TextStore ? window.TextStore.get() : (localStorage.getItem('text') || ''));
+        })(),
         history: [],
         historyIndex: -1,
         maxHistory: 50,
@@ -1970,32 +1973,95 @@ function hexaApp() {
             this.showNotification(`✨ Selected text formatted: ${format}`, 'success');
         },
 
+        waitForDependencies() {
+            return new Promise((resolve, reject) => {
+                let attempts = 0;
+                const maxAttempts = 50; // 5 seconds max wait time
+                
+                const checkDependencies = () => {
+                    attempts++;
+                    
+                    // Check if required dependencies are loaded
+                    const hasLZString = !!window.LZString;
+                    const hasSmartCompress = !!window.SmartCompress;
+                    
+                    console.log(`Dependency check attempt ${attempts}:`, { hasLZString, hasSmartCompress });
+                    
+                    if (hasLZString && hasSmartCompress) {
+                        console.log('All dependencies loaded successfully');
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        console.warn('Timeout waiting for dependencies. Proceeding anyway.', { hasLZString, hasSmartCompress });
+                        resolve(); // Resolve anyway to not block the app
+                    } else {
+                        // Wait 100ms and try again
+                        setTimeout(checkDependencies, 100);
+                    }
+                };
+                
+                // Start checking
+                checkDependencies();
+            });
+        },
+
         loadFromURL() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const isCompressed = urlParams.get('c') === '1';
-                const scheme = urlParams.get('s') || 'raw';
+                const scheme = urlParams.get('s') || 'lu'; // Default to 'lu' instead of 'raw'
+                
+                console.log('Loading from URL:', { isCompressed, scheme, hasSmartCompress: !!window.SmartCompress, hasLZString: !!window.LZString });
                 
                 let textToLoad = null;
                 
                 if (isCompressed) {
                     // Load compressed text from 't' parameter
                     const compressedText = urlParams.get('t');
+                    console.log('Compressed text parameter:', compressedText ? compressedText.substring(0, 50) + '...' : 'null');
+                    
                     if (compressedText) {
                         try {
-                            // Try SmartCompress first
-                            if (window.SmartCompress && scheme !== 'raw') {
-                                textToLoad = window.SmartCompress.decompress(compressedText, scheme);
-                            } else if (scheme === 'lu' || !scheme) {
-                                // Fallback to LZString
-                                textToLoad = LZString.decompressFromEncodedURIComponent(compressedText);
+                            // Try LZString decompression directly (most reliable)
+                            console.log('Attempting LZString decompression');
+                            textToLoad = window.LZString ? window.LZString.decompressFromEncodedURIComponent(compressedText) : null;
+                            
+                            // Try SmartCompress as fallback if LZString fails
+                            if (!textToLoad && window.SmartCompress && scheme !== 'raw') {
+                                console.log('Attempting SmartCompress decompression with scheme:', scheme);
+                                textToLoad = window.SmartCompress.decompress(scheme, compressedText);
                             }
                             
                             if (textToLoad) {
+                                console.log('Setting decompressed text:', textToLoad.substring(0, 100) + '...');
+                                
+                                // IMMEDIATELY set the text - don't wait for nextTick
                                 this.text = textToLoad;
+                                
+                                // Also directly update the textarea without waiting
+                                const textarea = document.getElementById('textInput');
+                                if (textarea) {
+                                    textarea.value = textToLoad;
+                                    console.log('Textarea updated directly');
+                                }
+                                
+                                // Update storage immediately
+                                if (window.TextStore) {
+                                    window.TextStore.set(textToLoad);
+                                } else {
+                                    try {
+                                        localStorage.setItem('text', textToLoad);
+                                    } catch (error) {
+                                        console.warn('Failed to save to localStorage:', error);
+                                    }
+                                }
+                                
+                                // Update stats
+                                this.updateStats();
+                                
                                 this.showNotification('✨ Shared text loaded and decompressed!', 'success');
+                                console.log('Successfully decompressed text, length:', textToLoad.length);
                             } else {
-                                throw new Error('Decompression failed');
+                                throw new Error('Decompression failed - no valid result');
                             }
                         } catch (error) {
                             console.error('Decompression error:', error);
@@ -2017,22 +2083,8 @@ function hexaApp() {
                     this.title = title;
                 }
                 
-                // If we loaded text from URL, update storage and stats
+                // Clean URL after loading
                 if (textToLoad || urlParams.get('text')) {
-                    if (window.TextStore) {
-                        window.TextStore.set(this.text);
-                    } else {
-                        try {
-                            localStorage.setItem('text', this.text);
-                        } catch (error) {
-                            console.warn('Failed to save loaded text to localStorage:', error);
-                        }
-                    }
-                    
-                    // Update stats after loading
-                    this.updateStats();
-                    
-                    // Clean URL after loading (optional - remove if you want to keep shareable URLs)
                     const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                     window.history.replaceState({}, document.title, cleanUrl);
                 }
@@ -2043,23 +2095,84 @@ function hexaApp() {
             }
         },
 
+        // Debug function to manually test decompression
+        debugDecompression() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const compressedText = urlParams.get('t');
+            const isCompressed = urlParams.get('c') === '1';
+            const scheme = urlParams.get('s') || 'lu';
+            
+            console.log('=== DEBUG DECOMPRESSION ===');
+            console.log('URL params:', { isCompressed, scheme, hasCompressed: !!compressedText });
+            console.log('Dependencies:', { LZString: !!window.LZString, SmartCompress: !!window.SmartCompress });
+            console.log('Current text length:', this.text.length);
+            
+            if (compressedText && isCompressed) {
+                try {
+                    const decompressed = window.LZString.decompressFromEncodedURIComponent(compressedText);
+                    console.log('Decompression result:', decompressed ? `${decompressed.length} chars` : 'null');
+                    
+                    if (decompressed) {
+                        console.log('Setting text manually...');
+                        this.text = decompressed;
+                        
+                        // Force textarea update
+                        const textarea = document.getElementById('textInput');
+                        if (textarea) {
+                            textarea.value = decompressed;
+                            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                            console.log('Textarea updated manually');
+                        }
+                        
+                        this.updateStats();
+                        console.log('Manual decompression complete');
+                        return decompressed;
+                    }
+                } catch (error) {
+                    console.error('Manual decompression failed:', error);
+                }
+            }
+            return null;
+        },
+
         init() {
             // Explicitly set aiProcessing to false during initialization to prevent overlay flash
             this.aiProcessing = false;
-            
-            // Load text from URL parameters first, before other initialization
-            this.loadFromURL();
             
             // Ensure text is always a string to prevent Alpine.js errors
             if (typeof this.text !== 'string') {
                 this.text = String(this.text || '');
             }
             
-            this.saveToHistory();
+            // Wait for dependencies to load before loading from URL
+            this.waitForDependencies().then(() => {
+                // Load text from URL parameters first, before other initialization
+                this.loadFromURL();
+                
+                // Continue with other initialization after URL loading
+                this.saveToHistory();
+                this.updateWritingStats();
+                this.initPerformanceOptimizations();
+            }).catch(error => {
+                console.warn('Failed to wait for dependencies:', error);
+                // Try to load anyway
+                this.loadFromURL();
+                this.saveToHistory();
+                this.updateWritingStats();
+                this.initPerformanceOptimizations();
+            });
             
-            this.updateWritingStats();
+            // Make debug function available globally
+            window.debugDecompression = () => this.debugDecompression();
             
-            this.initPerformanceOptimizations();
+            // Backup: check URL params again after 2 seconds in case initial load failed
+            setTimeout(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('c') === '1' && urlParams.get('t') && this.text.length === 0) {
+                    console.log('Backup URL loading triggered...');
+                    this.loadFromURL();
+                }
+            }, 2000);
             
             // Check for external Puter auth state changes on startup
             if (window.puterAI) {
