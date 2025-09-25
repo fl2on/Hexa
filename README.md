@@ -246,9 +246,6 @@ Visit: **[https://fl2on.github.io/Hexa](https://fl2on.github.io/Hexa)**
 ```url
 # Pre-fill content
 ?text=Hello%20World&title=My%20Document
-
-# Multiple parameters
-?text=Code%20example&title=JavaScript&theme=dark
 ```
 
 ### 3. File Support
