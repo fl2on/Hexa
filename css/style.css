@@ -8,6 +8,12 @@
     visibility: hidden;
 }
 
+/* Drag and drop styling - more controlled */
+.smart-textarea.drag-over {
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
 /* ===== TEXTAREA AND LINE NUMBERS ===== */
 
 @keyframes spin {
@@ -1244,17 +1250,32 @@ body {
     will-change: auto !important;
 }
 
+/* Protect important text from optimization side effects */
+.inp-optimized nav *,
+.inp-optimized .text-2xl,
+.inp-optimized .font-semibold,
+.inp-optimized .bg-clip-text {
+    will-change: auto !important;
+    opacity: 1 !important;
+    filter: none !important;
+    text-rendering: optimizeLegibility !important;
+}
+
 .inp-optimized .transition-all {
     /* Minimal transition duration for poor INP */
-    transition-duration: 0.05s !important;
+    transition-duration: 0.1s !important;
     transition-timing-function: linear !important;
 }
 
 .inp-optimized .bg-gradient-to-r,
 .inp-optimized .bg-gradient-to-br {
-    /* Remove expensive gradients */
+    /* Remove expensive gradients but keep subtle background - but NOT for text elements */
     background-image: none !important;
-    background-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Don't remove gradients from text elements */
+.inp-optimized .bg-clip-text {
+    background-image: linear-gradient(to right, white, rgba(255,255,255,0.9)) !important;
 }
 
 /* Monitor INP metrics styling */

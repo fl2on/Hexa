@@ -159,25 +159,21 @@
                 this.metrics.interactions
             );
 
-            // Apply optimizations based on metrics
-            if (this.metrics.avgPresentationDelay > 200) {
+            // Apply optimizations based on metrics (very conservative threshold)
+            if (this.metrics.avgPresentationDelay > 600) {
                 this.applyAggressiveOptimizations();
             }
         },
 
         // Apply more aggressive optimizations when INP is poor
         applyAggressiveOptimizations() {
-            console.log('🚀 Applying aggressive INP optimizations');
+            console.log('🚀 Applying conservative INP optimizations');
 
-            // Disable expensive animations
+            // Apply minimal performance improvements without visual impact
             const style = document.createElement('style');
             style.textContent = `
-                .transition-all { transition-duration: 50ms !important; }
-                .bg-gradient-to-r, .bg-gradient-to-br { 
-                    background-image: none !important; 
-                    background-color: rgba(59, 130, 246, 0.5) !important; 
-                }
-                * { animation-duration: 0.1s !important; }
+                .transition-all { transition-duration: 100ms !important; }
+                * { animation-duration: 0.15s !important; }
             `;
             document.head.appendChild(style);
 
