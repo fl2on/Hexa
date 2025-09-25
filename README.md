@@ -20,7 +20,7 @@
 
 ### ✍️ Advanced Text Editor
 - **🌙 Smart Theme System**: Instant dark/light mode switching with zero flicker
-- **🎯 Focus Mode**: Distraction-free writing environment (`Alt+Enter`)
+- **🎯 Focus Mode**: Distraction-free writing environment
 - **📏 Enhanced Line Numbers**: Visual reference with syntax highlighting
 - **🖱️ Drag & Drop**: Multi-format file support up to 10MB
 - **📱 Mobile-First Design**: Fully responsive across all devices
