@@ -247,9 +247,6 @@ Visit: **[https://fl2on.github.io/Hexa](https://fl2on.github.io/Hexa)**
 # Pre-fill content
 ?text=Hello%20World&title=My%20Document
 
-# Load compressed content
-?t=COMPRESSED_TEXT&c=1
-
 # Multiple parameters
 ?text=Code%20example&title=JavaScript&theme=dark
 ```
