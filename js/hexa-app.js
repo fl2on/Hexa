@@ -3,7 +3,13 @@ function hexaApp() {
     return {
         // State variables
     darkMode: (window.Utils && window.Utils.SafeStorage ? window.Utils.SafeStorage.local.get('darkMode', true) !== false : (localStorage.getItem('darkMode') !== 'false')),
-        title: 'Hexa',
+        title: (() => {
+            try {
+                return localStorage.getItem('hexaTitle') || 'Hexa';
+            } catch {
+                return 'Hexa';
+            }
+        })(),
         showNotificationToast: false,
         notificationMessage: '',
         notificationType: 'success',
@@ -2008,9 +2014,32 @@ function hexaApp() {
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const isCompressed = urlParams.get('c') === '1';
-                const scheme = urlParams.get('s') || 'lu'; // Default to 'lu' instead of 'raw'
+                const scheme = urlParams.get('s') || 'lu';
+                const plainText = urlParams.get('text');
+                const titleParam = urlParams.get('title');
                 
-                console.log('Loading from URL:', { isCompressed, scheme, hasSmartCompress: !!window.SmartCompress, hasLZString: !!window.LZString });
+                console.log('LoadFromURL - checking params:', { isCompressed, hasPlainText: !!plainText, hasTitle: !!titleParam });
+                
+                // Check if immediate-decompress.js already handled this
+                const currentTextLength = this.text.length;
+                console.log('Current text length:', currentTextLength);
+                
+                // If we already have text loaded (by immediate script), skip URL processing
+                if (currentTextLength > 0) {
+                    console.log('Text already loaded by immediate script, skipping URL processing');
+                    
+                    // Just handle title if it exists and wasn't set yet
+                    if (titleParam && this.title === 'Hexa') {
+                        this.title = titleParam;
+                    }
+                    
+                    // Clean URL
+                    const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                    return;
+                }
+                
+                console.log('No text loaded yet, processing URL parameters...');
                 
                 let textToLoad = null;
                 
@@ -2068,23 +2097,21 @@ function hexaApp() {
                             this.showNotification('❌ Failed to load compressed text', 'error');
                         }
                     }
-                } else {
+                } else if (plainText) {
                     // Load uncompressed text from 'text' parameter
-                    const plainText = urlParams.get('text');
-                    if (plainText) {
-                        this.text = plainText;
-                        this.showNotification('✨ Shared text loaded!', 'success');
-                    }
+                    console.log('Loading plain text from URL');
+                    textToLoad = plainText;
+                    this.text = textToLoad;
+                    this.showNotification('✨ Shared text loaded!', 'success');
                 }
                 
                 // Load title if provided
-                const title = urlParams.get('title');
-                if (title) {
-                    this.title = title;
+                if (titleParam && titleParam !== this.title) {
+                    this.title = titleParam;
                 }
                 
                 // Clean URL after loading
-                if (textToLoad || urlParams.get('text')) {
+                if (textToLoad || plainText) {
                     const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                     window.history.replaceState({}, document.title, cleanUrl);
                 }

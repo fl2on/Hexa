@@ -1,11 +1,57 @@
 // Immediate URL decompression script - runs before Alpine.js
 (function() {
-    console.log('Immediate decompression script running...');
+    console.log('Immediate URL processing script running...');
     
     const urlParams = new URLSearchParams(window.location.search);
     const isCompressed = urlParams.get('c') === '1';
     const compressedText = urlParams.get('t');
+    const plainText = urlParams.get('text');
+    const titleParam = urlParams.get('title');
     
+    // Set title if provided (for both plain and compressed text)
+    if (titleParam) {
+        try {
+            localStorage.setItem('hexaTitle', titleParam);
+            console.log('Title saved to localStorage:', titleParam);
+            document.title = titleParam + ' - Hexa';
+        } catch (error) {
+            console.warn('Failed to save title:', error);
+        }
+    }
+    
+    // Handle plain text parameter first (simpler case)
+    if (plainText && !isCompressed) {
+        console.log('Found plain text in URL, setting it...');
+        try {
+            localStorage.setItem('text', plainText);
+            console.log('Plain text saved to localStorage');
+            
+            // Set textarea directly if available
+            const setTextarea = () => {
+                const textarea = document.getElementById('textInput');
+                if (textarea) {
+                    textarea.value = plainText;
+                    console.log('Plain text set in textarea');
+                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                } else {
+                    setTimeout(setTextarea, 500);
+                }
+            };
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setTextarea);
+            } else {
+                setTextarea();
+            }
+            setTimeout(setTextarea, 2000);
+            
+        } catch (error) {
+            console.warn('Failed to save plain text to localStorage:', error);
+        }
+        return; // Exit early for plain text
+    }
+    
+    // Handle compressed text
     if (isCompressed && compressedText) {
         console.log('Found compressed text in URL, setting up decompression...');
         
