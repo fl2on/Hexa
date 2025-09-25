@@ -4,7 +4,7 @@ function hexaApp() {
         // State variables
     darkMode: (window.Utils && window.Utils.SafeStorage ? window.Utils.SafeStorage.local.get('darkMode', true) !== false : (localStorage.getItem('darkMode') !== 'false')),
         title: 'Hexa',
-        showNotification: false,
+        showNotificationToast: false,
         notificationMessage: '',
         notificationType: 'success',
         stats: {
@@ -19,7 +19,7 @@ function hexaApp() {
         },
         isOpen: false,
         shareURL: '',
-    text: (window.TextStore ? window.TextStore.get() : (localStorage.getItem('text') || '')),
+        text: String(window.TextStore ? window.TextStore.get() : (localStorage.getItem('text') || '')),
         history: [],
         historyIndex: -1,
         maxHistory: 50,
@@ -31,6 +31,18 @@ function hexaApp() {
         writingTimer: null,
         lastSaveTime: Date.now(),
         autoSaveInterval: null,
+        
+        statsUpdateTimeout: null,
+        storageUpdateTimeout: null,
+        historyUpdateTimeout: null,
+        scrollTimeout: null,
+        
+        statsCache: {
+            lastText: '',
+            lastHash: '',
+            cachedStats: null
+        },
+        
         formatOpen: false,
         devToolsOpen: false,
         pythonExecuting: false,
@@ -44,12 +56,95 @@ function hexaApp() {
         selectedText: '',
         syntaxHighlight: false,
         currentTheme: 'default',
-    telemetryView: '',
+        telemetryView: '',
+        // AI Utilities
+        aiOpen: false,
+        aiFromLanguage: 'javascript',
+        aiToLanguage: 'python',
+        aiTargetLanguage: 'Spanish',
+        aiContentTopic: '',
+        aiContentType: 'article',
+        aiContentLength: 'medium',
+        aiChatMessage: '',
+        aiChatHistory: [],
+        aiProcessing: false,
+        aiAbortController: null,
+        
+        // Advanced AI Utilities Variables
+        aiHTMLDescription: '',
+        aiSEOKeywords: '',
+        aiRegexDescription: '',
+        aiSQLDescription: '',
+        aiEmailPurpose: '',
+        aiEmailTone: 'professional',
+
+        // Puter.js Authentication
+        authMenuOpen: false,
+        puterAuth: {
+            isAuthenticated: false,
+            userInfo: null,
+            isLoading: false,
+            error: null,
+            initialized: false,
+            fallbackMode: true  // Start in fallback mode until Puter.js is initialized
+        },
 
     // Methods
         updateStats() {
+            // Ensure text is always a string to prevent Alpine.js errors
+            if (typeof this.text !== 'string') {
+                this.text = String(this.text || '');
+            }
+            
             const text = this.text || '';
+            
+            // Sistema de caché: verificar si el texto ha cambiado
+            const textHash = this.simpleHash(text);
+            if (this.statsCache.lastHash === textHash && this.statsCache.cachedStats) {
+                this.stats = this.statsCache.cachedStats;
+                return;
+            }
+            
+            if (window.PerformanceOptimizer) {
+                const optimizedStats = window.PerformanceOptimizer.getOptimizedStats(text);
+                if (optimizedStats) {
+                    this.stats = optimizedStats;
+                    // Actualizar caché
+                    this.statsCache.lastText = text;
+                    this.statsCache.lastHash = textHash;
+                    this.statsCache.cachedStats = optimizedStats;
+                    return;
+                }
+            }
+            
+            this.updateStatsLegacy(text);
+            
+            // Actualizar caché
+            this.statsCache.lastText = text;
+            this.statsCache.lastHash = textHash;
+            this.statsCache.cachedStats = this.stats;
+        },
+
+        simpleHash(text) {
+            // Hash rápido para detectar cambios en el texto
+            let hash = 0;
+            if (text.length === 0) return hash;
+            for (let i = 0; i < text.length; i++) {
+                const char = text.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convertir a 32bit integer
+            }
+            return hash;
+        },
+
+        updateStatsLegacy(text) {
             const chars = text.length;
+            
+            if (chars > 10000) {
+                this.updateStatsForLargeText(text, chars);
+                return;
+            }
+            
             const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).filter(word => word.length > 0).length;
             const lines = text === '' ? 0 : text.split('\n').length;
             const sentences = text === '' ? 0 : text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
@@ -71,6 +166,37 @@ function hexaApp() {
                 avgWordsPerSentence,
                 avgCharsPerWord,
                 readabilityScore
+            };
+        },
+
+        updateStatsForLargeText(text, chars) {
+            // Para textos grandes, usar sampling para mejor rendimiento
+            const sampleSize = Math.min(5000, chars);
+            const sample = text.substring(0, sampleSize);
+            const ratio = chars / sampleSize;
+            
+            // Calcular en el sample
+            const sampleWords = sample.trim() === '' ? 0 : sample.trim().split(/\s+/).filter(word => word.length > 0).length;
+            const sampleSentences = sample === '' ? 0 : sample.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+            const sampleParagraphs = sample === '' ? 0 : sample.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
+            
+            // Extrapolar
+            const words = Math.round(sampleWords * ratio);
+            const sentences = Math.round(sampleSentences * ratio);
+            const paragraphs = Math.round(sampleParagraphs * ratio);
+            const lines = text.split('\n').length;
+            const readingTime = Math.ceil(words / 200);
+            
+            this.stats = {
+                chars,
+                words,
+                lines,
+                sentences,
+                paragraphs,
+                readingTime,
+                avgWordsPerSentence: sentences > 0 ? parseFloat((words / sentences).toFixed(1)) : 0,
+                avgCharsPerWord: words > 0 ? parseFloat((chars / words).toFixed(1)) : 0,
+                readabilityScore: 50 // Valor aproximado para textos largos
             };
         },
 
@@ -210,6 +336,155 @@ function hexaApp() {
             }
         },
 
+        // ===== OPTIMIZACIÓN DE RENDIMIENTO =====
+        
+        handleOptimizedInput(event) {
+            // Manejar input de forma optimizada para textos largos
+            const textLength = this.text.length;
+            const isLargeText = textLength > 10000;
+            
+            // Para textos grandes, usar debouncing más agresivo
+            if (isLargeText) {
+                this.debouncedUpdateStats();
+                this.debouncedSaveToStorage();
+                this.debouncedSaveToHistory();
+            } else {
+                // Para textos normales, usar la lógica original
+                this.updateStats();
+                localStorage.setItem('text', this.text);
+                this.saveToHistory();
+            }
+            
+            this.startWritingTimer();
+            
+            // Aplicar optimizaciones visuales dinámicamente
+            this.applyPerformanceOptimizations(textLength);
+        },
+
+        applyPerformanceOptimizations(textLength) {
+            const textarea = document.getElementById('textInput');
+            if (!textarea) return;
+            
+            const isLargeText = textLength > 10000;
+            const isHugeText = textLength > 50000;
+            
+            // Aplicar clases de optimización
+            if (isHugeText) {
+                textarea.classList.add('large-text', 'performance-optimized');
+                // Para textos enormes, reducir la frecuencia de actualizaciones
+                textarea.style.contentVisibility = 'auto';
+            } else if (isLargeText) {
+                textarea.classList.add('large-text');
+                textarea.classList.remove('performance-optimized');
+                textarea.style.contentVisibility = 'visible';
+            } else {
+                textarea.classList.remove('large-text', 'performance-optimized');
+                textarea.style.contentVisibility = 'visible';
+            }
+            
+            // Optimizar line numbers container
+            const lineContainer = document.querySelector('.line-numbers-container');
+            if (lineContainer) {
+                if (this.stats.lines > 1000) {
+                    lineContainer.classList.add('optimized');
+                } else {
+                    lineContainer.classList.remove('optimized');
+                }
+            }
+        },
+
+        debouncedUpdateStats() {
+            if (this.statsUpdateTimeout) {
+                clearTimeout(this.statsUpdateTimeout);
+            }
+            this.statsUpdateTimeout = setTimeout(() => {
+                this.updateStats();
+            }, 200);
+        },
+
+        debouncedSaveToStorage() {
+            if (this.storageUpdateTimeout) {
+                clearTimeout(this.storageUpdateTimeout);
+            }
+            this.storageUpdateTimeout = setTimeout(() => {
+                localStorage.setItem('text', this.text);
+            }, 500);
+        },
+
+        debouncedSaveToHistory() {
+            if (this.historyUpdateTimeout) {
+                clearTimeout(this.historyUpdateTimeout);
+            }
+            this.historyUpdateTimeout = setTimeout(() => {
+                this.saveToHistory();
+            }, 1000);
+        },
+
+        // ===== FIN OPTIMIZACIÓN =====
+
+        initPerformanceOptimizations() {
+            // Configurar optimizaciones iniciales
+            const textarea = document.getElementById('textInput');
+            if (textarea) {
+                // Aplicar optimizaciones según el tamaño inicial del texto
+                this.applyPerformanceOptimizations(this.text.length);
+                
+                // Agregar listener para cambios de scroll (para virtualización)
+                textarea.addEventListener('scroll', this.throttleScrollHandler.bind(this), { passive: true });
+                
+                // Optimizar composición para mejor performance
+                textarea.style.contain = 'layout style paint';
+            }
+            
+            // Agregar atajo de teclado para mostrar métricas de performance (Ctrl+Alt+M)
+            document.addEventListener('keydown', (event) => {
+                if (event.ctrlKey && event.altKey && event.key === 'M') {
+                    event.preventDefault();
+                    this.showPerformanceMetrics();
+                }
+            });
+        },
+
+        throttleScrollHandler() {
+            if (this.scrollTimeout) return;
+            
+            this.scrollTimeout = setTimeout(() => {
+                // Actualizar números de línea visibles si es necesario
+                this.updateVisibleLineNumbers();
+                this.scrollTimeout = null;
+            }, 16); // ~60fps
+        },
+
+        updateVisibleLineNumbers() {
+            const textarea = document.getElementById('textInput');
+            const lineContainer = document.querySelector('.line-numbers-container');
+            
+            if (!textarea || !lineContainer || this.stats.lines <= 1000) return;
+            
+            // Solo para textos con muchas líneas, implementar scroll virtual
+            if (window.PerformanceOptimizer) {
+                window.PerformanceOptimizer.updateVirtualLineNumbers();
+            }
+        },
+
+        showPerformanceMetrics() {
+            if (window.PerformanceOptimizer) {
+                window.PerformanceOptimizer.showPerformanceDialog();
+            } else {
+                // Mostrar métricas básicas si el optimizador no está disponible
+                const textLength = this.text.length;
+                const isLargeText = textLength > 10000;
+                
+                this.showNotification(
+                    `📊 Text: ${textLength.toLocaleString()} chars ${isLargeText ? '(Large Text Mode)' : '(Normal Mode)'} - Press Ctrl+Alt+M for details`,
+                    'info',
+                    { duration: 5000 }
+                );
+            }
+        },
+
+        // ===== FUNCIONES HEREDADAS =====
+
         handleKeyDown(event) {
             const textarea = event.target;
             const cursorPos = textarea.selectionStart;
@@ -303,6 +578,31 @@ function hexaApp() {
                 this.writingTimer = setInterval(() => {
                     this.writingTime++;
                 }, 1000);
+            }
+        },
+
+        setupAutoSave() {
+            // Clear any existing auto-save interval
+            if (this.autoSaveInterval) {
+                clearInterval(this.autoSaveInterval);
+            }
+            
+            // Set up auto-save every 30 seconds
+            this.autoSaveInterval = setInterval(() => {
+                this.saveToStorage();
+            }, 30000);
+        },
+
+        saveToStorage() {
+            try {
+                if (window.TextStore) {
+                    window.TextStore.set(this.text);
+                } else {
+                    localStorage.setItem('text', this.text);
+                }
+                this.lastSaveTime = Date.now();
+            } catch (error) {
+                console.warn('Failed to save text:', error);
             }
         },
 
@@ -586,11 +886,18 @@ function hexaApp() {
         },
 
         showNotification(message, type = 'success') {
+            // Usar el sistema de notificaciones personalizado
             if (window.showNotification && typeof window.showNotification === 'function') {
                 window.showNotification(message, type);
             } else {
-                console.warn('Global showNotification function not available');
-                alert(message);
+                // Fallback al sistema Alpine.js
+                this.notificationMessage = message;
+                this.notificationType = type;
+                this.showNotificationToast = true;
+                
+                setTimeout(() => {
+                    this.showNotificationToast = false;
+                }, 3000);
             }
         },
 
@@ -673,11 +980,8 @@ function hexaApp() {
                     this.showNotification(message, 'info');
                 }
                 
-                // Also log to console for debugging
-                console.log('Compression Analysis:', {
-                    originalSize,
-                    smart: !!window.SmartCompress
-                });
+                // Log omitido en producción
+                // console.log('Compression Analysis:', { originalSize, smart: !!window.SmartCompress });
                 
             } catch (error) {
                 console.error('Compression analysis failed:', error);
@@ -1492,6 +1796,7 @@ function hexaApp() {
             if (keepOpen !== 'utils') this.utilsOpen = false;
             if (keepOpen !== 'dev') this.devToolsOpen = false;
             if (keepOpen !== 'search') this.searchOpen = false;
+            if (keepOpen !== 'ai') this.aiOpen = false;
         },
 
         togglePanel(panel) {
@@ -1519,6 +1824,12 @@ function hexaApp() {
                     this.searchOpen = !this.searchOpen;
                     if (window.AutoOpt) { try { window.AutoOpt.trackPanel('search', this.searchOpen); } catch {} }
                     if (window.UXBrain) { try { window.UXBrain.trackPanel('search', this.searchOpen); } catch {} }
+                    break;
+                case 'ai':
+                    this.closeOtherPanels('ai');
+                    this.aiOpen = !this.aiOpen;
+                    if (window.AutoOpt) { try { window.AutoOpt.trackPanel('ai', this.aiOpen); } catch {} }
+                    if (window.UXBrain) { try { window.UXBrain.trackPanel('ai', this.aiOpen); } catch {} }
                     break;
             }
         },
@@ -1566,10 +1877,133 @@ function hexaApp() {
             this.showNotification(`✨ Selected text formatted: ${format}`, 'success');
         },
 
+        loadFromURL() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const isCompressed = urlParams.get('c') === '1';
+                const scheme = urlParams.get('s') || 'raw';
+                
+                let textToLoad = null;
+                
+                if (isCompressed) {
+                    // Load compressed text from 't' parameter
+                    const compressedText = urlParams.get('t');
+                    if (compressedText) {
+                        try {
+                            // Try SmartCompress first
+                            if (window.SmartCompress && scheme !== 'raw') {
+                                textToLoad = window.SmartCompress.decompress(compressedText, scheme);
+                            } else if (scheme === 'lu' || !scheme) {
+                                // Fallback to LZString
+                                textToLoad = LZString.decompressFromEncodedURIComponent(compressedText);
+                            }
+                            
+                            if (textToLoad) {
+                                this.text = textToLoad;
+                                this.showNotification('✨ Shared text loaded and decompressed!', 'success');
+                            } else {
+                                throw new Error('Decompression failed');
+                            }
+                        } catch (error) {
+                            console.error('Decompression error:', error);
+                            this.showNotification('❌ Failed to load compressed text', 'error');
+                        }
+                    }
+                } else {
+                    // Load uncompressed text from 'text' parameter
+                    const plainText = urlParams.get('text');
+                    if (plainText) {
+                        this.text = plainText;
+                        this.showNotification('✨ Shared text loaded!', 'success');
+                    }
+                }
+                
+                // Load title if provided
+                const title = urlParams.get('title');
+                if (title) {
+                    this.title = title;
+                }
+                
+                // If we loaded text from URL, update storage and stats
+                if (textToLoad || urlParams.get('text')) {
+                    if (window.TextStore) {
+                        window.TextStore.set(this.text);
+                    } else {
+                        try {
+                            localStorage.setItem('text', this.text);
+                        } catch (error) {
+                            console.warn('Failed to save loaded text to localStorage:', error);
+                        }
+                    }
+                    
+                    // Update stats after loading
+                    this.updateStats();
+                    
+                    // Clean URL after loading (optional - remove if you want to keep shareable URLs)
+                    const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                }
+                
+            } catch (error) {
+                console.error('Error loading from URL:', error);
+                this.showNotification('❌ Failed to load from URL', 'error');
+            }
+        },
+
         init() {
+            // Load text from URL parameters first, before other initialization
+            this.loadFromURL();
+            
+            // Ensure text is always a string to prevent Alpine.js errors
+            if (typeof this.text !== 'string') {
+                this.text = String(this.text || '');
+            }
+            
             this.saveToHistory();
             
             this.updateWritingStats();
+            
+            this.initPerformanceOptimizations();
+            
+            // Check for external Puter auth state changes on startup
+            if (window.puterAI) {
+                window.puterAI.refreshAuthState();
+            }
+            
+            // Listen for auth state changes from Puter
+            window.addEventListener('puterAuthStateChange', (event) => {
+                const { isAuthenticated, user, fallbackMode, initialized } = event.detail;
+                
+                // Update Alpine.js internal state
+                this.puterAuth.isAuthenticated = isAuthenticated;
+                this.puterAuth.initialized = initialized;
+                this.puterAuth.fallbackMode = fallbackMode;
+                this.puterAuth.userInfo = user; // This was missing!
+                
+                if (isAuthenticated && !fallbackMode) {
+                    this.showNotification('✅ Puter.js connected - AI features available!', 'success');
+                } else if (!isAuthenticated) {
+                    this.showNotification('🔵 Offline Mode - Using local fallback', 'info');
+                }
+                
+                // Force Alpine.js to update the UI
+                this.$nextTick(() => {
+                    // UI updated
+                });
+            });
+            
+            // Listen for custom notification events (e.g., session restoration)
+            window.addEventListener('showNotification', (event) => {
+                const { message, type } = event.detail;
+                this.showNotification(message, type || 'info');
+            });
+            
+            // Set up periodic auth state checking for external Puter sessions
+            setInterval(() => {
+                if (window.puterAI) {
+                    window.puterAI.refreshAuthState();
+                }
+            }, 5000); // Check every 5 seconds
             
             // Listener to detect exit from fullscreen
             document.addEventListener('fullscreenchange', () => {
@@ -1990,5 +2424,982 @@ function hexaApp() {
             }
         },
 
+        // Emergency unlock function
+        forceUnlockAI() {
+            this.aiProcessing = false;
+            this.showNotification('🔓 AI processing unlocked manually', 'success');
+        },
+
+        // Cancel AI request function
+        cancelAIRequest() {
+            if (this.aiAbortController) {
+                this.aiAbortController.abort();
+                this.aiAbortController = null;
+            }
+            this.aiProcessing = false;
+            this.showNotification('❌ AI request cancelled', 'info');
+        },
+
+        // Check authentication before AI operations
+        checkAIAuthentication() {
+            if (!this.puterAuth.isAuthenticated) {
+                this.showNotification('🔒 Please sign in with your Puter account to use AI features', 'warning');
+                // Close AI panel and redirect to main auth button
+                this.aiOpen = false;
+                setTimeout(() => {
+                    this.toggleAuthMenu();
+                }, 300); // Small delay to allow panel to close smoothly
+                return false;
+            }
+            return true;
+        },
+
+        // AI Utility Methods
+        async aiSummarize(length) {
+            // Check authentication first
+            if (!this.checkAIAuthentication()) {
+                return;
+            }
+
+            // Prevent concurrent AI processing
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No text to summarize', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            this.aiAbortController = new AbortController();
+            
+            // Set a timeout to prevent hanging
+            let timeoutId = setTimeout(() => {
+                if (this.aiAbortController) {
+                    this.aiAbortController.abort();
+                }
+                this.aiProcessing = false;
+                this.showNotification('⏰ AI request timed out', 'error');
+            }, 30000); // 30 seconds timeout
+            
+            try {
+                const result = await window.puterAI.summarizeText(this.text, length, this.aiAbortController.signal);
+                clearTimeout(timeoutId);
+                
+                if (this.aiAbortController?.signal.aborted) {
+                    return; // Request was cancelled
+                }
+                
+                this.text = result;
+                this.updateStats();
+                this.showNotification(`✨ Text summarized (${length})`, 'success');
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    return; // Request was cancelled, don't show error
+                }
+                this.showNotification('❌ Summarization failed', 'error');
+                console.error('AI Summarization error:', error);
+            } finally {
+                this.aiProcessing = false;
+                this.aiAbortController = null;
+            }
+        },
+
+        async aiConvertCode() {
+            // Check authentication first
+            if (!this.checkAIAuthentication()) {
+                return;
+            }
+
+            // Prevent concurrent AI processing
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No code to convert', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            
+            // Set a timeout to prevent hanging
+            let timeoutId = setTimeout(() => {
+                this.aiProcessing = false;
+                this.showNotification('⏰ AI request timed out', 'error');
+            }, 30000); // 30 seconds timeout
+            
+            try {
+                const result = await window.puterAI.convertCode(
+                    this.text, 
+                    this.aiFromLanguage, 
+                    this.aiToLanguage
+                );
+                clearTimeout(timeoutId);
+                this.text = result;
+                this.updateStats();
+                this.showNotification(`🔄 Code converted: ${this.aiFromLanguage} → ${this.aiToLanguage}`, 'success');
+            } catch (error) {
+                clearTimeout(timeoutId);
+                this.showNotification('❌ Code conversion failed', 'error');
+                console.error('AI Code conversion error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiEnhanceText(enhancement) {
+            // Check authentication first
+            if (!this.checkAIAuthentication()) {
+                return;
+            }
+
+            // Prevent concurrent AI processing
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No text to enhance', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.enhanceText(this.text, enhancement);
+                this.text = result;
+                this.updateStats();
+                this.showNotification(`✨ Text enhanced (${enhancement})`, 'success');
+            } catch (error) {
+                this.showNotification('❌ Text enhancement failed', 'error');
+                console.error('AI Text enhancement error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiTranslateText() {
+            // Check authentication first
+            if (!this.checkAIAuthentication()) {
+                return;
+            }
+
+            // Prevent concurrent AI processing
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No text to translate', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.translateText(this.text, this.aiTargetLanguage);
+                this.text = result;
+                this.updateStats();
+                this.showNotification(`🌍 Text translated to ${this.aiTargetLanguage}`, 'success');
+            } catch (error) {
+                this.showNotification('❌ Translation failed', 'error');
+                console.error('AI Translation error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiCheckGrammar() {
+            // Check authentication first
+            if (!this.checkAIAuthentication()) {
+                return;
+            }
+
+            // Prevent concurrent AI processing
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No text to check', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.checkGrammar(this.text);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('📝 Grammar checked and corrected', 'success');
+            } catch (error) {
+                this.showNotification('❌ Grammar check failed', 'error');
+                console.error('AI Grammar check error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiGenerateContent() {
+            // Check authentication first
+            if (!this.checkAIAuthentication()) {
+                return;
+            }
+
+            // Prevent concurrent AI processing
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.aiContentTopic.trim()) {
+                this.showNotification('❌ Please enter a topic', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.generateContent(
+                    this.aiContentTopic, 
+                    this.aiContentType,
+                    this.aiContentLength
+                );
+                this.text = result;
+                this.updateStats();
+                this.showNotification(`🎨 Content generated: ${this.aiContentType} about "${this.aiContentTopic}"`, 'success');
+                this.aiContentTopic = ''; // Clear topic after generation
+            } catch (error) {
+                this.showNotification('❌ Content generation failed', 'error');
+                console.error('AI Content generation error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiSendMessage() {
+            // Check authentication first
+            if (!this.checkAIAuthentication()) {
+                return;
+            }
+
+            // Prevent concurrent AI processing
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.aiChatMessage.trim()) {
+                return;
+            }
+
+            const userMessage = this.aiChatMessage;
+            this.aiChatMessage = '';
+
+            // Add user message to history
+            this.aiChatHistory.push({
+                id: Date.now(),
+                role: 'user',
+                content: userMessage
+            });
+
+            this.aiProcessing = true;
+            try {
+                // Process chat with AI
+                if (!window.puterAI || !window.puterAI.chatWithAI) {
+                    throw new Error('PuterAI or chatWithAI method not available');
+                }
+                
+                const response = await window.puterAI.chatWithAI(userMessage); // Remove history parameter for now
+                
+                // Add AI response to history
+                this.aiChatHistory.push({
+                    id: Date.now() + 1,
+                    role: 'assistant',
+                    content: response
+                });
+
+                // Keep chat history manageable
+                if (this.aiChatHistory.length > 20) {
+                    this.aiChatHistory = this.aiChatHistory.slice(-20);
+                }
+
+            } catch (error) {
+                this.showNotification('❌ AI chat failed', 'error');
+                console.error('AI Chat error:', error);
+                
+                // Add error message to chat
+                this.aiChatHistory.push({
+                    id: Date.now() + 1,
+                    role: 'assistant',
+                    content: 'Sorry, I encountered an error. Please try again.'
+                });
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        // Puter.js Authentication Methods
+        async init() {
+            // Initialize application
+            this.updateStats();
+            this.setupAutoSave();
+            this.startWritingTimer();
+            await this.checkPuterAuth();
+        },
+
+        async checkPuterAuth() {
+            try {
+                // Wait for PuterAI to initialize
+                if (window.puterAI && window.puterAI.initialized) {
+                    // Only check authentication status when explicitly needed
+                    // This prevents automatic 401 errors on page load
+                    console.log('PuterAI ready for authentication when needed');
+                }
+            } catch (error) {
+                console.warn('Auth check failed:', error);
+            }
+        },
+
+        // Advanced AI Code Utilities
+        async aiGenerateDocumentation() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No code to document', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.generateDocumentation(this.text);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('📚 Code documentation generated', 'success');
+            } catch (error) {
+                this.showNotification('❌ Documentation generation failed', 'error');
+                console.error('AI Documentation error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiOptimizeCode() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No code to optimize', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.optimizeCode(this.text);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('⚡ Code optimized', 'success');
+            } catch (error) {
+                this.showNotification('❌ Code optimization failed', 'error');
+                console.error('AI Optimization error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiExplainCode() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No code to explain', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.explainCode(this.text);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('🔍 Code explanation generated', 'success');
+            } catch (error) {
+                this.showNotification('❌ Code explanation failed', 'error');
+                console.error('AI Explanation error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiFindBugs() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No code to analyze', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.findBugs(this.text);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('🐛 Bug analysis completed', 'success');
+            } catch (error) {
+                this.showNotification('❌ Bug analysis failed', 'error');
+                console.error('AI Bug analysis error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiGenerateTests() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No code to test', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.generateTests(this.text);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('🧪 Unit tests generated', 'success');
+            } catch (error) {
+                this.showNotification('❌ Test generation failed', 'error');
+                console.error('AI Test generation error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        // Advanced AI Content Utilities
+        async aiGenerateHTML() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.aiHTMLDescription.trim()) {
+                this.showNotification('❌ Please describe the HTML you want', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.generateHTML(this.aiHTMLDescription);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('🌐 HTML generated successfully', 'success');
+                this.aiHTMLDescription = '';
+            } catch (error) {
+                this.showNotification('❌ HTML generation failed', 'error');
+                console.error('AI HTML generation error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiOptimizeSEO() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No content to optimize', 'error');
+                return;
+            }
+
+            if (!this.aiSEOKeywords.trim()) {
+                this.showNotification('❌ Please provide SEO keywords', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.optimizeSEO(this.text, this.aiSEOKeywords);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('📈 Content optimized for SEO', 'success');
+                this.aiSEOKeywords = '';
+            } catch (error) {
+                this.showNotification('❌ SEO optimization failed', 'error');
+                console.error('AI SEO optimization error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        // Advanced AI Developer Tools
+        async aiGenerateRegex() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.aiRegexDescription.trim()) {
+                this.showNotification('❌ Please describe the pattern you need', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.generateRegex(this.aiRegexDescription);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('🎯 Regex pattern generated', 'success');
+                this.aiRegexDescription = '';
+            } catch (error) {
+                this.showNotification('❌ Regex generation failed', 'error');
+                console.error('AI Regex generation error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiGenerateSQL() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.aiSQLDescription.trim()) {
+                this.showNotification('❌ Please describe the SQL query needed', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.generateSQL(this.aiSQLDescription);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('🗃️ SQL query generated', 'success');
+                this.aiSQLDescription = '';
+            } catch (error) {
+                this.showNotification('❌ SQL generation failed', 'error');
+                console.error('AI SQL generation error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiAnalyzeData() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.text.trim()) {
+                this.showNotification('❌ No data to analyze', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.analyzeData(this.text);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('📊 Data analysis completed', 'success');
+            } catch (error) {
+                this.showNotification('❌ Data analysis failed', 'error');
+                console.error('AI Data analysis error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        async aiGenerateEmail() {
+            if (!this.checkAIAuthentication()) return;
+            if (this.aiProcessing) {
+                this.showNotification('⏳ AI is already processing, please wait...', 'warning');
+                return;
+            }
+
+            if (!this.aiEmailPurpose.trim()) {
+                this.showNotification('❌ Please describe the email purpose', 'error');
+                return;
+            }
+
+            this.aiProcessing = true;
+            try {
+                const result = await window.puterAI.generateEmail(this.aiEmailPurpose, this.aiEmailTone);
+                this.text = result;
+                this.updateStats();
+                this.showNotification('📧 Email generated successfully', 'success');
+                this.aiEmailPurpose = '';
+            } catch (error) {
+                this.showNotification('❌ Email generation failed', 'error');
+                console.error('AI Email generation error:', error);
+            } finally {
+                this.aiProcessing = false;
+            }
+        },
+
+        toggleAuthMenu() {
+            // First close AI Utilities panel if it's open
+            if (this.aiOpen) {
+                this.aiOpen = false;
+                // Small delay to allow the AI panel to close before opening auth menu
+                setTimeout(() => {
+                    this.authMenuOpen = !this.authMenuOpen;
+                }, 200);
+            } else {
+                this.authMenuOpen = !this.authMenuOpen;
+            }
+        },
+
+        // Helper method to check for popup blockers
+        testPopupBlocked() {
+            try {
+                const popup = window.open('', '_blank', 'width=1,height=1');
+                if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+                    return true; // Popup blocked
+                }
+                // Close popup immediately to avoid leaving it open
+                setTimeout(() => {
+                    try {
+                        if (popup && !popup.closed) {
+                            popup.close();
+                        }
+                    } catch (e) {
+                        // Ignore errors when closing popup
+                    }
+                }, 100);
+                return false; // Popup not blocked
+            } catch (e) {
+                return true; // Popup blocked
+            }
+        },
+
+        // Simplified sign in following official Puter.js pattern
+        async signInToPuter() {
+            try {
+                this.puterAuth.isLoading = true;
+                this.puterAuth.error = null;
+                
+                if (!window.puterAI) {
+                    throw new Error('PuterAI not available');
+                }
+
+                this.showNotification('🔐 Opening authentication popup...', 'info');
+                
+                // Add a small delay before attempting sign-in to ensure user interaction is complete
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // Follow official pattern: simple signIn() call with user interaction
+                try {
+                    let user = await window.puterAI.signIn();
+                    
+                    if (user) {
+                        // Update local state immediately
+                        this.puterAuth.isAuthenticated = true;
+                        this.puterAuth.userInfo = user;
+                        this.puterAuth.fallbackMode = false;
+                        
+                        this.showNotification('✅ Successfully signed in to Hexa!', 'success');
+                        
+                        // Force Alpine.js to update
+                        this.$nextTick(() => {
+                            // UI will be updated
+                        });
+                        
+                        // Only close the auth menu after successful authentication
+                        // Add a small delay to ensure the user sees the success message
+                        setTimeout(() => {
+                            this.authMenuOpen = false;
+                        }, 1500);
+                    } else {
+                        throw new Error('Sign in failed - no user returned');
+                    }
+                } catch (error) {
+                    // Handle specific error cases
+                    const errorMessage = error?.message || error?.toString() || 'Unknown error';
+                    const errorObj = error?.error || error;
+                    
+                    this.puterAuth.error = errorMessage;
+                    this.puterAuth.isAuthenticated = false;
+                    this.puterAuth.userInfo = null;
+                    
+                    if (errorMessage.includes('popup') || errorMessage.includes('blocked')) {
+                        this.showNotification('🚫 Popup blocked. Try "Direct Sign In" below.', 'warning');
+                    } else if (errorMessage.includes('cancelled') || errorObj === 'auth_window_closed') {
+                        this.showNotification('🔄 Authentication cancelled. Please try again.', 'info');
+                    } else {
+                        this.showNotification('❌ Sign in failed: ' + errorMessage, 'error');
+                    }
+                    console.error('Sign in failed:', error);
+                    // Keep auth menu open on error so user can try again
+                }
+                
+            } catch (error) {
+                const errorMessage = error?.message || error?.toString() || 'Unknown error';
+                this.puterAuth.error = errorMessage;
+                this.showNotification('❌ Sign in error: ' + errorMessage, 'error');
+                console.error('Sign in error:', error);
+                // Keep auth menu open on error so user can try again
+            } finally {
+                this.puterAuth.isLoading = false;
+            }
+        },
+
+        async directSignInToPuter() {
+            try {
+                this.puterAuth.isLoading = true;
+                this.puterAuth.error = null;
+                
+                if (!window.puterAI) {
+                    throw new Error('PuterAI not available');
+                }
+
+                this.showNotification('🔗 Redirecting to Puter authentication...', 'info');
+                
+                // Use direct sign in method (redirects to Puter.com)
+                await window.puterAI.directSignIn();
+                
+            } catch (error) {
+                this.puterAuth.error = error.message;
+                this.showNotification('❌ Direct sign in failed: ' + error.message, 'error');
+                console.error('Direct sign in failed:', error);
+            } finally {
+                this.puterAuth.isLoading = false;
+            }
+        },
+
+        async quickSignInToPuter() {
+            try {
+                this.puterAuth.isLoading = true;
+                this.puterAuth.error = null;
+                
+                if (!window.puterAI) {
+                    throw new Error('PuterAI not available');
+                }
+
+                await window.puterAI.quickSignIn();
+                
+                // Update auth state
+                this.puterAuth.isAuthenticated = true;
+                this.puterAuth.userInfo = await window.puterAI.getUser();
+                
+                this.showNotification('🚀 Quick sign in successful!', 'success');
+                
+                // Only close the auth menu after successful authentication
+                // Add a small delay to ensure the user sees the success message
+                setTimeout(() => {
+                    this.authMenuOpen = false;
+                }, 1500);
+                
+            } catch (error) {
+                this.puterAuth.error = error.message;
+                this.showNotification('❌ Quick sign in failed: ' + error.message, 'error');
+                console.error('Quick sign in failed:', error);
+                // Keep auth menu open on error so user can try again
+            } finally {
+                this.puterAuth.isLoading = false;
+            }
+        },
+
+        async signOutFromPuter() {
+            try {
+                this.puterAuth.isLoading = true;
+                this.puterAuth.error = null;
+                
+                if (!window.puterAI) {
+                    throw new Error('PuterAI not available');
+                }
+
+                await window.puterAI.signOut();
+                
+                // Update auth state
+                this.puterAuth.isAuthenticated = false;
+                this.puterAuth.userInfo = null;
+                
+                this.showNotification('👋 Successfully signed out', 'success');
+                this.authMenuOpen = false;
+                
+            } catch (error) {
+                this.puterAuth.error = error.message;
+                this.showNotification('❌ Sign out failed: ' + error.message, 'error');
+                console.error('Sign out failed:', error);
+            } finally {
+                this.puterAuth.isLoading = false;
+            }
+        },
+
     }
 }
+
+// Notification system is handled by main.js
+
+// ===== OPTIMIZED SPOTLIGHT EFFECT =====
+(() => {
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isBrave = !!(navigator.brave) || /Brave/i.test(navigator.userAgent || '');
+  let glowEl = null;
+  let lastTs = 0;
+  // Limit to ~30fps to reduce paint work on Chromium
+  const fpsInterval = 1000 / 30;
+  let inactivityTimer = null;
+
+  function ensureGlowEl() {
+    if (!glowEl) glowEl = document.getElementById('glow-effect');
+    return glowEl;
+  }
+
+  function setThemeClass() {
+    const el = ensureGlowEl();
+    if (!el) return;
+    const dark = document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
+    el.classList.toggle('glow--dark', !!dark);
+  }
+
+  function onPointerMove(e) {
+    const el = ensureGlowEl();
+    if (!el) return;
+    const now = performance.now();
+    if (now - lastTs < fpsInterval) return;
+    lastTs = now;
+
+    el.style.setProperty('--mouse-x', e.clientX + 'px');
+    el.style.setProperty('--mouse-y', e.clientY + 'px');
+    el.style.opacity = '1';
+
+    // Reiniciar temporizador de inactividad
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      const el2 = ensureGlowEl();
+      if (el2) el2.style.opacity = '0.3';
+    }, 3000);
+  }
+
+  function onEnter() {
+    const el = ensureGlowEl();
+    if (el) el.style.opacity = '1';
+  }
+
+  function onLeave() {
+    const el = ensureGlowEl();
+    if (el) el.style.opacity = '0';
+  }
+
+  function initGlow() {
+    const el = ensureGlowEl();
+    if (!el) return;
+
+    // Brave-specific tweaks (reduce expensive composition)
+    if (isBrave) {
+      el.style.mixBlendMode = 'normal';
+      el.style.opacity = '0.6';
+    }
+
+    setThemeClass();
+
+    // Observar cambios de clase para modo oscuro
+    const mo = new MutationObserver(setThemeClass);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    // Pointer events with passive to avoid blocking main thread
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('mouseenter', onEnter, { passive: true });
+    window.addEventListener('mouseleave', onLeave, { passive: true });
+  }
+
+  // Disable if user prefers reduced motion
+  if (!prefersReduced) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initGlow, { once: true });
+    } else {
+      initGlow();
+    }
+  } else {
+    const el = ensureGlowEl();
+    if (el) el.style.display = 'none';
+  }
+})();
+
+// ===== SYNTAX DETECTION =====
+window.detectSyntax = () => {
+  const textArea = document.querySelector("textarea");
+  if (!textArea || !textArea.value.trim()) {
+    showNotification("ℹ️ No text to analyze", "error");
+    return;
+  }
+
+  const text = textArea.value;
+  const syntaxPatterns = {
+    html: { 
+      pattern: /<[^>]+>/, 
+      keywords: ["<div", "<p", "<html", "class=", "<body", "<!DOCTYPE", "<head>", "<title>"] 
+    },
+    javascript: { 
+      pattern: /function|const|let|var|=>|class/, 
+      keywords: ["function", "const", "let", "var", "if", "for", "console.log", "document.", "window."] 
+    },
+    css: { 
+      pattern: /{[^}]*}/, 
+      keywords: ["{", "}", ":", ";", "@media", "px", "rem", "color:", "background:"] 
+    },
+    python: { 
+      pattern: /def |class |import |if __/, 
+      keywords: ["def", "class", "import", "if", "print", "from", "elif", "while"] 
+    },
+    sql: { 
+      pattern: /SELECT|INSERT|UPDATE|DELETE|CREATE TABLE/i, 
+      keywords: ["SELECT", "FROM", "WHERE", "INSERT", "DELETE", "UPDATE", "CREATE", "ALTER"] 
+    },
+    json: {
+      pattern: /^\s*[\{\[][\s\S]*[\}\]]\s*$/,
+      keywords: ['":', '": ', '",', '"}', '"]']
+    },
+    markdown: {
+      pattern: /^#{1,6}\s|^\*\s|\*\*.*\*\*|__.*__|^\-\s/m,
+      keywords: ["# ", "## ", "### ", "**", "__", "- ", "* ", "[", "]("]
+    },
+    xml: {
+      pattern: /<\?xml|<\/\w+>/,
+      keywords: ["<?xml", "</", "/>", "xmlns"]
+    }
+  };
+
+  const detectedLanguages = [];
+  for (const [lang, syntax] of Object.entries(syntaxPatterns)) {
+    if (syntax.pattern.test(text) || syntax.keywords.some(kw => text.toLowerCase().includes(kw.toLowerCase()))) {
+      detectedLanguages.push(lang.toUpperCase());
+    }
+  }
+
+  if (detectedLanguages.length > 0) {
+    showNotification(`🔍 Detected: ${detectedLanguages.join(', ')}`, "success");
+  } else {
+    showNotification("📝 Plain text detected", "success");
+  }
+};

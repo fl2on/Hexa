@@ -30,7 +30,7 @@ window.TextAnalyzer = {
         if (sentences === 0 || words === 0) return 0;
         
         const syllables = this.countSyllables(text);
-    // Flesch Reading Ease score
+        // Flesch Reading Ease score
         const score = 206.835 - (1.015 * (words / sentences)) - (84.6 * (syllables / words));
         return Math.max(0, Math.min(100, Math.round(score)));
     },
@@ -109,12 +109,11 @@ window.TextFormatter = {
 };
 
 // Lua Processor (Obfuscator/Deobfuscator)
-// (Removed) LuaProcessor and DiscordUtils were unused; keeping file lean.
 
 // Hash and encoding utilities
 window.HashUtils = {
     async md5(text) {
-        // Using Web Crypto API for real MD5 (simplified implementation)
+        // Using Web Crypto API for real MD5
         return this.simpleHash(text, 'md5');
     },
 

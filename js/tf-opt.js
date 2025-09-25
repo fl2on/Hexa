@@ -11,7 +11,7 @@
   }
 
   const STORAGE_KEY = 'tfopt_profile_v1';
-  const MODEL_KEY = 'tfopt_model_v1'; // legacy (JSON stringified artifacts) – deprecated
+  const MODEL_KEY = 'tfopt_model_v1'; // legacy (JSON stringified artifacts)
   const MODEL_ID = 'hexa_tfopt_v1';   // new storage id for tf.io handlers
 
   function loadProfile(){
@@ -77,9 +77,23 @@
 
   async function loadModel(){
     // Prefer IndexedDB, then LocalStorage; else build fresh
-    try { return await tf.loadLayersModel(`indexeddb://${MODEL_ID}`); }
+    try { 
+      const model = await tf.loadLayersModel(`indexeddb://${MODEL_ID}`);
+      // Ensure the loaded model is compiled
+      if (!model.compiled) {
+        model.compile({ optimizer: tf.train.adam(0.01), loss: 'meanSquaredError' });
+      }
+      return model;
+    }
     catch (e) { /* try next */ }
-    try { return await tf.loadLayersModel(`localstorage://${MODEL_ID}`); }
+    try { 
+      const model = await tf.loadLayersModel(`localstorage://${MODEL_ID}`);
+      // Ensure the loaded model is compiled
+      if (!model.compiled) {
+        model.compile({ optimizer: tf.train.adam(0.01), loss: 'meanSquaredError' });
+      }
+      return model;
+    }
     catch (e2) {
       // Clean up legacy JSON-artifacts to avoid future misuse and free space
       try { localStorage.removeItem(MODEL_KEY); } catch {}

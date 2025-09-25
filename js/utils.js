@@ -262,10 +262,6 @@
     }
   };
 
-  // Large Text persistence (safe & quota-aware)
-  // Stores under key 'text' using localStorage when possible. If value is large,
-  // compress to UTF-16 and mark with a prefix. Falls back to sessionStorage on quota errors.
-  // Public API: TextStore.get(), TextStore.set(text)
   const TEXT_KEY = 'text';
   const PREFIX_C16 = 'hxc:c16:'; // LZString.compressToUTF16 payload
   const NOTICE_KEY = 'hexa.textstore.notice';
@@ -351,7 +347,7 @@
       h ^= str.charCodeAt(i);
       h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
     }
-    return h >>> 0; // unsigned
+    return h >>> 0;
   }
 
   class LRUCache {

@@ -1,6 +1,18 @@
 /* ===== TEXTAREA AND LINE NUMBERS ===== */
 
-/* Line numbers container */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.ai-spinner {
+    animation: spin 1s linear infinite !important;
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite !important;
+}
+
 .line-numbers-container {
     position: absolute;
     left: 0;
@@ -17,32 +29,31 @@
     pointer-events: none;
 }
 
-/* Textarea principal */
+/* Main textarea */
 .smart-textarea {
     width: 100% !important;
     padding-left: 3rem !important;
+    padding-right: 1rem !important;
     padding-top: 0.75rem !important;
     padding-bottom: 0.75rem !important;
     box-sizing: border-box !important;
     line-height: 1.5 !important;
     font-size: 0.875rem !important;
+    resize: none !important;
 }
 
-/* ===== FOCUS MODE - SOLO LO ESENCIAL ===== */
+/* ===== FOCUS MODE ===== */
 
-/* Base transitions so both enter and exit are smooth */
 nav, footer {
     transition: opacity 800ms cubic-bezier(0.22, 1, 0.36, 1) !important;
     will-change: opacity;
 }
 
-/* Side panels base transition (dev/utils/format) */
 .fixed.top-0.right-0.h-full {
     transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1), transform 700ms cubic-bezier(0.22, 1, 0.36, 1) !important;
     will-change: opacity, transform;
 }
 
-/* Focus mode: smooth hiding of navigation and panels */
 .focus-mode-active nav,
 .focus-mode-active footer {
     opacity: 0 !important;
@@ -50,7 +61,6 @@ nav, footer {
     transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
-/* Smoothly hide side panels (if open) */
 .focus-mode-active .fixed.top-0.right-0.h-full {
     opacity: 0 !important;
     transform: translateX(24px) !important;
@@ -58,24 +68,21 @@ nav, footer {
     transition: opacity 550ms cubic-bezier(0.22, 1, 0.36, 1), transform 550ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
-/* Focus mode: exit button (class .focus-exit-btn in index) */
 .focus-exit-btn {
     background: rgba(0, 0, 0, 0.8) !important;
     color: #fff !important;
     border: 1px solid rgba(255, 255, 255, 0.25) !important;
-    border-radius: 9999px !important; /* fully rounded */
+    border-radius: 9999px !important;
     box-shadow: 0 8px 30px rgba(0,0,0,0.35) !important;
     transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), background-color 320ms ease, box-shadow 320ms ease !important;
 }
 .focus-exit-btn:hover { transform: scale(1.06) !important; }
 .focus-exit-btn:active { transform: scale(0.96) !important; }
 
-/* Ensure the X is visible white */
 .focus-exit-btn span, .focus-exit-btn svg, .focus-exit-btn {
     color: #fff !important;
 }
 
-/* Size defaults in focus mode for the exit button */
 .focus-mode-active .focus-exit-btn {
     width: 48px !important;
     height: 48px !important;
@@ -83,7 +90,6 @@ nav, footer {
 
 /* ===== FLASHLIGHT EFFECT ===== */
 
-/* Base flashlight effect that follows the mouse */
 #glow-effect {
     background: radial-gradient(
         600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
@@ -95,13 +101,12 @@ nav, footer {
     );
     mix-blend-mode: overlay;
     opacity: 0.8;
-    pointer-events: none;            /* no interactions */
-    position: fixed;                 /* full-screen layer */
-    inset: 0;                        /* cover the entire window */
-    contain: paint;                  /* limit repaints to this element */
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    contain: paint;
 }
 
-/* Flashlight effect in dark mode via class (avoid costly :has) */
 #glow-effect.glow--dark {
     background: radial-gradient(
         500px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
@@ -115,7 +120,6 @@ nav, footer {
     opacity: 1;
 }
 
-/* Additional effect for focus mode */
 .focus-mode-active #glow-effect {
     background: radial-gradient(
         350px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
@@ -127,80 +131,67 @@ nav, footer {
     mix-blend-mode: overlay;
 }
 
-/* Smooth animation for changes */
 #glow-effect {
-    transition: opacity 0.25s ease-out; /* avoid animating background (expensive) */
+    transition: opacity 0.25s ease-out;
 }
 
-/* More subtle effect on mobile devices */
 @media (max-width: 1024px) {
     #glow-effect {
         display: none !important;
     }
 }
 
-/* ===== RESPONSIVE DESIGN IMPROVEMENTS ===== */
+/* ===== RESPONSIVE DESIGN ===== */
 
-/* Mobile and small screens */
 @media (max-width: 768px) {
-    /* More compact navigation */
     .max-w-7xl.mx-auto.px-4 {
         padding-left: 1rem !important;
         padding-right: 1rem !important;
     }
     
-    /* Navigation button spacing */
     .flex.items-center.space-x-4 button {
         padding: 0.5rem !important;
     }
     
-    /* Responsive main content */
     main.transition-all.duration-500 {
-    padding-top: 5rem !important; /* Reduce top padding */
+        padding-top: 5rem !important;
         padding-bottom: 1rem !important;
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
         max-width: 100% !important;
-    margin-right: 0 !important; /* Remove right margin on mobile */
+        margin-right: 0 !important;
     }
     
-    /* More compact editor on mobile */
     .relative.w-full.rounded-2xl {
         border-radius: 1rem !important;
         margin: 0 !important;
     }
     
-    /* Internal editor padding */
     .relative.p-6 {
         padding: 1rem !important;
     }
     
-    /* Larger buttons for touch */
     .text-xs.px-3.py-1 {
         padding: 0.5rem 0.75rem !important;
         font-size: 0.75rem !important;
     }
     
-    /* Responsive footer */
     footer.fixed.bottom-0 {
         padding: 0.5rem 0 !important;
     }
     
-    /* Focus mode adjustments for mobile */
     .focus-mode-active main {
         padding: 1rem !important;
         max-width: 100% !important;
     }
     
-    /* Smaller text in stats for mobile */
     .text-sm {
         font-size: 0.75rem !important;
     }
 }
 
-/* Tablets y pantallas medianas */
+/* Tablets and medium screens */
 @media (max-width: 1024px) and (min-width: 769px) {
-    /* Contenido principal en tablets */
     main.transition-all.duration-500 {
         padding-top: 6rem !important;
         padding-left: 1rem !important;
@@ -208,27 +199,23 @@ nav, footer {
         max-width: calc(100% - 2rem) !important;
     }
     
-    /* Si hay panel abierto, reducir el margen */
     main.transition-all.duration-500:has(+ *[class*="mr-96"]) {
-        margin-right: 20rem !important; /* Reducir de 24rem (96) a 20rem */
+        margin-right: 20rem !important;
     }
 }
 
-/* Paneles laterales responsive */
+/* Responsive side panels */
 @media (max-width: 1024px) {
-    /* On small screens, panels take the full screen */
     .fixed.top-0.right-0.h-full.w-96 {
         width: 100vw !important;
         z-index: 9999 !important;
     }
     
-    /* More visible close button on mobile */
     .fixed.top-0.right-0 .p-6 .flex.items-center.justify-between button {
         padding: 0.75rem !important;
         font-size: 1.25rem !important;
     }
     
-    /* Contenido del panel con scroll mejorado */
     .fixed.top-0.right-0 .p-6 {
         padding: 1rem !important;
         height: 100vh !important;
@@ -237,9 +224,8 @@ nav, footer {
     }
 }
 
-/* Ultra small (< 480px) */
+/* Ultra small screens (< 480px) */
 @media (max-width: 479px) {
-    /* More compact logo and title */
     .flex.items-center.space-x-4 > * + * {
         margin-left: 0.5rem !important;
     }
@@ -248,18 +234,15 @@ nav, footer {
         font-size: 1rem !important;
     }
     
-    /* Stats simplificadas */
     .text-sm {
         font-size: 0.625rem !important;
     }
     
-    /* Editor full width */
     main {
         padding-left: 0.25rem !important;
         padding-right: 0.25rem !important;
     }
     
-    /* Panel lateral ajustado */
     .fixed.top-0.right-0.h-full .p-6 {
         padding: 0.5rem !important;
     }
@@ -267,13 +250,11 @@ nav, footer {
 
 /* ===== MOBILE USABILITY ===== */
 
-/* Scrolling on mobile */
 @media (max-width: 768px) {
     body {
         overflow-x: hidden;
     }
     
-    /* Main container optimized for mobile */
     main {
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
@@ -283,7 +264,6 @@ nav, footer {
         margin-right: 0 !important;
     }
     
-    /* Editor container with mobile layout */
     .relative.w-full {
         margin: 0 !important;
         width: 100% !important;
@@ -291,14 +271,12 @@ nav, footer {
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
     }
     
-    /* Comfortable internal padding for mobile */
     .relative.p-3 {
         padding: 1rem !important;
     }
     
-    /* Textarea designed for mobile */
     .smart-textarea {
-        font-size: 1rem !important; /* 16px para evitar zoom en iOS */
+        font-size: 1rem !important;
         line-height: 1.5 !important;
         min-height: 60vh !important;
         border-radius: 0.75rem !important;
@@ -306,7 +284,6 @@ nav, footer {
         resize: none !important;
     }
     
-    /* Stylish line numbers */
     .line-numbers-container {
         width: 2.5rem !important;
         font-size: 0.75rem !important;
@@ -322,7 +299,6 @@ nav, footer {
         padding-right: 1rem !important;
     }
     
-    /* Header buttons with elegant spacing */
     nav .flex.items-center.space-x-1 {
         gap: 0.75rem !important;
     }
@@ -341,7 +317,6 @@ nav, footer {
         transform: scale(0.95) !important;
     }
     
-    /* Elegant control buttons for mobile */
     .flex.justify-between button {
         padding: 0.75rem 1rem !important;
         font-size: 0.875rem !important;
@@ -355,7 +330,6 @@ nav, footer {
         transform: scale(0.95) !important;
     }
     
-    /* Comfortable margins */
     .mb-6 {
         margin-bottom: 1.5rem !important;
     }
@@ -368,7 +342,6 @@ nav, footer {
         margin-bottom: 1rem !important;
     }
         
-    /* Panels as bottom sheets on mobile */
     .fixed.top-0.right-0.h-full.w-full {
         top: auto !important;
         bottom: 0 !important;
@@ -378,19 +351,17 @@ nav, footer {
         height: 85vh !important;
         border-radius: 1.5rem 1.5rem 0 0 !important;
         box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.2) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        backdrop-filter: blur(20px) !important;
         animation: slideUp 0.3s ease-out !important;
     }
     
-    /* Mobile panel header */
     .fixed .flex.items-center.justify-between {
         padding: 1.5rem 1.5rem 1rem 1.5rem !important;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
         margin-bottom: 0 !important;
     }
     
-    /* Visual indicator for mobile panel */
     .fixed .flex.items-center.justify-between::before {
         content: '' !important;
         position: absolute !important;
@@ -403,14 +374,12 @@ nav, footer {
         border-radius: 0.125rem !important;
     }
     
-    /* Content of mobile panels */
     .fixed .p-6 {
         padding: 0 1.5rem 1.5rem 1.5rem !important;
         height: calc(85vh - 5rem) !important;
         overflow-y: auto !important;
     }
     
-    /* Buttons in mobile panels */
     .fixed button {
         min-height: 48px !important;
         padding: 0.75rem 1rem !important;
@@ -425,7 +394,6 @@ nav, footer {
         transform: scale(0.98) !important;
     }
     
-    /* Grids optimized for mobile */
     .fixed .grid-cols-2 {
         grid-template-columns: 1fr 1fr !important;
         gap: 0.75rem !important;
@@ -440,7 +408,6 @@ nav, footer {
         gap: 0.75rem !important;
     }
     
-    /* Headers of mobile panels */
     .fixed h3 {
         font-size: 1.25rem !important;
         font-weight: 600 !important;
@@ -452,7 +419,6 @@ nav, footer {
         margin-bottom: 0.75rem !important;
     }
     
-    /* Secciones con espaciado elegante */
     .fixed .mb-6 {
         margin-bottom: 1.5rem !important;
         padding-bottom: 1rem !important;
@@ -464,7 +430,6 @@ nav, footer {
         padding-bottom: 0 !important;
     }
     
-    /* Larger close button */
     .fixed button[class*="p-2"] {
         min-width: 44px !important;
         min-height: 44px !important;
@@ -474,38 +439,31 @@ nav, footer {
         justify-content: center !important;
     }
     
-    /* Hide the entire utilities buttons section on mobile */
     nav > div > div > div.flex.items-center.space-x-1 {
         display: none !important;
     }
     
-    /* Hide notifications on mobile */
     #notification-container {
         display: none !important;
     }
     
-    /* Hide Analyze button on mobile */
     button:has-text("Analyze") {
         display: none !important;
     }
     
-    /* More specific selector for the Analyze button */
     .flex.space-x-1 button:nth-child(2) {
         display: none !important;
     }
-        
-    /* Contenedor principal del modal */
+    
     .fixed.inset-0.z-50.overflow-y-auto {
         align-items: flex-end !important;
     }
     
-    /* Contenedor flex del modal */
     .fixed.inset-0.z-50 .flex.items-end.justify-center {
         align-items: flex-end !important;
         padding: 0 !important;
     }
     
-    /* Modal as bottom sheet on mobile */
     .fixed.inset-0.z-50 .inline-block.w-full.max-w-md {
         position: fixed !important;
         bottom: 0 !important;
@@ -521,7 +479,6 @@ nav, footer {
         transform: translateY(0) !important;
     }
     
-    /* Remover transiciones que interfieren */
     .fixed.inset-0.z-50 .inline-block.w-full.max-w-md[x-transition] {
         animation: slideUpMobile 0.3s ease-out !important;
     }
@@ -544,7 +501,6 @@ nav, footer {
         border-radius: 0.125rem !important;
     }
     
-    /* Larger input and button for touch */
     .fixed.inset-0.z-50 .flex.rounded-lg input {
         padding: 1rem !important;
         font-size: 1rem !important;
@@ -560,20 +516,17 @@ nav, footer {
         font-weight: 600 !important;
     }
     
-    /* More legible descriptive text */
     .fixed.inset-0.z-50 p.mt-3 {
         font-size: 0.875rem !important;
         line-height: 1.5 !important;
         margin-top: 1.5rem !important;
     }
     
-    /* Larger title */
     .fixed.inset-0.z-50 h3 {
         font-size: 1.25rem !important;
         font-weight: 600 !important;
     }
     
-    /* Larger close button */
     .fixed.inset-0.z-50 .flex.items-center.justify-between button {
         width: 44px !important;
         height: 44px !important;
@@ -583,7 +536,6 @@ nav, footer {
         justify-content: center !important;
     }
     
-    /* Bottom Close button */
     .fixed.inset-0.z-50 .mt-4.flex.justify-end button {
         width: 100% !important;
         padding: 1rem !important;
@@ -594,24 +546,21 @@ nav, footer {
         margin-top: 2rem !important;
     }
     
-    /* Taller header for mobile */
     nav div.h-12 {
-        height: 4rem !important; /* 64px en lugar de 48px */
+        height: 4rem !important;
     }
     
-    /* Anular las clases responsive del header */
     nav .h-12.sm\\:h-14.md\\:h-16 {
         height: 4rem !important;
     }
     
-    /* Larger logo and title on mobile with more space */
     nav img {
-        height: 2.5rem !important; /* 40px en lugar de 32px */
+        height: 2.5rem !important;
         width: 2.5rem !important;
     }
     
     nav .text-lg {
-        font-size: 1.5rem !important; /* 24px */
+        font-size: 1.5rem !important;
         line-height: 2rem !important;
     }
 }
@@ -640,51 +589,44 @@ nav, footer {
     }
 }
 
-/* Hide ALL utility buttons on tablets as well */
+/* Hide utility buttons on tablets */
 @media (max-width: 1023px) {
-    /* Hide the entire utilities buttons section */
     nav > div > div > div.flex.items-center.space-x-1 {
         display: none !important;
     }
     
-    /* Hide notifications on tablets as well */
     #notification-container {
         display: none !important;
     }
     
-    /* Hide Analyze button on tablets */
     .flex.space-x-1 button:nth-child(2) {
         display: none !important;
     }
     
-    /* Taller header for tablets as well */
     nav div.h-12,
     nav .h-12.sm\\:h-14.md\\:h-16 {
-        height: 3.5rem !important; /* 56px para tablets */
+        height: 3.5rem !important;
     }
 }
 
 /* ===== LANDSCAPE MODE ON MOBILE ===== */
 @media (max-width: 768px) and (orientation: landscape) {
-    /* Aprovechar mejor el espacio horizontal */
     main {
         padding-top: 4rem !important;
         padding-bottom: 0.5rem !important;
     }
     
-    /* Smaller footer in landscape */
     footer {
         padding: 0.25rem 0 !important;
         font-size: 0.75rem !important;
     }
     
-    /* More compact navigation */
     nav .h-16 {
         height: 3rem !important;
     }
 }
 
-/* ===== MEJORAS DE ACCESIBILIDAD ===== */
+/* ===== ACCESSIBILITY ===== */
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: 0.01ms !important;
@@ -693,25 +635,20 @@ nav, footer {
     }
 }
 
-/* ===== MEJORAS ADICIONALES PARA TOUCH ===== */
 @media (max-width: 768px) {
-    /* Ensure buttons are easy to tap */
     button, .btn {
         min-height: 44px !important;
         min-width: 44px !important;
     }
     
-    /* More touch-friendly textarea */
     textarea, .smart-textarea {
         touch-action: manipulation;
     }
     
-    /* Evitar zoom en inputs en iOS */
     input, textarea, select {
         font-size: 16px !important;
     }
     
-    /* Improve contrast on small screens */
     .text-gray-400 {
         color: rgb(156, 163, 175) !important;
     }
@@ -721,9 +658,8 @@ nav, footer {
     }
 }
 
-/* ===== GRID RESPONSIVE PARA BOTONES EN PANELES ===== */
+/* ===== RESPONSIVE GRID ===== */
 @media (max-width: 768px) {
-    /* Larger grid buttons on mobile */
     .grid-cols-2 {
         grid-template-columns: 1fr !important;
         gap: 0.75rem !important;
@@ -734,7 +670,6 @@ nav, footer {
         gap: 0.75rem !important;
     }
     
-    /* Larger buttons in panels */
     .grid button {
         padding: 0.75rem 1rem !important;
         font-size: 0.875rem !important;
@@ -756,5 +691,348 @@ nav, footer {
     
     .w-80 {
         width: 24rem !important;
+    }
+}
+
+/* ===== AI UTILITIES ===== */
+
+@keyframes ai-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.ai-processing {
+    animation: ai-pulse 1.5s ease-in-out infinite;
+}
+
+.ai-chat-history {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.ai-chat-history::-webkit-scrollbar {
+    width: 4px;
+}
+
+.ai-chat-history::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ai-chat-history::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+/* ===== CUSTOM SCROLLBARS ===== */
+
+.smart-textarea, textarea, .overflow-y-auto {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.smart-textarea::-webkit-scrollbar,
+textarea::-webkit-scrollbar {
+    width: 6px;
+}
+
+.smart-textarea::-webkit-scrollbar-track,
+textarea::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.smart-textarea::-webkit-scrollbar-thumb,
+textarea::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+}
+
+.smart-textarea::-webkit-scrollbar-thumb:hover,
+textarea::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+.light .smart-textarea,
+.light textarea {
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+.light .smart-textarea::-webkit-scrollbar-thumb,
+.light textarea::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.light .smart-textarea::-webkit-scrollbar-thumb:hover,
+.light textarea::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.25);
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+    width: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    transition: background-color 0.2s ease;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.light .overflow-y-auto {
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.light .overflow-y-auto::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.light .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* AI Status Indicators */
+.ai-status-connected::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+}
+
+.ai-status-fallback::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+/* AI Button Hover Effects */
+.ai-button-enhance:hover {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.3)) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+}
+
+.ai-button-code:hover {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(239, 68, 68, 0.3)) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+
+.ai-button-translate:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(16, 185, 129, 0.3)) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* AI Select Accessibility */
+.ai-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+}
+
+/* AI Gradient Text Effect */
+.ai-gradient-text {
+    background: linear-gradient(135deg, #ec4899, #8b5cf6, #06b6d4);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* AI Panel Backdrop Enhancement */
+.ai-panel-backdrop {
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(0, 0, 0, 0.85);
+    border-left: 1px solid rgba(236, 72, 153, 0.2);
+}
+
+.ai-panel-backdrop.light {
+    background: rgba(255, 255, 255, 0.85);
+    border-left: 1px solid rgba(236, 72, 153, 0.3);
+}
+
+/* ===== SELECT STYLING - REMOVE DUPLICATE ARROWS ===== */
+
+/* Base select styling - remove native arrow */
+select {
+    /* Remove native dropdown arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    
+    /* Ensure there's space for custom arrow */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3e%3c/path%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem !important;
+}
+
+/* Dark mode select arrow color */
+.dark select,
+[data-theme="dark"] select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.7)'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3e%3c/path%3e%3c/svg%3e");
+}
+
+/* Light mode select arrow color */
+select:not(.dark select):not([data-theme="dark"] select) {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.7)'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3e%3c/path%3e%3c/svg%3e");
+}
+
+/* AI Panel */
+.ai-select {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ai-select:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.15);
+}
+
+.ai-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.5);
+    transform: translateY(-1px);
+}
+
+/* Remove outline on focus for cleaner look */
+.ai-select:focus-visible {
+    outline: 2px solid rgba(236, 72, 153, 0.6);
+    outline-offset: 2px;
+}
+
+/* ===== SELECT OPTIONS STYLING ===== */
+
+/* Base option styling for better visibility */
+select option {
+    background-color: white !important;
+    color: black !important;
+    padding: 8px 12px;
+    font-weight: 500;
+    border: none;
+}
+
+/* Dark mode select options */
+.dark select option,
+[data-theme="dark"] select option {
+    background-color: #1f2937 !important;
+    color: white !important;
+}
+
+/* Selected option styling */
+select option:checked {
+    background-color: #ec4899 !important;
+    color: white !important;
+}
+
+/* Hover state for options */
+select option:hover {
+    background-color: #f3f4f6 !important;
+    color: black !important;
+}
+
+.dark select option:hover,
+[data-theme="dark"] select option:hover {
+    background-color: #374151 !important;
+    color: white !important;
+}
+
+/* ===== PERFORMANCE ===== */
+
+.smart-textarea.large-text {
+    will-change: scroll-position;
+    contain: layout style paint;
+    transform: translateZ(0);
+}
+
+.line-numbers-container.optimized {
+    contain: layout style paint;
+    transform: translateZ(0);
+    opacity: 0.6;
+}
+
+.line-numbers-container.optimized::before {
+    content: "⋮";
+    display: block;
+    text-align: center;
+    font-size: 1.2em;
+    line-height: 1;
+    color: currentColor;
+    opacity: 0.5;
+}
+
+.performance-optimized {
+    contain: layout style paint;
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 500px;
+}
+
+.smart-textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+.smart-textarea::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.smart-textarea::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 4px;
+}
+
+.smart-textarea::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+}
+
+.dark .smart-textarea::-webkit-scrollbar-thumb {
+    background: rgba(229, 231, 235, 0.3);
+}
+
+.dark .smart-textarea::-webkit-scrollbar-thumb:hover {
+    background: rgba(229, 231, 235, 0.5);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .performance-optimized * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .smart-textarea {
+        will-change: auto;
+        transform: none;
+    }
+    
+    .line-numbers-container {
+        will-change: auto;
+        transform: none;
     }
 }

@@ -1,5 +1,5 @@
 /*
-  ux-brain.js - Lightweight on-device AI (no LLM) for dynamic UX enhancements
+  ux-brain.js - Lightweight on-device AI for dynamic UX enhancements
   Goals:
   - Observe behavior (typing cadence, panel usage, errors) and derive small suggestions
   - Provide context-aware helpers (e.g., detect JSON/XML and offer pretty/minify; detect long session and suggest Focus)

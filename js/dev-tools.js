@@ -1,4 +1,3 @@
-// Developer tools and features for Hexa
 // This file contains all developer-focused functionality
 
 // Execute Python code

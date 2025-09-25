@@ -1,5 +1,4 @@
 // Auto Optimization Module (behaviour-driven, non-intrusive)
-// No network calls, no external deps. TensorFlow backend is optional (stubbed).
 (function () {
   const storeKey = 'autoopt_profile';
   const Safe = (window.Utils && window.Utils.SafeStorage) ? window.Utils.SafeStorage.local : {
@@ -64,7 +63,6 @@
     },
 
     optimize() {
-      // Simple rules + placeholder for ML backend
       const p = this.profile || Profile.load();
       const sugg = {};
 
@@ -106,7 +104,6 @@
     }
   };
 
-  // Optional TensorFlow backend (stub): will be used if available
   AutoOpt.registerBackend('tf', {
     enabled() { return !!(window.tf && window.tf.sequential); },
     // Dummy predict API for future extension
