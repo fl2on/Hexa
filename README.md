@@ -260,11 +260,7 @@ Visit: **[https://fl2on.github.io/Hexa](https://fl2on.github.io/Hexa)**
 
 ### [🚀 Try Hexa Now!](https://fl2on.github.io/Hexa/?title=Demo&text=Welcome%20to%20Hexa!%20✨)
 
-<img width="2525" height="1338" alt="image" src="https://github.com/user-attachments/assets/e63f642a-e972-431c-b2a9-b48f08c93c81" />
-<img width="2559" height="1335" alt="image" src="https://github.com/user-attachments/assets/c9e26f5a-e99e-4b0c-afe0-045a9b271f2c" />
-<img width="2559" height="1324" alt="image" src="https://github.com/user-attachments/assets/e9d92ae8-0e40-436a-b9b0-328d978d1303" />
-<img width="2559" height="1324" alt="image" src="https://github.com/user-attachments/assets/6815b9a6-980a-45dc-8cd1-70237e655b63" />
-<img width="2559" height="1322" alt="image" src="https://github.com/user-attachments/assets/b1aa604c-4914-419a-8522-cf8a77a815ba" />
+<img width="1024" height="535" alt="image" src="https://github.com/user-attachments/assets/8c391afb-076b-4789-940b-5ffccf92ce85" />
 
 </div>
 
@@ -324,6 +320,3 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 [![GitHub](https://img.shields.io/badge/GitHub-fl2on-black?style=for-the-badge&logo=github)](https://github.com/fl2on)
 [![Twitter](https://img.shields.io/badge/Twitter-@nova__qzxtu-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/nova_qzxtu)
-
-<img width="1024" height="535" alt="image" src="https://github.com/user-attachments/assets/8c391afb-076b-4789-940b-5ffccf92ce85" />
-
