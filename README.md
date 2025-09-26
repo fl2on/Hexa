@@ -18,8 +18,6 @@
 
 ## 🎯 Core Features
 
-<img width="1024" height="535" alt="image" src="https://github.com/user-attachments/assets/8c391afb-076b-4789-940b-5ffccf92ce85" />
-
 ### ✍️ Advanced Text Editor
 
 - **🌙 Smart Theme System**: Instant dark/light mode switching with zero flicker
@@ -326,3 +324,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 [![GitHub](https://img.shields.io/badge/GitHub-fl2on-black?style=for-the-badge&logo=github)](https://github.com/fl2on)
 [![Twitter](https://img.shields.io/badge/Twitter-@nova__qzxtu-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/nova_qzxtu)
+
+<img width="1024" height="535" alt="image" src="https://github.com/user-attachments/assets/8c391afb-076b-4789-940b-5ffccf92ce85" />
+
