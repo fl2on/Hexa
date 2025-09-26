@@ -18,7 +18,10 @@
 
 ## 🎯 Core Features
 
+<img width="1024" height="535" alt="image" src="https://github.com/user-attachments/assets/8c391afb-076b-4789-940b-5ffccf92ce85" />
+
 ### ✍️ Advanced Text Editor
+
 - **🌙 Smart Theme System**: Instant dark/light mode switching with zero flicker
 - **🎯 Focus Mode**: Distraction-free writing environment
 - **📏 Enhanced Line Numbers**: Visual reference with syntax highlighting
