@@ -3,13 +3,7 @@ function hexaApp() {
     return {
         // State variables
     darkMode: (window.Utils && window.Utils.SafeStorage ? window.Utils.SafeStorage.local.get('darkMode', true) !== false : (localStorage.getItem('darkMode') !== 'false')),
-        title: (() => {
-            try {
-                return localStorage.getItem('hexaTitle') || 'Hexa';
-            } catch {
-                return 'Hexa';
-            }
-        })(),
+        title: 'Hexa',
         showNotificationToast: false,
         notificationMessage: '',
         notificationType: 'success',
@@ -2029,8 +2023,9 @@ function hexaApp() {
                     console.log('Text already loaded by immediate script, skipping URL processing');
                     
                     // Just handle title if it exists and wasn't set yet
-                    if (titleParam && this.title === 'Hexa') {
+                    if (titleParam) {
                         this.title = titleParam;
+                        document.title = titleParam + ' - Hexa';
                     }
                     
                     // Clean URL
@@ -2105,9 +2100,10 @@ function hexaApp() {
                     this.showNotification('✨ Shared text loaded!', 'success');
                 }
                 
-                // Load title if provided
-                if (titleParam && titleParam !== this.title) {
+                // Load title if provided (temporary, not saved)
+                if (titleParam) {
                     this.title = titleParam;
+                    document.title = titleParam + ' - Hexa';
                 }
                 
                 // Clean URL after loading

@@ -10,13 +10,9 @@
     
     // Set title if provided (for both plain and compressed text)
     if (titleParam) {
-        try {
-            localStorage.setItem('hexaTitle', titleParam);
-            console.log('Title saved to localStorage:', titleParam);
-            document.title = titleParam + ' - Hexa';
-        } catch (error) {
-            console.warn('Failed to save title:', error);
-        }
+        console.log('Setting page title:', titleParam);
+        document.title = titleParam + ' - Hexa';
+        // Don't save title to localStorage - it's temporary only
     }
     
     // Handle plain text parameter first (simpler case)
