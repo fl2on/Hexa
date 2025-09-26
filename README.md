@@ -258,9 +258,9 @@ Visit: **[https://fl2on.github.io/Hexa](https://fl2on.github.io/Hexa)**
 
 <div align="center">
 
-### [🚀 Try Hexa Now!](https://fl2on.github.io/Hexa/?title=Demo&text=Welcome%20to%20Hexa!%20✨)
-
 <img width="1024" height="535" alt="image" src="https://github.com/user-attachments/assets/8c391afb-076b-4789-940b-5ffccf92ce85" />
+
+### [🚀 Try Hexa Now!](https://fl2on.github.io/Hexa/?title=Demo&text=Welcome%20to%20Hexa!%20✨)
 
 </div>
 
