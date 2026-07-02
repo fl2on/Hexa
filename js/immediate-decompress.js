@@ -1,108 +1,167 @@
-// Immediate URL decompression script - runs before Alpine.js
-(function() {
-    console.log('Immediate URL processing script running...');
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const isCompressed = urlParams.get('c') === '1';
-    const compressedText = urlParams.get('t');
-    const plainText = urlParams.get('text');
-    const titleParam = urlParams.get('title');
-    
-    // Set title if provided (for both plain and compressed text)
-    if (titleParam) {
-        console.log('Setting page title:', titleParam);
-        document.title = titleParam + ' - Hexa';
-        // Don't save title to localStorage - it's temporary only
-    }
-    
-    // Handle plain text parameter first (simpler case)
-    if (plainText && !isCompressed) {
-        console.log('Found plain text in URL, setting it...');
+(function () {
+    console.log('Immediate share loader running...');
+    function setTextEverywhere(text, title) {
+        if (!text)
+            return false;
+        window.__HEXA_BOOT_TEXT = text;
         try {
-            localStorage.setItem('text', plainText);
-            console.log('Plain text saved to localStorage');
-            
-            // Set textarea directly if available
-            const setTextarea = () => {
-                const textarea = document.getElementById('textInput');
-                if (textarea) {
-                    textarea.value = plainText;
-                    console.log('Plain text set in textarea');
-                    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                } else {
-                    setTimeout(setTextarea, 500);
-                }
-            };
-            
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', setTextarea);
-            } else {
-                setTextarea();
-            }
-            setTimeout(setTextarea, 2000);
-            
-        } catch (error) {
-            console.warn('Failed to save plain text to localStorage:', error);
+            localStorage.setItem('text', text);
         }
-        return; // Exit early for plain text
-    }
-    
-    // Handle compressed text
-    if (isCompressed && compressedText) {
-        console.log('Found compressed text in URL, setting up decompression...');
-        
-        // Function to decompress and set text
-        const decompressAndSet = () => {
-            if (!window.LZString) {
-                console.log('LZString not ready, waiting...');
-                setTimeout(decompressAndSet, 100);
-                return;
-            }
-            
+        catch (error) {
+            console.warn('Failed to save shared text:', error);
+        }
+        if (title) {
             try {
-                const decompressed = window.LZString.decompressFromEncodedURIComponent(compressedText);
-                console.log('Decompression result:', decompressed ? `${decompressed.length} chars` : 'failed');
-                
-                if (decompressed) {
-                    // Save to localStorage so Alpine.js can pick it up
-                    try {
-                        localStorage.setItem('text', decompressed);
-                        console.log('Decompressed text saved to localStorage');
-                    } catch (error) {
-                        console.warn('Failed to save to localStorage:', error);
-                    }
-                    
-                    // Also try to set the textarea directly if it exists
-                    const setTextarea = () => {
-                        const textarea = document.getElementById('textInput');
-                        if (textarea) {
-                            textarea.value = decompressed;
-                            console.log('Textarea set directly');
-                            
-                            // Try to trigger Alpine.js update
-                            textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                        } else {
-                            // Wait for DOM to be ready
-                            setTimeout(setTextarea, 500);
-                        }
-                    };
-                    
-                    // Set textarea when DOM is ready
-                    if (document.readyState === 'loading') {
-                        document.addEventListener('DOMContentLoaded', setTextarea);
-                    } else {
-                        setTextarea();
-                    }
-                    
-                    // Also try after Alpine.js loads
-                    setTimeout(setTextarea, 2000);
-                }
-            } catch (error) {
-                console.error('Immediate decompression failed:', error);
+                document.title = String(title).slice(0, 80) + ' - Hexa';
             }
+            catch { }
+        }
+        const setTextarea = () => {
+            const textarea = document.getElementById('textInput');
+            if (!textarea)
+                return false;
+            textarea.value = text;
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            textarea.dispatchEvent(new Event('change', { bubbles: true }));
+            return true;
         };
-        
-        // Start decompression
-        decompressAndSet();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setTextarea, { once: true });
+        }
+        setTextarea();
+        setTimeout(setTextarea, 50);
+        setTimeout(setTextarea, 250);
+        setTimeout(setTextarea, 1000);
+        setTimeout(setTextarea, 2200);
+        return true;
     }
+    function parseHashShare() {
+        const hash = String(window.location.hash || '').replace(/^#/, '');
+        if (!hash || !hash.includes('h2='))
+            return null;
+        const raw = Object.create(null);
+        for (const part of hash.split('&')) {
+            const eq = part.indexOf('=');
+            if (eq <= 0)
+                continue;
+            raw[part.slice(0, eq)] = part.slice(eq + 1);
+        }
+        const packed = raw.h2;
+        if (!packed)
+            return null;
+        const dot = packed.indexOf('.');
+        return {
+            scheme: dot >= 0 ? packed.slice(0, dot) : 'r',
+            payload: dot >= 0 ? packed.slice(dot + 1) : packed,
+            checksum: raw.k || '',
+            title: raw.ti ? decodeURIComponent(raw.ti) : ''
+        };
+    }
+    function b64UrlToBytes(value) {
+        const pad = value.length % 4 === 2 ? '==' : value.length % 4 === 3 ? '=' : value.length % 4 === 1 ? '===' : '';
+        const b64 = value.replace(/-/g, '+').replace(/_/g, '/') + pad;
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++)
+            bytes[i] = bin.charCodeAt(i);
+        return bytes;
+    }
+    function decodeRepeat(payload) {
+        const value = String(payload || '');
+        const dot = value.lastIndexOf('.');
+        if (dot <= 0)
+            return '';
+        try {
+            const unit = new TextDecoder().decode(b64UrlToBytes(value.slice(0, dot)));
+            const count = parseInt(value.slice(dot + 1), 36);
+            if (!unit || !Number.isFinite(count) || count < 0 || count > 2000000)
+                return '';
+            return unit.repeat(count);
+        }
+        catch (error) {
+            console.warn('Immediate repeat decode failed:', error);
+            return '';
+        }
+    }
+    function decodeFallback(share) {
+        if (!share || !share.payload)
+            return '';
+        try {
+            if (share.scheme === 'r')
+                return decodeURIComponent(share.payload);
+            if (share.scheme === 'rs')
+                return decodeRepeat(share.payload);
+            if (share.scheme === 'u')
+                return new TextDecoder().decode(b64UrlToBytes(share.payload));
+            if (share.scheme === 'lu' && window.LZString)
+                return window.LZString.decompressFromEncodedURIComponent(share.payload) || '';
+            if (share.scheme === 'lb' && window.LZString) {
+                const pad = share.payload.length % 4 === 2 ? '==' : share.payload.length % 4 === 3 ? '=' : share.payload.length % 4 === 1 ? '===' : '';
+                return window.LZString.decompressFromBase64(share.payload.replace(/-/g, '+').replace(/_/g, '/') + pad) || '';
+            }
+            if (window.SmartCompress)
+                return window.SmartCompress.decompress(share.scheme, share.payload) || '';
+            if (window.LZString)
+                return window.LZString.decompressFromEncodedURIComponent(share.payload) || '';
+        }
+        catch (error) {
+            console.warn('Immediate fallback decode failed:', error);
+        }
+        return '';
+    }
+    async function loadFragmentShare() {
+        const share = parseHashShare();
+        if (!share)
+            return false;
+        try {
+            if (window.ShareOptimizer) {
+                const decoded = await window.ShareOptimizer.decode(share);
+                if (decoded && decoded.text)
+                    return setTextEverywhere(decoded.text, decoded.title || share.title);
+            }
+        }
+        catch (error) {
+            console.warn('Immediate ShareOptimizer decode failed:', error);
+        }
+        const text = decodeFallback(share);
+        if (text)
+            return setTextEverywhere(text, share.title);
+        return false;
+    }
+    async function loadLegacyQueryShare() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const isCompressed = urlParams.get('c') === '1';
+        const compressedText = urlParams.get('t');
+        const plainText = urlParams.get('text');
+        const titleParam = urlParams.get('title');
+        if (titleParam) {
+            try {
+                document.title = titleParam + ' - Hexa';
+            }
+            catch { }
+        }
+        if (plainText && !isCompressed)
+            return setTextEverywhere(plainText, titleParam);
+        if (isCompressed && compressedText) {
+            const scheme = urlParams.get('s') || 'lu';
+            const text = decodeFallback({ scheme, payload: compressedText, title: titleParam });
+            if (text)
+                return setTextEverywhere(text, titleParam);
+        }
+        return false;
+    }
+    async function boot() {
+        for (let attempt = 0; attempt < 30; attempt++) {
+            const loadedFragment = await loadFragmentShare();
+            if (loadedFragment)
+                return;
+            if (attempt === 0) {
+                const loadedLegacy = await loadLegacyQueryShare();
+                if (loadedLegacy)
+                    return;
+            }
+            await new Promise(resolve => setTimeout(resolve, 80));
+        }
+    }
+    boot();
 })();

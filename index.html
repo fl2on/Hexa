@@ -4,240 +4,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <link rel="icon" href="https://raw.githubusercontent.com/fl2on/Hexa/main/icon.png" type="image/png">
+    <link rel="manifest" href="manifest.webmanifest">
     <title>Hexa</title>
 
-    <!-- Prevent light theme flicker -->
-    <script>
-        (function () {
-            try {
-                var darkMode = true;
-                if (window.Utils && window.Utils.SafeStorage) {
-                    darkMode = window.Utils.SafeStorage.local.get('darkMode', true) !== false;
-                } else {
-                    darkMode = localStorage.getItem('darkMode') !== 'false';
-                }
-                if (darkMode) document.documentElement.classList.add('dark');
-            } catch {
-                if (localStorage.getItem('darkMode') !== 'false') document.documentElement.classList.add('dark');
-            }
-        })();
-    </script>
+    
+    <script>(function () {
+    try {
+        var darkMode = true;
+        if (window.Utils && window.Utils.SafeStorage) {
+            darkMode = window.Utils.SafeStorage.local.get('darkMode', true) !== false;
+        }
+        else {
+            darkMode = localStorage.getItem('darkMode') !== 'false';
+        }
+        if (darkMode)
+            document.documentElement.classList.add('dark');
+    }
+    catch {
+        if (localStorage.getItem('darkMode') !== 'false')
+            document.documentElement.classList.add('dark');
+    }
+})();
+</script>
 
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Puter.js for AI utilities (with error handling) -->
-    <script>
-        // Enhanced error suppression system
-        (function() {
-            const originalConsoleError = console.error;
-            const originalConsoleWarn = console.warn;
-            const originalConsoleLog = console.log;
-            
-            // Track error patterns to avoid spam
-            const errorPatterns = new Map();
-            const maxErrorsPerPattern = 1; // Only show each error once
-            
-            function shouldSuppress(message) {
-                const suppressPatterns = [
-                    /The model needs to be compiled/i,
-                    /Failed to load resource.*401/i,
-                    /Cannot read properties of null.*reading 'closed'/i,
-                    /whoami/i,
-                    /api\.puter\.com/i,
-                    /Script error/i,
-                    /Unhandled error/i,
-                    /WebGL.*CONTEXT_LOST_WEBGL/i,
-                    /doubleclick\.net/i,
-                    /google-analytics\.com/i,
-                    /googletagmanager\.com/i,
-                    /ERR_BLOCKED_BY_CLIENT/i,
-                    /Tracking Prevention blocked/i,
-                    /net::ERR_BLOCKED_BY_CLIENT/i,
-                    /favicon\.ico.*Failed to load/i,
-                    /context lost/i,
-                    /Could not get context for WebGL/i,
-                    /Initialization of backend webgl failed/i,
-                    /WebGL is not supported on this device/i,
-                    /Uncaught TypeError.*Cannot read properties of null/i,
-                    /v2\/.*Uncaught TypeError/i,
-                    /reading 'closed'/i,
-                    /setupAutoSave is not a function/i,
-                    /TypeError.*setupAutoSave/i,
-                    /models\.js.*Error.*compiled/i,
-                    /Authentication popup timeout/i,
-                    /Sign in failed.*Object/i,
-                    /Quick sign in failed.*Object/i,
-                    /Popup timeout/i,
-                    /BloggerPemula.*jQuery/i,
-                    /Cannot read properties of undefined.*reading 'jQuery'/i,
-                    /window\.puterAI\.signIn is not a function/i,
-                    /window\.puterAI\.directSignIn is not a function/i,
-                    /BASS V.*ERROR From BloggerPemula/i,
-                    // Local environment specific errors
-                    /PuterAI signIn error.*Puter\.js not loaded/i,
-                    /Sign in failed.*Puter\.js not loaded/i,
-                    /Error: Puter\.js not loaded/i,
-                    /Sign-in not available in local environment/i,
-                    /Sign in failed.*AdGuard Home/i,
-                    /AdGuard Home.*detected/i,
-                    // Alpine.js specific errors
-                    /text\.trim is not a function/i,
-                    /text\.split is not a function/i,
-                    /text\.substring is not a function/i,
-                    /Alpine Expression Error.*text\./i,
-                    /this\.text\.substring is not a function/i,
-                    /TypeError.*text\./i,
-                    // SVG and content script errors
-                    /Error.*svg.*attribute viewBox/i,
-                    /content\.js.*JSON/i,
-                    /_storageChangeDispatcher/i,
-                    /\[object Object\].*is not valid JSON/i,
-                    // Puter.js popup specific errors
-                    /120v2.*Cannot read properties of null.*reading 'closed'/i,
-                    /163v2.*Cannot read properties of null.*reading 'closed'/i,
-                    /v2\/.*Cannot read properties of null.*reading 'closed'/i,
-                    /Cannot read properties of null.*reading 'closed'.*v2/i,
-                    /puter.*popup.*window.*null/i,
-                    /auth.*popup.*closed.*unexpectedly/i,
-                    // Generic popup errors
-                    /popup.*null.*closed/i,
-                    /window.*reference.*null/i
-                ];
-                
-                // In local environment, suppress more network-related errors
-                if (typeof window !== 'undefined' && window.IS_LOCAL_ENV) {
-                    const localSuppressionPatterns = [
-                        /Failed to load resource/i,
-                        /NetworkError/i,
-                        /TypeError.*fetch/i,
-                        /401/i,
-                        /400/i,
-                        /CORS/i
-                    ];
-                    suppressPatterns.push(...localSuppressionPatterns);
-                }
-                
-                return suppressPatterns.some(pattern => pattern.test(message));
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>(function () {
+    const originalConsoleError = console.error;
+    const originalConsoleWarn = console.warn;
+    const originalConsoleLog = console.log;
+    const errorPatterns = new Map();
+    const maxErrorsPerPattern = 1;
+    function shouldSuppress(message) {
+        const suppressPatterns = [
+            /The model needs to be compiled/i,
+            /Failed to load resource.*401/i,
+            /Cannot read properties of null.*reading 'closed'/i,
+            /whoami/i,
+            /api\.puter\.com/i,
+            /Script error/i,
+            /Unhandled error/i,
+            /WebGL.*CONTEXT_LOST_WEBGL/i,
+            /doubleclick\.net/i,
+            /google-analytics\.com/i,
+            /googletagmanager\.com/i,
+            /ERR_BLOCKED_BY_CLIENT/i,
+            /Tracking Prevention blocked/i,
+            /net::ERR_BLOCKED_BY_CLIENT/i,
+            /favicon\.ico.*Failed to load/i,
+            /context lost/i,
+            /Could not get context for WebGL/i,
+            /Initialization of backend webgl failed/i,
+            /WebGL is not supported on this device/i,
+            /Uncaught TypeError.*Cannot read properties of null/i,
+            /v2\/.*Uncaught TypeError/i,
+            /reading 'closed'/i,
+            /setupAutoSave is not a function/i,
+            /TypeError.*setupAutoSave/i,
+            /models\.js.*Error.*compiled/i,
+            /Authentication popup timeout/i,
+            /Sign in failed.*Object/i,
+            /Quick sign in failed.*Object/i,
+            /Popup timeout/i,
+            /BloggerPemula.*jQuery/i,
+            /Cannot read properties of undefined.*reading 'jQuery'/i,
+            /window\.puterAI\.signIn is not a function/i,
+            /window\.puterAI\.directSignIn is not a function/i,
+            /BASS V.*ERROR From BloggerPemula/i,
+            /PuterAI signIn error.*Puter\.js not loaded/i,
+            /Sign in failed.*Puter\.js not loaded/i,
+            /Error: Puter\.js not loaded/i,
+            /Sign-in not available in local environment/i,
+            /Sign in failed.*AdGuard Home/i,
+            /AdGuard Home.*detected/i,
+            /text\.trim is not a function/i,
+            /text\.split is not a function/i,
+            /text\.substring is not a function/i,
+            /Alpine Expression Error.*text\./i,
+            /this\.text\.substring is not a function/i,
+            /TypeError.*text\./i,
+            /Error.*svg.*attribute viewBox/i,
+            /content\.js.*JSON/i,
+            /_storageChangeDispatcher/i,
+            /\[object Object\].*is not valid JSON/i,
+            /120v2.*Cannot read properties of null.*reading 'closed'/i,
+            /163v2.*Cannot read properties of null.*reading 'closed'/i,
+            /v2\/.*Cannot read properties of null.*reading 'closed'/i,
+            /Cannot read properties of null.*reading 'closed'.*v2/i,
+            /puter.*popup.*window.*null/i,
+            /auth.*popup.*closed.*unexpectedly/i,
+            /popup.*null.*closed/i,
+            /window.*reference.*null/i
+        ];
+        if (typeof window !== 'undefined' && window.IS_LOCAL_ENV) {
+            const localSuppressionPatterns = [
+                /Failed to load resource/i,
+                /NetworkError/i,
+                /TypeError.*fetch/i,
+                /401/i,
+                /400/i,
+                /CORS/i
+            ];
+            suppressPatterns.push(...localSuppressionPatterns);
+        }
+        return suppressPatterns.some(pattern => pattern.test(message));
+    }
+    function filterConsoleOutput(originalFn, ...args) {
+        const message = args.join(' ');
+        if (shouldSuppress(message)) {
+            const key = message.substring(0, 80);
+            const count = errorPatterns.get(key) || 0;
+            if (count < maxErrorsPerPattern) {
+                errorPatterns.set(key, count + 1);
+                console.warn('[Hexa] Suppressed error:', message.substring(0, 100) + '...');
+                return;
             }
-            
-            function filterConsoleOutput(originalFn, ...args) {
-                const message = args.join(' ');
-                
-                if (shouldSuppress(message)) {
-                    // Count this error pattern
-                    const key = message.substring(0, 80); // Use first 80 chars as key
-                    const count = errorPatterns.get(key) || 0;
-                    
-                    if (count < maxErrorsPerPattern) {
-                        errorPatterns.set(key, count + 1);
-                        console.warn('[Hexa] Suppressed error:', message.substring(0, 100) + '...');
-                        return; // Don't show the actual error
-                    }
-                    // Suppress if we've seen this error before
-                    return;
-                }
-                
-                return originalFn.apply(console, args);
-            }
-            
-            console.error = function(...args) {
-                return filterConsoleOutput(originalConsoleError, ...args);
+            return;
+        }
+        return originalFn.apply(console, args);
+    }
+    console.error = function (...args) {
+        return filterConsoleOutput(originalConsoleError, ...args);
+    };
+    console.warn = function (...args) {
+        return filterConsoleOutput(originalConsoleWarn, ...args);
+    };
+    window.addEventListener('error', function (event) {
+        const message = event.message || event.error?.message || '';
+        if (shouldSuppress(message)) {
+            event.preventDefault();
+            console.warn('[Hexa] Suppressed window error:', message.substring(0, 100));
+            return false;
+        }
+    });
+    window.addEventListener('unhandledrejection', function (event) {
+        const message = event.reason?.message || event.reason || '';
+        if (shouldSuppress(message)) {
+            event.preventDefault();
+            console.warn('[Hexa] Suppressed unhandled rejection:', String(message).substring(0, 100));
+            return;
+        }
+    });
+    window.addEventListener('webglcontextlost', function (event) {
+        event.preventDefault();
+        console.warn('[WebGL] Context lost - this is usually temporary');
+    }, false);
+    window.addEventListener('webglcontextrestored', function (event) {
+        console.log('[WebGL] Context restored');
+    }, false);
+})();
+window.forceUnlockAI = function () {
+    const app = document.querySelector('[x-data="hexaApp()"]');
+    if (app && app._x_dataStack && app._x_dataStack[0]) {
+        app._x_dataStack[0].aiProcessing = false;
+        console.log(' AI processing manually unlocked via console');
+    }
+};
+window.debugAIState = function () {
+    const app = document.querySelector('[x-data="hexaApp()"]');
+    if (app && app._x_dataStack && app._x_dataStack[0]) {
+        console.log('AI Processing State:', app._x_dataStack[0].aiProcessing);
+        console.log('PuterAI State:', {
+            initialized: window.puterAI?.initialized,
+            fallbackMode: window.puterAI?.fallbackMode,
+            isAuthenticated: window.puterAI?.isAuthenticated
+        });
+    }
+};
+(function () {
+    const envScript = document.createElement('script');
+    envScript.src = 'js/environment-detector.js';
+    envScript.onload = function () {
+        if (window.EnvironmentDetector && window.EnvironmentDetector.shouldLoadExternalAPIs()) {
+            const script = document.createElement('script');
+            script.src = 'https://js.puter.com/v2/';
+            script.onerror = function () {
+                console.warn('Puter.js failed to load, using offline mode');
+                window.puterLoadFailed = true;
             };
-            
-            console.warn = function(...args) {
-                return filterConsoleOutput(originalConsoleWarn, ...args);
+            script.onload = function () {
+                console.log('Puter.js loaded successfully');
+                window.puterLoadFailed = false;
             };
-            
-            // Enhanced error handling for popup-related errors
-            window.addEventListener('error', function(event) {
-                const message = event.message || event.error?.message || '';
-                if (shouldSuppress(message)) {
-                    event.preventDefault();
-                    console.warn('[Hexa] Suppressed window error:', message.substring(0, 100));
-                    return false;
-                }
-            });
-            
-            window.addEventListener('unhandledrejection', function(event) {
-                const message = event.reason?.message || event.reason || '';
-                if (shouldSuppress(message)) {
-                    event.preventDefault();
-                    console.warn('[Hexa] Suppressed unhandled rejection:', String(message).substring(0, 100));
-                    return;
-                }
-            });
-            
-            // Handle WebGL
-            window.addEventListener('webglcontextlost', function(event) {
-                event.preventDefault();
-                console.warn('[WebGL] Context lost - this is usually temporary');
-            }, false);
-            
-            window.addEventListener('webglcontextrestored', function(event) {
-                console.log('[WebGL] Context restored');
-            }, false);
-        })();
-        
-        window.forceUnlockAI = function() {
-            const app = document.querySelector('[x-data="hexaApp()"]');
-            if (app && app._x_dataStack && app._x_dataStack[0]) {
-                app._x_dataStack[0].aiProcessing = false;
-                console.log('🔓 AI processing manually unlocked via console');
-            }
-        };
-
-        // Debug AI state for console
-        window.debugAIState = function() {
-            const app = document.querySelector('[x-data="hexaApp()"]');
-            if (app && app._x_dataStack && app._x_dataStack[0]) {
-                console.log('AI Processing State:', app._x_dataStack[0].aiProcessing);
-                console.log('PuterAI State:', {
-                    initialized: window.puterAI?.initialized,
-                    fallbackMode: window.puterAI?.fallbackMode,
-                    isAuthenticated: window.puterAI?.isAuthenticated
-                });
-            }
-        };
-
-        // Puter.js loader with environment detection
-        (function() {
-            // Load environment detector first
-            const envScript = document.createElement('script');
-            envScript.src = 'js/environment-detector.js';
-            envScript.onload = function() {
-                // Only load Puter.js in production environment (including localhost)
-                if (window.EnvironmentDetector && window.EnvironmentDetector.shouldLoadExternalAPIs()) {
-                    const script = document.createElement('script');
-                    script.src = 'https://js.puter.com/v2/';
-                    script.onerror = function() {
-                        console.warn('Puter.js failed to load, using offline mode');
-                        window.puterLoadFailed = true;
-                    };
-                    script.onload = function() {
-                        console.log('Puter.js loaded successfully');
-                        window.puterLoadFailed = false;
-                    };
-                    document.head.appendChild(script);
-                } else {
-                    console.log('📄 Skipping Puter.js load - file:// protocol detected');
-                    window.puterLoadFailed = true; // Force offline mode
-                }
-            };
-            document.head.appendChild(envScript);
-        })();
-    </script>
+            document.head.appendChild(script);
+        }
+        else {
+            console.log(' Skipping Puter.js load - file:// protocol detected');
+            window.puterLoadFailed = true;
+        }
+    };
+    document.head.appendChild(envScript);
+})();
+</script>
     <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
-    <script src="js/immediate-decompress.js"></script>
+    <script src="js/vendor/lz-string.min.js"></script>
     <script src="js/smart-compress.js"></script>
+    <script src="js/vendor/pako_inflate.min.js"></script>
+    <script src="js/share-optimizer.js"></script>
+    <script src="js/immediate-decompress.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/prism.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prismjs/1.24.1/themes/prism-tomorrow.min.css">
     <script src="js/utils.js"></script>
     <script src="js/environment-detector.js"></script>
     <script src="js/performance-optimizer.js"></script>
     <script src="js/inp-optimizer.js"></script>
-    <!-- TensorFlow.js for on-device learning -->
+    
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0/dist/tf.min.js"></script>
     <script src="js/tf-opt.js"></script>
     <script src="js/auto-opt.js"></script>
@@ -250,6 +225,14 @@
     <script src="js/algos.js"></script>
     <script src="js/ux-brain.js"></script>
     <script src="js/blocker-detector.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide)
+        lucide.createIcons();
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        navigator.serviceWorker.register('sw.js').catch(() => { });
+    }
+});
+</script>
 </head>
 
 <body x-data="hexaApp()" x-init="init()" class="min-h-screen transition-colors duration-300"
@@ -258,7 +241,7 @@
         focusMode ? 'focus-mode-active' : ''
     ]">
 
-    <!-- Global AI Processing Overlay -->
+    
     <template x-if="aiProcessing === true">
         <div x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0" 
@@ -268,50 +251,45 @@
              x-transition:leave-end="opacity-0"
              class="fixed inset-0 z-[9998] pointer-events-none">
         
-        <!-- Semi-transparent overlay -->
+        
         <div class="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
         
-        <!-- Processing indicator -->
+        
         <div class="absolute inset-0 flex items-center justify-center">
             <div class="bg-black/80 text-white px-6 py-4 rounded-xl border border-white/20 backdrop-blur-xl flex items-center gap-3 shadow-2xl pointer-events-auto">
-                <!-- SVG Spinner that definitively works -->
+                
                 <svg class="ai-spinner w-5 h-5 text-white" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 <div class="flex flex-col">
-                    <span class="font-medium">🤖 AI Processing</span>
-                    <span class="text-xs text-white/70">Please wait while AI processes your request...</span>
+                    <span class="font-medium">AI Processing</span>
+                    <span class="text-xs text-white/70">Please wait while the request is processed...</span>
                 </div>
-                <!-- Cancel request button -->
+                
                 <button @click="cancelAIRequest()" 
                         class="ml-4 text-xs px-3 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/20 transition-colors"
                         title="Cancel current AI request">
-                    ❌ Cancel
+                    Cancel
                 </button>
             </div>
         </div>
     </template>
+<div id="notification-container"
+        class="hexa-toast-stack fixed bottom-5 left-1/2 z-[9999] flex flex-col items-center pointer-events-none"></div>
 
-    <!-- Mouse glow effect (flashlight-style) -->
-    <div id="glow-effect" class="pointer-events-none fixed inset-0 z-30 transition-opacity duration-300 lg:block hidden"
-         :style="{ opacity: darkMode ? '1' : '0.8' }"></div>
-
-    <div id="notification-container"
-        class="fixed bottom-4 right-4 z-[9999] flex flex-col items-end pointer-events-none space-y-3 max-w-sm"></div>
-
-    <!-- Focus mode exit button -->
+    
     <div x-show="focusMode" x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 scale-90" x-transition:enter-end="opacity-100 scale-100"
-        class="fixed top-2 right-2 sm:top-4 sm:right-4 z-50">
-        <button @click="toggleFocusMode()"
-            class="focus-exit-btn w-10 h-10 sm:w-12 sm:h-12 text-lg sm:text-xl"
-            title="Exit Focus Mode (Escape)">
-            ✕
+        class="focus-exit-wrapper fixed top-2 right-2 sm:top-4 sm:right-4 z-50">
+        <button @click="exitFocusMode()"
+            class="focus-exit-btn w-10 h-10 sm:w-12 sm:h-12 text-lg sm:text-xl inline-flex items-center justify-center"
+            title="Exit Focus Mode (Escape)" aria-label="Exit Focus Mode">
+            <i data-lucide="x" class="h-5 w-5 sm:h-6 sm:w-6"></i>
         </button>
     </div>
 
-    <!-- Navigation -->
+    
     <nav class="fixed top-0 left-0 w-full z-50 transition-all duration-300" :class="[
              darkMode ? 'border-b border-white/5 bg-black/50 backdrop-blur-xl' : 'border-b border-black/5 bg-white/50 backdrop-blur-xl',
              focusMode ? 'opacity-0 pointer-events-none' : 'opacity-100'
@@ -332,13 +310,13 @@
                 </div>
 
                 <div class="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
-                    <!-- Stats Counter - More visible on smaller screens -->
+                    
                     <div class="text-xs sm:text-sm block" :class="darkMode ? 'text-gray-400' : 'text-gray-600'">
                         <span class="hidden sm:inline"><span x-text="stats.chars">0</span> chars | </span>
                         <span x-text="stats.words">0</span> words<span class="hidden sm:inline"> |
                         <span x-text="stats.lines">0</span> lines</span>
                         <span x-show="stats.readingTime > 0" class="hidden md:inline"> | <span x-text="stats.readingTime"></span>min read</span>
-                        <span x-show="writingTime > 0" class="hidden lg:inline"> | ⏱️ <span x-text="formatWritingTime()"></span></span>
+                        <span x-show="writingTime > 0" class="hidden lg:inline-flex items-center gap-1"> | <i data-lucide="timer" class="h-3.5 w-3.5"></i> <span x-text="formatWritingTime()"></span></span>
                     </div>
 
                     <button @click="toggleFocusMode()"
@@ -346,14 +324,8 @@
                         :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
                         title="Focus Mode (Alt+Enter)">
                         <div class="relative z-10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
-                                :class="focusMode ? 'text-green-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
+                            <i data-lucide="eye" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="focusMode ? 'text-green-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"></i>
                         </div>
                     </button>
 
@@ -362,12 +334,8 @@
                         :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
                         title="Find and Replace">
                         <div class="relative z-10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
-                                :class="searchOpen ? 'text-blue-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
+                            <i data-lucide="search" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="searchOpen ? 'text-blue-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"></i>
                         </div>
                     </button>
 
@@ -376,12 +344,8 @@
                         :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
                         title="Text Tools (Ctrl+T)">
                         <div class="relative z-10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
-                                :class="formatOpen ? 'text-purple-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                            </svg>
+                            <i data-lucide="sliders-horizontal" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="formatOpen ? 'text-purple-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"></i>
                         </div>
                     </button>
 
@@ -390,12 +354,8 @@
                         :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
                         title="Utilities (Discord, Social)">
                         <div class="relative z-10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
-                                :class="utilsOpen ? 'text-indigo-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                            </svg>
+                            <i data-lucide="flask-conical" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="utilsOpen ? 'text-indigo-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"></i>
                         </div>
                     </button>
 
@@ -404,12 +364,8 @@
                         :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
                         title="AI Utilities (Hexa AI)">
                         <div class="relative z-10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
-                                :class="aiOpen ? 'text-pink-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9.663 17h4.673M12 3v1m6.364-.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                            </svg>
+                            <i data-lucide="sparkles" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="aiOpen ? 'text-pink-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"></i>
                         </div>
                     </button>
 
@@ -418,12 +374,8 @@
                         :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'"
                         title="Developer Tools">
                         <div class="relative z-10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
-                                :class="devToolsOpen ? 'text-green-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                            </svg>
+                            <i data-lucide="code-2" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="devToolsOpen ? 'text-green-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"></i>
                         </div>
                     </button>
 
@@ -431,23 +383,15 @@
                         class="relative p-2 sm:p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group flex items-center justify-center"
                         :class="darkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-black/5 hover:bg-black/10'">
                         <div class="relative z-10 flex items-center justify-center">
-                            <svg x-show="darkMode" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 text-yellow-300"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            <svg x-show="!darkMode" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 text-blue-600"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                            </svg>
+                            <i x-show="darkMode" data-lucide="sun" class="h-4 w-4 sm:h-5 sm:w-5 text-yellow-300"></i>
+                            <i x-show="!darkMode" data-lucide="moon" class="h-4 w-4 sm:h-5 sm:w-5 text-blue-600"></i>
                         </div>
                         <div class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100"
                             :class="darkMode ? 'bg-gradient-to-r from-yellow-500/20 to-orange-500/20 blur' : 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 blur'">
                         </div>
                     </button>
 
-                    <!-- Puter.js Authentication Button -->
+                    
                     <button @click="toggleAuthMenu()" title="Authentication Menu"
                         class="relative p-2 sm:p-2.5 rounded-lg transition-all duration-300 hover:scale-110 group flex items-center justify-center"
                         :class="[
@@ -456,12 +400,8 @@
                         ]"
                         :title="puterAuth.isAuthenticated ? `Signed in as ${puterAuth.userInfo?.username || 'User'}` : 'Sign in to Hexa'">
                         <div class="relative z-10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5"
-                                :class="puterAuth.isAuthenticated ? 'text-green-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
+                            <i data-lucide="user-round" class="h-4 w-4 sm:h-5 sm:w-5"
+                                :class="puterAuth.isAuthenticated ? 'text-green-400' : (darkMode ? 'text-gray-400' : 'text-gray-600')"></i>
                         </div>
                         <div class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100"
                             :class="darkMode ? 'bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur' : 'bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur'">
@@ -472,12 +412,11 @@
         </div>
     </nav>
 
-    <!-- Main content -->
-    <main class="transition-all duration-500" :class="[
-              focusMode ? 'pt-16 pb-16 px-4 sm:px-8 md:px-16 max-w-5xl mx-auto min-h-screen flex items-center' : 'pt-16 md:pt-24 pb-8 md:pb-12 px-2 sm:px-4 max-w-full sm:max-w-3xl mx-auto',
-              (devToolsOpen || formatOpen || utilsOpen || aiOpen) && !focusMode ? 'lg:mr-96' : ''
+    
+    <main class="editor-main transition-all duration-500" :class="[
+              focusMode ? 'pt-16 pb-16 px-4 sm:px-8 md:px-16 min-h-screen flex items-center justify-center' : 'pt-20 md:pt-24 pb-10 md:pb-14 px-3 sm:px-4 min-h-screen flex items-center justify-center'
           ]">
-        <div class="relative w-full overflow-hidden transition-all duration-500" :class="[
+        <div class="editor-card relative w-full overflow-hidden transition-all duration-500" :class="[
                  'rounded-lg sm:rounded-2xl',
                  focusMode ? 
                      'shadow-[0_0_100px_-12px_rgba(59,130,246,0.2)] transform scale-105' : 
@@ -496,27 +435,26 @@
                     </div>
                     <div class="flex space-x-1 sm:space-x-2 ml-auto sm:ml-0">
                         <button @click="generateShareURL()"
-                            class="text-xs px-3 py-1 rounded-md transition-all duration-300"
-                            :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
-                            Share URL
+                            class="hexa-toolbar-btn text-xs px-3 py-2 rounded-xl transition-all duration-300 inline-flex items-center gap-2"
+                            :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/80' : 'bg-black/10 hover:bg-black/20 text-black/80'">
+                            <i data-lucide="share-2" class="h-3.5 w-3.5"></i>
+                            <span>Share URL</span>
                         </button>
                         
                         <button @click="getTextAnalysis()"
-                            class="text-xs px-3 py-1 rounded-md transition-all duration-300"
-                            :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
-                            Analyze
+                            class="hexa-toolbar-btn text-xs px-3 py-2 rounded-xl transition-all duration-300 inline-flex items-center gap-2"
+                            :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/80' : 'bg-black/10 hover:bg-black/20 text-black/80'">
+                            <i data-lucide="bar-chart-3" class="h-3.5 w-3.5"></i>
+                            <span>Analyze</span>
                         </button>
                         <div class="relative" x-data="{ exportOpen: false }">
                             <button @click="exportOpen = !exportOpen"
-                                class="text-xs px-3 py-1 rounded-md transition-all duration-300 flex items-center gap-1"
-                                :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
-                                Export
-                                <svg class="w-3 h-3 transition-transform duration-200"
-                                    :class="exportOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
+                                class="hexa-toolbar-btn text-xs px-3 py-2 rounded-xl transition-all duration-300 flex items-center gap-2"
+                                :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/80' : 'bg-black/10 hover:bg-black/20 text-black/80'">
+                                <i data-lucide="download" class="h-3.5 w-3.5"></i>
+                                <span>Export</span>
+                                <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200"
+                                    :class="exportOpen ? 'rotate-180' : ''"></i>
                             </button>
                             <div x-show="exportOpen" x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="opacity-0 scale-95"
@@ -530,23 +468,23 @@
                                     <button @click="exportText('txt'); exportOpen = false"
                                         class="flex items-center w-full text-left px-3 py-2 text-xs transition-colors duration-200"
                                         :class="darkMode ? 'hover:bg-white/10 text-white/80' : 'hover:bg-black/10 text-black/80'">
-                                        <span class="w-8">📄</span> Text (.txt)
+                                        <i data-lucide="file-text" class="w-4 h-4 mr-3 opacity-80"></i> Text (.txt)
                                     </button>
                                     <button @click="exportText('md'); exportOpen = false"
                                         class="flex items-center w-full text-left px-3 py-2 text-xs transition-colors duration-200"
                                         :class="darkMode ? 'hover:bg-white/10 text-white/80' : 'hover:bg-black/10 text-black/80'">
-                                        <span class="w-8">📝</span> Markdown (.md)
+                                        <i data-lucide="file-pen-line" class="w-4 h-4 mr-3 opacity-80"></i> Markdown (.md)
                                     </button>
                                     <button @click="exportText('html'); exportOpen = false"
                                         class="flex items-center w-full text-left px-3 py-2 text-xs transition-colors duration-200"
                                         :class="darkMode ? 'hover:bg-white/10 text-white/80' : 'hover:bg-black/10 text-black/80'">
-                                        <span class="w-8">🌐</span> HTML (.html)
+                                        <i data-lucide="file-code-2" class="w-4 h-4 mr-3 opacity-80"></i> HTML (.html)
                                     </button>
                                     <hr :class="darkMode ? 'border-white/10' : 'border-black/10'" class="my-1">
                                     <button @click="exportText('json'); exportOpen = false"
                                         class="flex items-center w-full text-left px-3 py-2 text-xs transition-colors duration-200"
                                         :class="darkMode ? 'hover:bg-white/10 text-white/80' : 'hover:bg-black/10 text-black/80'">
-                                        <span class="w-8">📊</span> JSON (.json)
+                                        <i data-lucide="braces" class="w-4 h-4 mr-3 opacity-80"></i> JSON (.json)
                                     </button>
                                 </div>
                             </div>
@@ -582,7 +520,7 @@
                                 'text-xl leading-loose font-light tracking-wide' : 
                                 'text-sm',
                             aiProcessing ? 'opacity-60 cursor-not-allowed' : ''
-                        ]" :placeholder="aiProcessing ? '🔄 AI is processing, please wait...' : (focusMode ? 'Focus mode - Write without distractions...' : 'Type or paste your text here...')"
+                        ]" :placeholder="aiProcessing ? 'AI is processing, please wait...' : (focusMode ? 'Focus mode - Write without distractions...' : 'Type or paste your text here...')"
                         :style="focusMode ? 'min-height: 60vh;' : ''"></textarea>
                 </div>
 
@@ -593,14 +531,14 @@
                             :class="darkMode ? 
                                     'bg-gray-500/10 text-gray-300 hover:bg-gray-500/20' : 
                                     'bg-gray-500/10 text-gray-600 hover:bg-gray-500/20'" title="Undo (Ctrl+Z)">
-                            <span class="relative z-10">↶</span>
+                            <span class="relative z-10 inline-flex items-center"><i data-lucide="undo-2" class="h-4 w-4"></i></span>
                         </button>
                         <button @click="redo()" :disabled="historyIndex >= history.length - 1 || aiProcessing"
                             class="group relative px-2 py-2 sm:px-3 sm:py-2 rounded-lg font-medium transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
                             :class="darkMode ? 
                                     'bg-gray-500/10 text-gray-300 hover:bg-gray-500/20' : 
                                     'bg-gray-500/10 text-gray-600 hover:bg-gray-500/20'" title="Redo (Ctrl+Shift+Z)">
-                            <span class="relative z-10">↷</span>
+                            <span class="relative z-10 inline-flex items-center"><i data-lucide="redo-2" class="h-4 w-4"></i></span>
                         </button>
                     </div>
 
@@ -610,7 +548,7 @@
                             :class="darkMode ? 
                                     'bg-red-500/10 text-red-300 hover:bg-red-500/20' : 
                                     'bg-red-500/10 text-red-600 hover:bg-red-500/20'">
-                            <span class="relative z-10">Clear</span>
+                            <span class="relative z-10 inline-flex items-center gap-2"><i data-lucide="trash-2" class="h-4 w-4"></i><span>Clear</span></span>
                             <div
                                 class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-red-500/20 to-orange-500/20 blur">
                             </div>
@@ -620,7 +558,7 @@
                             :class="darkMode ? 
                                     'bg-blue-500/10 text-blue-300 hover:bg-blue-500/20' : 
                                     'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20'">
-                            <span class="relative z-10"><span class="hidden sm:inline">Copy To </span>Clipboard</span>
+                            <span class="relative z-10 inline-flex items-center gap-2"><i data-lucide="copy" class="h-4 w-4"></i><span><span class="hidden sm:inline">Copy To </span>Clipboard</span></span>
                             <div
                                 class="absolute inset-0 rounded-lg transition-opacity duration-300 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur">
                             </div>
@@ -631,7 +569,7 @@
         </div>
     </main>
 
-    <!-- Search panel -->
+    
     <div x-show="searchOpen" x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-1 translate-y-0"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-1 translate-y-0"
@@ -660,7 +598,7 @@
         </div>
     </div>
 
-    <!-- Text Tools Panel -->
+    
     <div x-show="formatOpen" x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0 translate-x-full" x-transition:enter-end="opacity-1 translate-x-0"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-1 translate-x-0"
@@ -672,30 +610,30 @@
             <h3 class="text-lg font-semibold" :class="darkMode ? 'text-white' : 'text-gray-900'">
                 Text Tools
             </h3>
-            <button @click="formatOpen = false" class="p-2 rounded-lg transition-all duration-300"
+            <button @click="formatOpen = false" aria-label="Close panel" title="Close panel" class="panel-close-btn p-2 rounded-lg transition-all duration-300"
                 :class="darkMode ? 'hover:bg-white/10 text-white/70' : 'hover:bg-black/10 text-black/70'">
-                ✕
+                <i data-lucide="x" class="h-5 w-5"></i>
             </button>
         </div>
 
-        <!-- Text Analysis -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                📊 Analysis
+                 Analysis
             </h4>
             <div class="space-y-2 text-xs" :class="darkMode ? 'text-white/60' : 'text-gray-600'">
-                <div>📖 Reading: <span x-text="stats.readingTime"></span> min</div>
-                <div>📝 Sentences: <span x-text="stats.sentences || 0"></span></div>
-                <div>📄 Paragraphs: <span x-text="stats.paragraphs || 0"></span></div>
-                <div>📏 Avg Words/Sentence: <span x-text="stats.avgWordsPerSentence || 0"></span></div>
-                <div>🔤 Avg Chars/Word: <span x-text="stats.avgCharsPerWord || 0"></span></div>
-                <div>🎯 Readability: <span x-text="stats.readabilityScore || 0"></span>/100</div>
+                <div> Reading: <span x-text="stats.readingTime"></span> min</div>
+                <div> Sentences: <span x-text="stats.sentences || 0"></span></div>
+                <div> Paragraphs: <span x-text="stats.paragraphs || 0"></span></div>
+                <div> Avg Words/Sentence: <span x-text="stats.avgWordsPerSentence || 0"></span></div>
+                <div> Avg Chars/Word: <span x-text="stats.avgCharsPerWord || 0"></span></div>
+                <div> Readability: <span x-text="stats.readabilityScore || 0"></span>/100</div>
             </div>
         </div>
 
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                🔤 Case Format
+                 Case Format
             </h4>
             <div class="grid grid-cols-2 gap-2">
                 <button @click="formatText('uppercase')" :disabled="aiProcessing"
@@ -744,7 +682,7 @@
 
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                🧹 Clean Text
+                 Clean Text
             </h4>
             <div class="grid grid-cols-1 gap-2">
                 <button @click="formatText('removeextraspaces')"
@@ -767,7 +705,7 @@
 
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                📋 Line Operations
+                 Line Operations
             </h4>
             <div class="grid grid-cols-2 gap-2">
                 <button @click="formatText('addnumbers')"
@@ -800,23 +738,23 @@
 
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                🔍 Extract Data
+                 Extract Data
             </h4>
             <div class="grid grid-cols-1 gap-2">
                 <button @click="formatText('extractemails')"
                     class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
                     :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
-                    📧 Extract Emails
+                     Extract Emails
                 </button>
                 <button @click="formatText('extracturls')"
                     class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
                     :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
-                    🔗 Extract URLs
+                     Extract URLs
                 </button>
                 <button @click="formatText('wordcount')"
                     class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
                     :class="darkMode ? 'bg-white/10 hover:bg-white/20 text-white/70' : 'bg-black/10 hover:bg-black/20 text-black/70'">
-                    📊 Word Frequency
+                     Word Frequency
                 </button>
             </div>
         </div>
@@ -834,19 +772,19 @@
         
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold flex items-center gap-2" :class="darkMode ? 'text-white' : 'text-gray-900'">
-                🛠️ Utilities
+                 Utilities
             </h3>
-            <button @click="utilsOpen = false" 
-                    class="p-2 rounded-lg transition-all duration-300"
+            <button @click="utilsOpen = false" aria-label="Close panel" title="Close panel"
+                    class="panel-close-btn p-2 rounded-lg transition-all duration-300"
                     :class="darkMode ? 'hover:bg-white/10 text-white/70' : 'hover:bg-black/10 text-black/70'">
-                ✕
+                <i data-lucide="x" class="h-5 w-5"></i>
             </button>
         </div>
 
-        <!-- Discord Tools -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                💬 Discord Formatting
+                 Discord Formatting
             </h4>
             <div class="grid grid-cols-2 gap-2">
                 <button @click="processUtils('discord', 'bold')" 
@@ -889,13 +827,13 @@
                 <button @click="processUtils('discord', 'embed')" 
                         class="text-xs px-3 py-2 rounded-lg transition-all duration-300"
                         :class="darkMode ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300' : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-600'">
-                    📋 Embed JSON
+                     Embed JSON
                 </button>
             </div>
         </div>
 
 
-        <!-- Fancy Social Text -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
                 &#x2728; Fancy Text
@@ -906,7 +844,7 @@
             </div>
         </div>
 
-        <!-- Social Share Links -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
                 &#x1F517; Share Links
@@ -918,7 +856,7 @@
             </div>
         </div>
 
-        <!-- Social Utilities: WhatsApp -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
                 &#x1F4F2; WhatsApp
@@ -932,7 +870,7 @@
             <div class="text-xs mt-2" :class="darkMode ? 'text-white/50' : 'text-gray-600'">Uses Search for phone (digits) if provided.</div>
         </div>
 
-        <!-- Social Utilities: X/Twitter -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
                 &#x1F426; X / Twitter
@@ -942,7 +880,7 @@
             </div>
         </div>
 
-        <!-- Social Utilities: Slack -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
                 &#x1F4BC; Slack
@@ -953,7 +891,7 @@
             </div>
         </div>
 
-        <!-- Social Utilities: Telegram -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
                 &#x2708;&#xFE0F; Telegram
@@ -964,7 +902,7 @@
             </div>
         </div>
 
-        <!-- Social Utilities: Reddit -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
                 &#x1F47D; Reddit
@@ -974,7 +912,7 @@
             </div>
         </div>
 
-        <!-- Social Utilities: YouTube -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
                 &#x25B6;&#xFE0F; YouTube
@@ -985,7 +923,7 @@
         </div>
     </div>
 
-    <!-- AI Utilities Panel -->
+    
     <div x-show="aiOpen" x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0 translate-x-full" x-transition:enter-end="opacity-1 translate-x-0"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-1 translate-x-0"
@@ -996,9 +934,9 @@
         <div class="flex items-center justify-between mb-6">
             <div>
                 <h3 class="text-lg font-semibold flex items-center gap-2" :class="darkMode ? 'text-white' : 'text-gray-900'">
-                    🤖 AI Utilities
+                     AI Utilities
                 </h3>
-                <!-- Auth Status Indicator -->
+                
                 <div class="text-xs mt-1 flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full" :class="puterAuth.isAuthenticated ? 'bg-green-400' : 'bg-red-400'"></div>
                     <span :class="darkMode ? 'text-white/60' : 'text-gray-600'">
@@ -1009,26 +947,26 @@
                         </span>
                         <span x-show="!puterAuth.isAuthenticated" class="text-red-400 font-medium">Sign in required</span>
                     </span>
-                    <!-- Debug button (temporary) -->
+                    
                     <button @click="console.log('PuterAuth Debug:', puterAuth); console.log('Window.puterAI:', window.puterAI?.getAuthStatus());" 
                             class="ml-2 text-xs px-1 py-0.5 rounded bg-gray-500/20 text-gray-400 hover:bg-gray-500/30" 
                             title="Debug auth state">
-                        🐛
+                        <i data-lucide="bug" class="h-3.5 w-3.5"></i>
                     </button>
                 </div>
             </div>
-            <button @click="aiOpen = false" class="p-2 rounded-lg transition-all duration-300"
+            <button @click="aiOpen = false" aria-label="Close panel" title="Close panel" class="panel-close-btn p-2 rounded-lg transition-all duration-300"
                 :class="darkMode ? 'hover:bg-white/10 text-white/70' : 'hover:bg-black/10 text-black/70'">
-                ✕
+                <i data-lucide="x" class="h-5 w-5"></i>
             </button>
         </div>
 
-        <!-- Authentication Required Notice -->
+        
         <div x-show="!puterAuth.isAuthenticated" class="mb-6 p-4 rounded-lg border-2 border-dashed"
              :class="darkMode ? 'border-red-400/30 bg-red-500/10' : 'border-red-500/30 bg-red-50'">
             <div class="flex items-center gap-3 mb-3">
                 <div class="flex-shrink-0">
-                    <span class="text-2xl">🔒</span>
+                    <span class="text-2xl"></span>
                 </div>
                 <div>
                     <h4 class="text-sm font-semibold mb-1" :class="darkMode ? 'text-red-300' : 'text-red-700'">
@@ -1046,10 +984,10 @@
             </button>
         </div>
 
-        <!-- AI Text Summarizer -->
+        
         <div class="mb-6 relative">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                📋 Text Summarizer
+                 Text Summarizer
             </h4>
             <div class="grid grid-cols-3 gap-2 mb-3">
                 <button @click="aiSummarize('short')" 
@@ -1085,10 +1023,10 @@
             </div>
         </div>
 
-        <!-- AI Code Converter -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                💻 Code Converter
+                 Code Converter
             </h4>
             <div class="space-y-2">
                 <select x-model="aiFromLanguage" 
@@ -1104,8 +1042,6 @@
                             `background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'rgba(0,0,0,0.7)\\'%3e%3cpath stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' stroke-width=\\'2\\' d=\\'M19 9l-7 7-7-7\\'%3e%3c/path%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.7rem center; background-size: 1rem; padding-right: 2.5rem;`"
                         >
                     <option value="javascript">JavaScript</option>
-                    <option value="python">Python</option>
-                    <option value="java">Java</option>
                     <option value="csharp">C#</option>
                     <option value="cpp">C++</option>
                     <option value="php">PHP</option>
@@ -1129,9 +1065,7 @@
                             `background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'rgba(255,255,255,0.7)\\'%3e%3cpath stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' stroke-width=\\'2\\' d=\\'M19 9l-7 7-7-7\\'%3e%3c/path%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.7rem center; background-size: 1rem; padding-right: 2.5rem;` : 
                             `background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'rgba(0,0,0,0.7)\\'%3e%3cpath stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' stroke-width=\\'2\\' d=\\'M19 9l-7 7-7-7\\'%3e%3c/path%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.7rem center; background-size: 1rem; padding-right: 2.5rem;`"
                         >
-                    <option value="python">Python</option>
                     <option value="javascript">JavaScript</option>
-                    <option value="java">Java</option>
                     <option value="csharp">C#</option>
                     <option value="cpp">C++</option>
                     <option value="php">PHP</option>
@@ -1152,10 +1086,10 @@
             </div>
         </div>
 
-        <!-- AI Text Enhancement -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                ✨ Text Enhancement
+                 Text Enhancement
             </h4>
             <div class="grid grid-cols-2 gap-2">
                 <button @click="aiEnhanceText('improve')" 
@@ -1211,10 +1145,10 @@
             </div>
         </div>
 
-        <!-- AI Translation -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                🌍 Translation
+                 Translation
             </h4>
             <div class="space-y-2">
                 <select x-model="aiTargetLanguage" 
@@ -1253,10 +1187,10 @@
             </div>
         </div>
 
-        <!-- AI Grammar Checker -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                📝 Grammar Check
+                 Grammar Check
             </h4>
             <button @click="aiCheckGrammar()" 
                     :disabled="aiProcessing || !puterAuth.isAuthenticated"
@@ -1270,10 +1204,10 @@
             </button>
         </div>
 
-        <!-- AI Content Generator -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                🎨 Content Generator
+                 Content Generator
             </h4>
             <div class="space-y-2">
                 <input x-model="aiContentTopic" type="text" placeholder="Enter topic..." 
@@ -1332,16 +1266,16 @@
             </div>
         </div>
 
-        <!-- AI Chat -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                💬 AI Chat
+                 AI Chat
             </h4>
             <div class="space-y-2">
                 <div class="max-h-32 overflow-y-auto p-3 rounded-lg border ai-chat-history" 
                      :class="darkMode ? 'bg-white/5 border-white/10' : 'bg-black/5 border-black/10'">
                     <div x-show="aiChatHistory.length === 0" class="text-center py-4">
-                        <div class="text-2xl mb-2">💬</div>
+                        <div class="text-2xl mb-2"></div>
                         <div class="text-xs font-medium" :class="darkMode ? 'text-white/80' : 'text-black/80'">
                             Start a conversation with AI...
                         </div>
@@ -1388,10 +1322,10 @@
             </div>
         </div>
 
-        <!-- Advanced AI Code Analysis -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                🔍 Code Analysis
+                 Code Analysis
             </h4>
             <div class="grid grid-cols-2 gap-2 mb-2">
                 <button @click="aiGenerateDocumentation()" 
@@ -1402,7 +1336,7 @@
                             aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                             !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                         ]">
-                    📚 Document
+                     Document
                 </button>
                 <button @click="aiOptimizeCode()" 
                         :disabled="aiProcessing || !puterAuth.isAuthenticated"
@@ -1412,7 +1346,7 @@
                             aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                             !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                         ]">
-                    ⚡ Optimize
+                     Optimize
                 </button>
                 <button @click="aiExplainCode()" 
                         :disabled="aiProcessing || !puterAuth.isAuthenticated"
@@ -1422,7 +1356,7 @@
                             aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                             !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                         ]">
-                    🔍 Explain
+                     Explain
                 </button>
                 <button @click="aiFindBugs()" 
                         :disabled="aiProcessing || !puterAuth.isAuthenticated"
@@ -1432,7 +1366,7 @@
                             aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                             !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                         ]">
-                    🐛 Find Bugs
+                     Find Bugs
                 </button>
             </div>
             <button @click="aiGenerateTests()" 
@@ -1443,14 +1377,14 @@
                         aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                         !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                     ]">
-                🧪 Generate Tests
+                 Generate Tests
             </button>
         </div>
 
-        <!-- Advanced AI Content Tools -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                🌐 Content Tools
+                 Content Tools
             </h4>
             <div class="space-y-2">
                 <input x-model="aiHTMLDescription" type="text" placeholder="Describe HTML structure..." 
@@ -1468,7 +1402,7 @@
                             aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                             !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                         ]">
-                    🌐 Generate HTML
+                     Generate HTML
                 </button>
                 <input x-model="aiSEOKeywords" type="text" placeholder="Enter SEO keywords..." 
                        :disabled="!puterAuth.isAuthenticated"
@@ -1485,15 +1419,15 @@
                             aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                             !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                         ]">
-                    📈 Optimize SEO
+                     Optimize SEO
                 </button>
             </div>
         </div>
 
-        <!-- Advanced AI Developer Tools -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                🛠️ Developer Tools
+                 Developer Tools
             </h4>
             <div class="space-y-2">
                 <input x-model="aiRegexDescription" type="text" placeholder="Describe regex pattern..." 
@@ -1511,7 +1445,7 @@
                             aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                             !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                         ]">
-                    🎯 Generate Regex
+                     Generate Regex
                 </button>
                 <input x-model="aiSQLDescription" type="text" placeholder="Describe SQL query..." 
                        :disabled="!puterAuth.isAuthenticated"
@@ -1528,7 +1462,7 @@
                             aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                             !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                         ]">
-                    🗃️ Generate SQL
+                     Generate SQL
                 </button>
                 <button @click="aiAnalyzeData()" 
                         :disabled="aiProcessing || !puterAuth.isAuthenticated"
@@ -1538,15 +1472,15 @@
                             aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                             !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                         ]">
-                    📊 Analyze Data
+                     Analyze Data
                 </button>
             </div>
         </div>
 
-        <!-- Advanced AI Email Generator -->
+        
         <div class="mb-6">
             <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                📧 Email Generator
+                 Email Generator
             </h4>
             <div class="space-y-2">
                 <input x-model="aiEmailPurpose" type="text" placeholder="Email purpose (e.g., follow-up, proposal)..." 
@@ -1582,47 +1516,47 @@
                             aiProcessing ? 'ai-processing opacity-50 cursor-not-allowed' : '',
                             !puterAuth.isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
                         ]">
-                    📧 Generate Email
+                     Generate Email
                 </button>
             </div>
         </div>
 
-        <!-- AI Status -->
+        
         <div class="text-xs text-center border-t pt-4" :class="darkMode ? 'text-white/60 border-white/10' : 'text-black/60 border-black/10'">
             <div x-show="puterAuth.initialized && puterAuth.isAuthenticated && !puterAuth.fallbackMode" 
                  class="text-green-400 ai-status-connected font-medium">
-                🟢 Puter.js Online - AI Features Active
+                 Puter.js Online - AI Features Active
             </div>
-            <!-- Offline States: Show based on priority -->
+            
             <div x-show="!(puterAuth.initialized && puterAuth.isAuthenticated && !puterAuth.fallbackMode)" 
                  class="ai-status-fallback">
-                <!-- Only show sign-in option when initialized but not authenticated AND not in fallback mode -->
+                
                 <div x-show="puterAuth.initialized && !puterAuth.isAuthenticated && !puterAuth.fallbackMode" 
                      class="text-yellow-400 font-medium">
-                    🟡 Offline Mode - <span class="underline cursor-pointer" @click="toggleAuthMenu()">Sign in for AI features</span>
+                     Offline Mode - <span class="underline cursor-pointer" @click="toggleAuthMenu()">Sign in for AI features</span>
                 </div>
-                <!-- Show fallback message when not initialized OR in fallback mode -->
+                
                 <div x-show="!puterAuth.initialized || puterAuth.fallbackMode" 
                      class="text-blue-400 font-medium">
-                    🔵 Offline Mode - Using local fallback
+                     Offline Mode - Using local fallback
                 </div>
             </div>
             <div class="mt-2 text-xs" :class="darkMode ? 'text-white/60' : 'text-black/60'">
-                <span x-show="aiProcessing" class="ai-processing text-yellow-400 font-medium">🔄 Processing AI request...</span>
+                <span x-show="aiProcessing" class="ai-processing text-yellow-400 font-medium"> Processing AI request...</span>
                 <span x-show="!aiProcessing" class="font-medium">Ready for AI tasks</span>
             </div>
-            <!-- Emergency unlock button when stuck -->
+            
             <div x-show="aiProcessing" class="mt-2">
                 <button @click="forceUnlockAI()" 
                         class="text-xs px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/20"
                         title="Force unlock if AI gets stuck">
-                    🔓 Force Unlock
+                     Force Unlock
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Puter.js Authentication Menu -->
+    
     <div x-show="authMenuOpen" x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-1 scale-100"
         x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-1 scale-100"
@@ -1630,7 +1564,7 @@
         class="fixed top-20 right-4 w-80 rounded-xl shadow-2xl border z-50 overflow-hidden"
         :class="darkMode ? 'bg-gray-900/95 backdrop-blur-xl border-white/10' : 'bg-white/95 backdrop-blur-xl border-black/10'">
         
-        <!-- Authentication Header -->
+        
         <div class="p-4 border-b" :class="darkMode ? 'border-white/10 bg-gradient-to-r from-slate-800/50 to-indigo-900/30' : 'border-black/10 bg-gradient-to-r from-slate-100/50 to-indigo-50/50'">
             <div class="flex items-center justify-between">
                 <div>
@@ -1647,17 +1581,15 @@
                         <span x-show="!puterAuth.isAuthenticated">Sign in for enhanced AI features</span>
                     </p>
                 </div>
-                <button @click="authMenuOpen = false" class="p-1 rounded-lg transition-all duration-200"
+                <button @click="authMenuOpen = false" aria-label="Close authentication menu" class="panel-close-btn p-1 rounded-lg transition-all duration-200"
                     title="Close authentication menu"
-                    :class="darkMode ? 'hover:bg-white/10 text-white/60' : 'hover:bg-black/10 text-black/60'"&gt;
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    :class="darkMode ? 'hover:bg-white/10 text-white/60' : 'hover:bg-black/10 text-black/60'">
+                    <i data-lucide="x" class="h-4 w-4"></i>
                 </button>
             </div>
         </div>
 
-        <!-- User Info (when signed in) -->
+        
         <div x-show="puterAuth.isAuthenticated" class="p-4 border-b" :class="darkMode ? 'border-white/10' : 'border-black/10'">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-br flex items-center justify-center" :class="darkMode ? 'from-indigo-600 to-purple-700' : 'from-indigo-500 to-purple-600'">
@@ -1669,10 +1601,10 @@
                 <div class="flex-1">
                     <p class="text-sm font-medium" :class="darkMode ? 'text-white' : 'text-black'" x-text="puterAuth.userInfo?.username || 'User'"></p>
                     <p class="text-xs opacity-60" :class="darkMode ? 'text-white/60' : 'text-black/60'">
-                        <span x-show="puterAuth.userInfo?.email_confirmed" class="text-green-400">✓ Email confirmed</span>
-                        <span x-show="!puterAuth.userInfo?.email_confirmed" class="text-yellow-400">⚠ Email pending</span>
+                        <span x-show="puterAuth.userInfo?.email_confirmed" class="text-green-400"> Email confirmed</span>
+                        <span x-show="!puterAuth.userInfo?.email_confirmed" class="text-yellow-400"> Email pending</span>
                     </p>
-                    <!-- Session Status Indicator -->
+                    
                     <div class="flex items-center gap-1 mt-1">
                         <div class="w-1.5 h-1.5 rounded-full bg-green-400"></div>
                         <p class="text-xs text-green-400">Session saved & auto-synced</p>
@@ -1681,9 +1613,9 @@
             </div>
         </div>
 
-        <!-- Authentication Actions -->
+        
         <div class="p-4 space-y-3">
-            <!-- Sign In Button (when not authenticated) -->
+            
             <template x-if="!puterAuth.isAuthenticated">
                 <div class="space-y-3">
                     <button @click="signInToPuter()" 
@@ -1701,7 +1633,7 @@
                         <span x-show="puterAuth.isLoading">Opening popup...</span>
                     </button>
 
-                    <!-- Brave Browser Help -->
+                    
                     <div x-show="isBrave" class="text-xs p-3 rounded-lg border-2 border-orange-500/20 bg-orange-500/10">
                         <div class="flex items-center gap-2 mb-2">
                             <svg class="h-4 w-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1715,10 +1647,10 @@
                             <li>Brave's built-in popup blocker</li>
                             <li>Other browser extensions</li>
                         </ul>
-                        <p class="text-orange-400 text-xs font-medium mt-2">💡 Try temporarily disabling AdGuard or popup blockers.</p>
+                        <p class="text-orange-400 text-xs font-medium mt-2"> Try temporarily disabling AdGuard or popup blockers.</p>
                     </div>
 
-                    <!-- Blocker Detection Warning -->
+                    
                     <div x-show="window.BlockerDetector?.hasHighImpactBlockers?.()" 
                          x-transition 
                          class="text-xs p-3 rounded-lg border-2 border-red-500/20 bg-red-500/10">
@@ -1743,7 +1675,7 @@
                         </div>
                     </div>
 
-                    <!-- Popup blocked help -->
+                    
                     <div x-show="puterAuth.error && puterAuth.error.includes('timeout')" class="text-xs p-3 rounded-lg border-2 border-yellow-500/20 bg-yellow-500/10">
                         <div class="flex items-center gap-2 mb-2">
                             <svg class="h-4 w-4 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1761,7 +1693,7 @@
                 </div>
             </template>
 
-            <!-- Sign Out Button (when authenticated) -->
+            
             <template x-if="puterAuth.isAuthenticated">
                 <button @click="signOutFromPuter()" 
                     class="w-full px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 text-white transform hover:scale-105"
@@ -1775,7 +1707,7 @@
             </template>
         </div>
 
-        <!-- Authentication Status -->
+        
         <div class="px-4 pb-4">
             <div class="text-xs p-3 rounded-lg" :class="puterAuth.isAuthenticated ? 
                 (darkMode ? 'bg-green-500/20 text-green-300' : 'bg-green-500/20 text-green-700') : 
@@ -1789,7 +1721,7 @@
         </div>
     </div>
 
-    <!-- Developer Panel -->
+    
     <div x-show="devToolsOpen" x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 translate-x-full" x-transition:enter-end="opacity-1 translate-x-0"
         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-1 translate-x-0"
@@ -1800,35 +1732,18 @@
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold flex items-center gap-2"
                     :class="darkMode ? 'text-white' : 'text-gray-900'">
-                    <span class="text-2xl">🛠️</span> Dev Tools
+                    <span class="text-2xl"></span> Dev Tools
                 </h3>
-                <button @click="devToolsOpen = false" class="p-2 rounded-lg transition-all duration-300"
+                <button @click="devToolsOpen = false" aria-label="Close panel" title="Close panel" class="panel-close-btn p-2 rounded-lg transition-all duration-300"
                     :class="darkMode ? 'hover:bg-white/10 text-white/70' : 'hover:bg-black/10 text-black/70'">
-                    ✕
+                    <i data-lucide="x" class="h-5 w-5"></i>
                 </button>
             </div>
 
-            <!-- Python Executor -->
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
                     :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🐍</span> Python Executor
-                </h4>
-                <button @click="executePython()" :disabled="!text.trim() || pythonExecuting || aiProcessing" title="Run Python code"
-                    class="w-full px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    :class="darkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'">
-                    <span x-text="aiProcessing ? 'AI Processing...' : (pythonExecuting ? 'Executing...' : 'Run Python')"></span>
-                </button>
-                <div x-show="pythonOutput" class="mt-3 p-3 rounded-lg text-xs font-mono whitespace-pre-wrap"
-                    :class="darkMode ? 'bg-black/50 text-green-300' : 'bg-gray-100 text-green-700'"
-                    x-text="pythonOutput"></div>
-            </div>
-
-            <!-- Generador de Codigos -->
-            <div class="mb-6">
-                <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
-                    :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>⚡</span> Code Generators
+                    <span></span> Code Generators
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="generateCode('uuid')"
@@ -1854,38 +1769,33 @@
                     <button @click="generateCode('html')"
                         class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' : 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'">
-                        📄 HTML
+                         HTML
                     </button>
                     <button @click="generateCode('css')"
                         class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30' : 'bg-pink-500/20 text-pink-600 hover:bg-pink-500/30'">
-                        🎨 CSS
+                         CSS
                     </button>
                     <button @click="generateCode('javascript')"
                         class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30' : 'bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30'">
-                        ⚡ JavaScript
+                         JavaScript
                     </button>
-                    <button @click="generateCode('python')"
-                        class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
-                        :class="darkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30'">
-                        🐍 Python
-                    </button>
-                    <button @click="generateCode('sql')"
+<button @click="generateCode('sql')"
                         class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30'">
-                        🗃️ SQL
+                         SQL
                     </button>
                     
                 </div>
             </div>
 
 
-            <!-- Minify de Codigo -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
                     :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🗜️</span> Code Minifier
+                    <span></span> Code Minifier
                 </h4>
                 <div class="grid grid-cols-3 gap-2">
                     <button @click="minifyCode('js')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
@@ -1902,103 +1812,103 @@
                     </button>
                     <button @click="beautifyCode()" class="px-3 py-2 rounded-lg text-xs transition-all duration-300 col-span-3"
                         :class="darkMode ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30' : 'bg-purple-500/20 text-purple-600 hover:bg-purple-500/30'">
-                        ✨ Beautify Code
+                         Beautify Code
                     </button>
                 </div>
             </div>
 
-            <!-- Smart Features -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
                     :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🔧</span> Code Features
+                    <span></span> Code Features
                 </h4>
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <button @click="codeFeature('validateCode')"
                         class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30'">
-                        ✅ Validate Code
+                         Validate Code
                     </button>
                     <button @click="codeFeature('analyzeSentiment')"
                         class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30' : 'bg-pink-500/20 text-pink-600 hover:bg-pink-500/30'">
-                        😊 Sentiment
+                         Sentiment
                     </button>
                     <button @click="codeFeature('generateSnippet')"
                         class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' : 'bg-cyan-500/20 text-cyan-600 hover:bg-cyan-500/30'">
-                        📝 Snippet
+                         Snippet
                     </button>
                     
                 </div>
             </div>
 
-            <!-- Compression Analysis -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
                     :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>📊</span> Compression Analysis
+                    <span></span> Compression Analysis
                 </h4>
                 <div class="grid grid-cols-1 gap-2">
                     <button @click="analyzeCompression()" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-500/20 text-blue-600 hover:bg-blue-500/30'">
-                        📈 Analyze Text Compression
+                         Analyze Text Compression
                     </button>
                     <button @click="getShareLinkStats()" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'">
-                        🔗 Share Link Statistics
+                         Share Link Statistics
                     </button>
                 </div>
                 <div class="text-xs mt-2 p-2 rounded-lg" :class="darkMode ? 'bg-white/5 text-white/60' : 'bg-black/5 text-gray-600'">
-                    💡 See how much your text can be compressed for sharing
+                     See how much your text can be compressed for sharing
                 </div>
             </div>
 
-            <!-- Telemetry -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
                     :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>📈</span> Compression Telemetry
+                    <span></span> Compression Telemetry
                 </h4>
                 <div class="grid grid-cols-1 gap-2">
                     <button @click="showTelemetry()" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-blue-500/20 text-blue-300 hover:bg-blue-500/30' : 'bg-blue-500/20 text-blue-600 hover:bg-blue-500/30'">
-                        📋 View Telemetry Snapshot
+                         View Telemetry Snapshot
                     </button>
                 </div>
                 <div x-show="telemetryView" class="mt-3 p-3 rounded-lg text-xs font-mono whitespace-pre-wrap"
                     :class="darkMode ? 'bg-white/5 text-white/70' : 'bg-black/5 text-gray-700'"
                     x-text="telemetryView"></div>
                 <div class="text-xs mt-2 p-2 rounded-lg" :class="darkMode ? 'bg-white/5 text-white/60' : 'bg-black/5 text-gray-600'">
-                    💡 Local-only stats per content type: total samples, dominant scheme, and average gains.
+                     Local-only stats per content type: total samples, dominant scheme, and average gains.
                 </div>
             </div>
 
-            <!-- Ofuscador de Lua -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2"
                     :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🌙</span> Lua Processing
+                    <span></span> Lua Processing
                 </h4>
                 <div class="grid grid-cols-1 gap-2">
                     <button @click="processLua('obfuscate')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30' : 'bg-red-500/20 text-red-600 hover:bg-red-500/30'">
-                        🔒 Obfuscate Lua Code
+                         Obfuscate Lua Code
                     </button>
                     <button @click="processLua('deobfuscate')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300"
                         :class="darkMode ? 'bg-green-500/20 text-green-300 hover:bg-green-500/30' : 'bg-green-500/20 text-green-600 hover:bg-green-500/30'">
-                        🔓 Format Lua Code
+                         Format Lua Code
                     </button>
                 </div>
                 <div class="text-xs mt-2 p-2 rounded-lg" :class="darkMode ? 'bg-white/5 text-white/60' : 'bg-black/5 text-gray-600'">
-                    ⚠️ Use responsibly and ethically
+                     Use responsibly and ethically
                 </div>
             </div>
 
-            <!-- Hash & Encoding -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🔐</span> Hash & Encoding
+                    <span></span> Hash & Encoding
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="processUtils('hash','md5')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-orange-500/20 text-orange-300 hover:bg-orange-500/30' : 'bg-orange-500/20 text-orange-600 hover:bg-orange-500/30'">MD5</button>
@@ -2010,10 +1920,10 @@
                 </div>
             </div>
 
-            <!-- Regex Tools -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🧩</span> Regex Tools
+                    <span></span> Regex Tools
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="processUtils('regex','test')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' : 'bg-cyan-500/20 text-cyan-600 hover:bg-cyan-500/30'">Test Pattern</button>
@@ -2022,10 +1932,10 @@
                 <div class="text-xs mt-2" :class="darkMode ? 'text-white/50' : 'text-gray-600'">Uses the Search term as regex (from Find panel)</div>
             </div>
 
-            <!-- Converters -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🔁</span> Converters
+                    <span></span> Converters
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="processUtils('convert','csvtojson')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500/20 text-amber-600 hover:bg-amber-500/30'">CSV → JSON</button>
@@ -2035,10 +1945,10 @@
                 </div>
             </div>
 
-            <!-- Unicode (moved) -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🌐</span> Unicode
+                    <span></span> Unicode
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="processUtils('unicode','removediacritics')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-purple-500/20 text-purple-300 hover:bg-purple-500/30' : 'bg-purple-500/20 text-purple-600 hover:bg-purple-500/30'">Remove Diacritics</button>
@@ -2047,10 +1957,10 @@
                 </div>
             </div>
 
-            <!-- JWT & URL (moved) -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🧾</span> JWT & URL
+                    <span></span> JWT & URL
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="processUtils('jwt','decode')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-rose-500/20 text-rose-300 hover:bg-rose-500/30' : 'bg-rose-500/20 text-rose-600 hover:bg-rose-500/30'">Decode JWT</button>
@@ -2059,10 +1969,10 @@
                 </div>
             </div>
 
-            <!-- Diff & IDs (moved) -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🧪</span> Diff & IDs
+                    <span></span> Diff & IDs
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="processUtils('diff','summary')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30' : 'bg-teal-500/20 text-teal-600 hover:bg-teal-500/30'">Diff with Previous</button>
@@ -2070,10 +1980,10 @@
                     <button @click="processUtils('uuid','batch')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300 col-span-2" :class="darkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30'">Generate 10 UUIDs</button>
                 </div>
             </div>
-            <!-- JSON Toolkit -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🧰</span> JSON Toolkit
+                    <span></span> JSON Toolkit
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="codeFeature('jsonValidate')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30' : 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30'">Validate JSON</button>
@@ -2083,10 +1993,10 @@
                 </div>
             </div>
 
-            <!-- Encoding & Base Converters -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🔣</span> Encoding & Base
+                    <span></span> Encoding & Base
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="codeFeature('textToBinary')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30' : 'bg-cyan-500/20 text-cyan-600 hover:bg-cyan-500/30'">Text → Binary</button>
@@ -2096,10 +2006,10 @@
                 </div>
             </div>
 
-            <!-- Color Tools -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🎨</span> Color Tools
+                    <span></span> Color Tools
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="codeFeature('hexToRgb')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-pink-500/20 text-pink-300 hover:bg-pink-500/30' : 'bg-pink-500/20 text-pink-600 hover:bg-pink-500/30'">HEX → RGB</button>
@@ -2108,10 +2018,10 @@
                 </div>
             </div>
 
-            <!-- Extractors -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🧲</span> Extractors
+                    <span></span> Extractors
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="codeFeature('extractIPs')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-teal-500/20 text-teal-300 hover:bg-teal-500/30' : 'bg-teal-500/20 text-teal-600 hover:bg-teal-500/30'">IPs</button>
@@ -2121,10 +2031,10 @@
                 </div>
             </div>
 
-            <!-- URL & Time -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>⏱️</span> URL & Time
+                    <span>⏱</span> URL & Time
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="codeFeature('parseURL')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30' : 'bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30'">Parse URL</button>
@@ -2132,10 +2042,10 @@
                 </div>
             </div>
 
-            <!-- Snippets -->
+            
             <div class="mb-6">
                 <h4 class="text-sm font-medium mb-3 flex items-center gap-2" :class="darkMode ? 'text-white/80' : 'text-gray-800'">
-                    <span>🧩</span> Snippets
+                    <span></span> Snippets
                 </h4>
                 <div class="grid grid-cols-2 gap-2">
                     <button @click="codeFeature('httpFetchSnippet')" class="px-3 py-2 rounded-lg text-xs transition-all duration-300" :class="darkMode ? 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30' : 'bg-amber-500/20 text-amber-600 hover:bg-amber-500/30'">HTTP fetch()</button>
@@ -2147,7 +2057,7 @@
         </div>
     </div>
 
-    <!-- Share -->
+    
     <div x-show="isOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
         aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -2169,7 +2079,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-medium leading-6 flex items-center gap-2"
                         :class="darkMode ? 'text-white' : 'text-gray-900'">
-                        🔗 Share URL
+                         Share URL
                     </h3>
                     <button @click="isOpen = false"
                         class="text-gray-400 hover:text-gray-500 focus:outline-none transition-colors duration-200">
@@ -2200,10 +2110,15 @@
                         </button>
                     </div>
                     <p class="mt-3 text-sm" :class="darkMode ? 'text-gray-400' : 'text-gray-500'">
-                        Share this URL to let others see your text and title configuration. The URL contains your
-                        current text content.
+                        Private fragment link: the payload stays after # and is removed from the address bar after loading.
                     </p>
-                    <div class="mt-4 flex justify-end">
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button @click="shareNativeOrCopy()"
+                            class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 inline-flex items-center gap-2"
+                            :class="darkMode ? 'bg-blue-900/50 text-blue-100 hover:bg-blue-800/60' : 'bg-blue-50 text-blue-900 hover:bg-blue-100'">
+                            <i data-lucide="send" class="h-4 w-4"></i>
+                            Share
+                        </button>
                         <button @click="isOpen = false"
                             class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
                             :class="darkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'">
@@ -2215,7 +2130,7 @@
         </div>
     </div>
 
-    <!-- Footer -->
+    
     <footer class="fixed bottom-0 left-0 w-full py-4 transition-all duration-300" :class="[
                 darkMode ? 'bg-black/50 backdrop-blur-xl border-t border-white/5' : 'bg-white/50 backdrop-blur-xl border-t border-black/5',
                 focusMode ? 'opacity-0 pointer-events-none' : 'opacity-100'
@@ -2223,153 +2138,131 @@
         <div class="max-w-7xl mx-auto px-4 text-center">
             <p class="text-sm transition-colors duration-300" :class="darkMode ? 'text-white/50' : 'text-black/50'">
                 © <span id="current-year"></span> fl2on. All rights reserved.
-                <!-- Performance indicator (discrete) -->
+                
                 <span x-show="stats.chars > 50000" class="ml-4 text-xs opacity-50" :class="'text-red-400'">
-                    🚀
+                    
                 </span>
                 <span x-show="stats.chars > 10000 && stats.chars <= 50000" class="ml-4 text-xs opacity-50" :class="'text-yellow-400'">
-                    ⚡
+                    
                 </span>
             </p>
         </div>
     </footer>
 
-    <script>
-        // Initialize utilities: logger, error handler, footer year, and hotkeys
-        (function(){
-            try {
-                const logger = new (window.Utils ? Utils.Logger : function(){})('Hexa');
-                if (window.Utils && Utils.installGlobalErrorHandler) {
-                    Utils.installGlobalErrorHandler(logger);
+    <script>(function () {
+    try {
+        const logger = new (window.Utils ? Utils.Logger : function () { })('Hexa');
+        if (window.Utils && Utils.installGlobalErrorHandler) {
+            Utils.installGlobalErrorHandler(logger);
+        }
+        const y = document.getElementById('current-year');
+        if (y)
+            y.textContent = new Date().getFullYear();
+        document.addEventListener('keydown', function (e) {
+            if (e.altKey && (e.key === 'd' || e.key === 'D')) {
+                e.preventDefault();
+                if (window.Utils && Utils.toggleTheme) {
+                    Utils.toggleTheme();
                 }
-                // Set current year in footer
-                const y = document.getElementById('current-year');
-                if (y) y.textContent = new Date().getFullYear();
-                // Keyboard shortcuts: Alt+D -> toggle dark theme
-                document.addEventListener('keydown', function(e){
-                    if (e.altKey && (e.key === 'd' || e.key === 'D')) {
-                        e.preventDefault();
-                        if (window.Utils && Utils.toggleTheme) {
-                            Utils.toggleTheme();
-                        } else {
-                            // Fallback toggle using Alpine state if available
-                            const root = document.querySelector('[x-data]');
-                            if (root && root.__x) {
-                                const st = root.__x.$data; st.darkMode = !st.darkMode;
-                            } else {
-                                document.documentElement.classList.toggle('dark');
+                else {
+                    const root = document.querySelector('[x-data]');
+                    if (root && root.__x) {
+                        const st = root.__x.$data;
+                        st.darkMode = !st.darkMode;
+                    }
+                    else {
+                        document.documentElement.classList.toggle('dark');
+                    }
+                }
+                if (window.showNotification)
+                    window.showNotification(' Theme toggled (Alt+D)', 'success');
+            }
+        });
+    }
+    catch (e) {
+        console.error('Utils init failed', e);
+    }
+})();
+window.addEventListener('DOMContentLoaded', function () {
+    const initializePuterAI = () => {
+        if (window.EnvironmentDetector && !window.EnvironmentDetector.shouldMakeAPIRequests()) {
+            console.log(' PuterAI initialization skipped - file:// protocol detected');
+            if (window.puterAI) {
+                window.puterAI.setOfflineMode();
+                setTimeout(() => {
+                    try {
+                        const appElement = document.querySelector('[x-data]');
+                        if (appElement && appElement._x_dataStack && appElement._x_dataStack[0]) {
+                            const app = appElement._x_dataStack[0];
+                            if (app.puterAuth) {
+                                app.puterAuth.isAuthenticated = false;
+                                app.puterAuth.initialized = true;
+                                app.puterAuth.fallbackMode = true;
+                                app.puterAuth.userInfo = null;
+                                if (app.$nextTick) {
+                                    app.$nextTick(() => {
+                                        console.log(' File mode initialized for Alpine.js');
+                                    });
+                                }
                             }
                         }
-                        if (window.showNotification) window.showNotification('🌓 Theme toggled (Alt+D)','success');
                     }
-                });
-            } catch (e) { console.error('Utils init failed', e); }
-        })();
-        
-        // Session management - show session info when available
-        window.addEventListener('DOMContentLoaded', function() {
-            // Wait for Puter.js to load before initializing
-            const initializePuterAI = () => {
-                // Check if we're using file:// protocol first
-                if (window.EnvironmentDetector && !window.EnvironmentDetector.shouldMakeAPIRequests()) {
-                    console.log('📄 PuterAI initialization skipped - file:// protocol detected');
-                    
-                    // Initialize PuterAI in offline mode directly
-                    if (window.puterAI) {
-                        window.puterAI.setOfflineMode();
-                        
-                        // Update Alpine.js state for offline mode
-                        setTimeout(() => {
-                            try {
-                                const appElement = document.querySelector('[x-data]');
-                                if (appElement && appElement._x_dataStack && appElement._x_dataStack[0]) {
-                                    const app = appElement._x_dataStack[0];
-                                    if (app.puterAuth) {
-                                        app.puterAuth.isAuthenticated = false;
-                                        app.puterAuth.initialized = true;
-                                        app.puterAuth.fallbackMode = true;
-                                        app.puterAuth.userInfo = null;
-                                        
-                                        // Trigger Alpine.js reactivity
-                                        if (app.$nextTick) {
-                                            app.$nextTick(() => {
-                                                console.log('📄 File mode initialized for Alpine.js');
-                                            });
-                                        }
-                                    }
+                    catch (error) {
+                        console.warn(' File mode Alpine.js update failed:', error);
+                    }
+                }, 100);
+            }
+            return;
+        }
+        if (window.puterAI && typeof puter !== 'undefined') {
+            window.puterAI.init().then(() => {
+                setTimeout(() => {
+                    try {
+                        const authStatus = window.puterAI.getAuthStatus();
+                        const appElement = document.querySelector('[x-data]');
+                        if (appElement && appElement._x_dataStack && appElement._x_dataStack[0]) {
+                            const app = appElement._x_dataStack[0];
+                            if (app.puterAuth) {
+                                app.puterAuth.isAuthenticated = authStatus.isAuthenticated || false;
+                                app.puterAuth.initialized = authStatus.initialized || false;
+                                app.puterAuth.fallbackMode = authStatus.fallbackMode !== false;
+                                app.puterAuth.userInfo = authStatus.userInfo || null;
+                                if (app.$nextTick) {
+                                    app.$nextTick(() => {
+                                    });
                                 }
-                            } catch (error) {
-                                console.warn('⚠️ File mode Alpine.js update failed:', error);
                             }
-                        }, 100);
-                    }
-                    return; // Exit early, don't continue trying to load Puter.js
-                }
-                
-                // Production environment logic
-                if (window.puterAI && typeof puter !== 'undefined') {
-                    window.puterAI.init().then(() => {
-                        
-                        // Force sync Alpine.js state immediately after initialization
-                        setTimeout(() => {
-                            try {
-                                const authStatus = window.puterAI.getAuthStatus();
-                                
-                                // Find the Alpine.js component and update it directly
-                                const appElement = document.querySelector('[x-data]');
-                                if (appElement && appElement._x_dataStack && appElement._x_dataStack[0]) {
-                                    const app = appElement._x_dataStack[0];
-                                    if (app.puterAuth) {
-                                        app.puterAuth.isAuthenticated = authStatus.isAuthenticated || false;
-                                        app.puterAuth.initialized = authStatus.initialized || false;
-                                        app.puterAuth.fallbackMode = authStatus.fallbackMode !== false; // Default to true
-                                        app.puterAuth.userInfo = authStatus.userInfo || null;
-                                        
-                                        // Trigger Alpine.js reactivity
-                                        if (app.$nextTick) {
-                                            app.$nextTick(() => {
-                                                // UI refreshed
-                                            });
-                                        }
-                                    }
-                                }
-                                
-                                // Also check for session restoration
-                                const sessionInfo = window.puterAI.getSavedSessionInfo();
-                                if (sessionInfo && sessionInfo.isSessionSaved && window.puterAI.isAuthenticated) {
-                                    const ageInHours = Math.round(sessionInfo.age / (60 * 60 * 1000));
-                                    const displayName = sessionInfo.username && sessionInfo.username !== 'unknown' 
-                                        ? sessionInfo.username 
-                                        : 'User';
-                                    
-                                    if (window.showNotification) {
-                                        window.showNotification(
-                                            `💾 Session restored for ${displayName}`, 
-                                            'success'
-                                        );
-                                    }
-                                }
-                            } catch (error) {
-                                // Silent error handling during initialization
+                        }
+                        const sessionInfo = window.puterAI.getSavedSessionInfo();
+                        if (sessionInfo && sessionInfo.isSessionSaved && window.puterAI.isAuthenticated) {
+                            const ageInHours = Math.round(sessionInfo.age / (60 * 60 * 1000));
+                            const displayName = sessionInfo.username && sessionInfo.username !== 'unknown'
+                                ? sessionInfo.username
+                                : 'User';
+                            if (window.showNotification) {
+                                window.showNotification(` Session restored for ${displayName}`, 'success');
                             }
-                        }, 500); // Give Alpine.js time to initialize
-                    }).catch(error => {
-                        console.warn('⚠️ PuterAI initialization failed:', error);
-                    });
-                } else {
-                    // Only retry in production environment (including localhost)
-                    if (window.EnvironmentDetector && window.EnvironmentDetector.shouldMakeAPIRequests()) {
-                        console.log('⏳ Waiting for Puter.js to load...');
-                        setTimeout(initializePuterAI, 1000);
-                    } else {
-                        console.log('📄 Stopping Puter.js wait - file:// protocol detected');
+                        }
                     }
-                }
-            };
-            
-            // Start initialization with a small delay
-            setTimeout(initializePuterAI, 500);
-        });
-    </script>
+                    catch (error) {
+                    }
+                }, 500);
+            }).catch(error => {
+                console.warn(' PuterAI initialization failed:', error);
+            });
+        }
+        else {
+            if (window.EnvironmentDetector && window.EnvironmentDetector.shouldMakeAPIRequests()) {
+                console.log('⏳ Waiting for Puter.js to load...');
+                setTimeout(initializePuterAI, 1000);
+            }
+            else {
+                console.log(' Stopping Puter.js wait - file:// protocol detected');
+            }
+        }
+    };
+    setTimeout(initializePuterAI, 500);
+});
+</script>
 </body>
 </html>
